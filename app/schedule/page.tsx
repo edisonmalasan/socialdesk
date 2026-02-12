@@ -4,16 +4,14 @@ import { useState } from "react";
 import { 
   Facebook, 
   Instagram, 
-  Twitter, 
-  Video, // for TikTok
+  Video, 
   Image as ImageIcon, 
-  Wand2, // for AI icon
+  Wand2, 
   Calendar,
   Clock
 } from "lucide-react";
 
 export default function SchedulePage() {
-  // Simple state to handle platform selection visually
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 
   const togglePlatform = (platform: string) => {
@@ -26,19 +24,15 @@ export default function SchedulePage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-primary">Content Scheduler</h1>
         <p className="text-muted">Create and schedule posts with AI assistance</p>
       </div>
 
-      {/* Main Grid Layout - Matches Wireframe */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* LEFT COLUMN: Content Creation (Takes up 2 columns) */}
+        {/* LEFT COLUMN: Content Creation */}
         <div className="lg:col-span-2 space-y-6">
-          
-          {/* Content Card */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full min-h-[500px] flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-semibold text-gray-700">Content</h2>
@@ -48,13 +42,11 @@ export default function SchedulePage() {
               </button>
             </div>
 
-            {/* Text Area */}
             <textarea 
               className="w-full flex-1 p-4 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
               placeholder="What's on your mind? Write your caption here..."
             ></textarea>
 
-            {/* Media Upload Bar */}
             <div className="mt-4 pt-4 border-t border-gray-100 flex gap-4">
               <button className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary transition-colors">
                 <ImageIcon size={18} />
@@ -68,10 +60,10 @@ export default function SchedulePage() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Settings (Takes up 1 column) */}
+        {/* RIGHT COLUMN: Settings */}
         <div className="space-y-6">
 
-          {/* 1. Platform Selector Card */}
+          {/* Platform Selector */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <h2 className="font-semibold text-gray-700 mb-4">Select Platform</h2>
             <div className="grid grid-cols-2 gap-3">
@@ -89,12 +81,13 @@ export default function SchedulePage() {
                 onClick={() => togglePlatform('instagram')}
                 color="text-pink-600"
               />
+              {/* X */}
               <PlatformButton 
-                name="Twitter" 
-                icon={<Twitter size={18} />} 
-                isSelected={selectedPlatforms.includes('twitter')}
-                onClick={() => togglePlatform('twitter')}
-                color="text-sky-500"
+                name="X" 
+                icon={<XIcon />} 
+                isSelected={selectedPlatforms.includes('x')}
+                onClick={() => togglePlatform('x')}
+                color="text-black" // X brand color is black
               />
               <PlatformButton 
                 name="TikTok" 
@@ -106,7 +99,7 @@ export default function SchedulePage() {
             </div>
           </div>
 
-          {/* 2. Schedule Settings Card */}
+          {/* Schedule Settings */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <h2 className="font-semibold text-gray-700 mb-4">Schedule Post</h2>
             
@@ -147,7 +140,8 @@ export default function SchedulePage() {
   );
 }
 
-// Helper Component for the Platform Buttons
+// --- Custom Components ---
+
 function PlatformButton({ name, icon, isSelected, onClick, color }: any) {
   return (
     <button 
@@ -161,5 +155,19 @@ function PlatformButton({ name, icon, isSelected, onClick, color }: any) {
       <div className={`mb-2 ${color}`}>{icon}</div>
       <span className="text-xs font-medium text-gray-600">{name}</span>
     </button>
+  );
+}
+
+// Custom X (formerly Twitter) Logo Component
+// This SVG matches the official branding perfectly
+function XIcon() {
+  return (
+    <svg 
+      viewBox="0 0 24 24" 
+      aria-hidden="true" 
+      className="w-4 h-4 fill-current" // matches size=18 (w-4.5) approximately
+    >
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
   );
 }
