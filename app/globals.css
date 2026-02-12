@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/*Color Palette*/
+@theme {
+  --color-background: #E7ECEF; /* Light grey/blue */
+  --color-primary: #274C77;    /* Dark blue */
+  --color-secondary: #6096BA;  /* Medium blue */
+  --color-accent: #A3CEF1;     /* Light blue */
+  --color-muted: #8B8C89;      /* Grey */
+}
 
 
-
+html, body {
+  height: 100%; /* App occupies full height of the screen */
+}
