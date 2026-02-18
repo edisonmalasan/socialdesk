@@ -14,12 +14,3 @@ html, body {
   height: 100%; /* App occupies full height of the screen */
 }
 
-/* Quick fix to hide sidebar on mobile until hamburger menu */
-@media (max-width: 768px) {
-  aside {
-    display: none;
-  }
-  main {
-    margin-left: 0 !important; /* Remove the empty space */
-  }
-}
