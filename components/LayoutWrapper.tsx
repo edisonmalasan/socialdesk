@@ -2,23 +2,25 @@
 
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/sidebar";
+import Navbar from "@/components/Navbar";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  
-  // List of pages where the Sidebar should be HIDDEN
   const isAuthPage = pathname === "/login" || pathname === "/logout";
 
   return (
     <>
-      {/* Only show Sidebar if we are NOT on an auth page */}
       {!isAuthPage && <Sidebar />}
 
-      {/* If Sidebar is visible, add margin (ml-64). 
-         If hidden (Login page), center content (no margin).
-      */}
-      <main className={`flex-1 min-h-screen transition-all ${!isAuthPage ? "ml-64 p-8" : "p-0"}`}>
-        {children}
+      {/* The main content area shifts right (ml-64) */}
+      <main className={`flex-1 min-h-screen bg-[#F3F6F8] transition-all ${!isAuthPage ? "ml-64" : ""}`}>
+        
+        {/* Navbar sits inside the main area so it aligns with content */}
+        {!isAuthPage && <Navbar />}
+        
+        <div className="p-8">
+          {children}
+        </div>
       </main>
     </>
   );

@@ -1,130 +1,183 @@
 "use client";
 
 import { 
-  Users, 
-  Activity, 
-  Globe, 
-  PieChart, 
-  TrendingUp, 
-  BarChart3, 
-  ArrowUpRight,
-  ArrowDownRight
-} from "lucide-react";
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell 
+} from 'recharts';
 
 export default function AnalyticsPage() {
+  
+  // --- MOCK DATA FOR CHARTS ---
+  const trendData = [
+    { name: 'Jan', rate: 20 }, { name: 'Feb', rate: 15 }, { name: 'Mar', rate: 25 },
+    { name: 'Apr', rate: 40 }, { name: 'May', rate: 28 }, { name: 'Jun', rate: 30 },
+    { name: 'Jul', rate: 10 }, { name: 'Aug', rate: 5 },  { name: 'Sep', rate: 18 },
+    { name: 'Oct', rate: 30 }, { name: 'Nov', rate: 50 }, { name: 'Dec', rate: 50 },
+  ];
+
+  const growthData = [
+    { name: 'Sun', total: 10, new: 5 }, { name: 'Mon', total: 35, new: 10 },
+    { name: 'Tue', total: 40, new: 30 }, { name: 'Wed', total: 30, new: 15 },
+    { name: 'Thu', total: 15, new: 5 },  { name: 'Fri', total: 20, new: 12 },
+    { name: 'Sat', total: 25, new: 18 },
+  ];
+
+  const reachData = [
+    { name: 'Digitimmerse Artworks', reach: 25, impress: 20 }, { name: 'Digitimmerse E-Card', reach: 30, impress: 35 },
+    { name: 'eGettinz USA', reach: 15, impress: 45 },    { name: 'Fibei USA', reach: 48, impress: 30 },
+    { name: 'eGetinnz PH', reach: 52, impress: 42 },     { name: 'Fibei PH', reach: 35, impress: 25 },
+  ];
+
+  const platformData = [
+    { name: 'Facebook', value: 43.89, color: '#90C2E7' }, // Light Blue
+    { name: 'Instagram', value: 18.78, color: '#274C77' }, // Dark Blue
+    { name: 'Youtube', value: 11.6, color: '#4A8FE7' },   // Med Blue
+    { name: 'Twitter', value: 9.59, color: '#E7ECEF' },   // Grey
+    { name: 'Tiktok', value: 8.93, color: '#6096BA' },    // Steel Blue
+    { name: 'Pinterest', value: 10.8, color: '#A3CEF1' }, // Pale Blue
+  ];
+
   return (
-    <div className="space-y-8">
-      {/* 1. Header Section */}
-      <div>
-        <h1 className="text-3xl font-bold text-primary">Analytics</h1>
-        <p className="text-muted">Track your social media performance</p>
+    <div className="space-y-6">
+      
+      {/* 1. Header */}
+      <div className="mb-4">
+        <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
+        <p className="text-gray-500">Track your social media performance</p>
       </div>
 
-      {/* 2. Top Row: Key Metrics (Grid of 4) */}
+      {/* 2. Top Metric Cards (Row 1) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <AnalyticsCard 
-          title="Total Followers" 
-          value="12,405" 
-          change="+12.5%" 
-          isPositive={true}
-          icon={<Users className="w-5 h-5 text-primary" />}
-        />
-        <AnalyticsCard 
-          title="Avg Engagement" 
-          value="5.2%" 
-          change="-0.4%" 
-          isPositive={false}
-          icon={<Activity className="w-5 h-5 text-secondary" />}
-        />
-        <AnalyticsCard 
-          title="Total Reach" 
-          value="45.2k" 
-          change="+8.1%" 
-          isPositive={true}
-          icon={<Globe className="w-5 h-5 text-accent" />}
-        />
-        <AnalyticsCard 
-          title="Platform Comparison" 
-          value="Facebook" 
-          subValue="Top Performer"
-          isPositive={true}
-          icon={<PieChart className="w-5 h-5 text-muted" />}
-        />
-      </div>
-
-      {/* 3. Middle Row: Trends & Growth (Grid of 2) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartPlaceholder 
-          title="Engagement Rate Trend" 
-          subtitle="Daily engagement over the last 30 days"
-          icon={<TrendingUp size={48} />}
-        />
-        <ChartPlaceholder 
-          title="Follower Growth (14 Days)" 
-          subtitle="New followers vs Unfollows"
-          icon={<Users size={48} />}
-        />
-      </div>
-
-      {/* 4. Bottom Row: Reach & Comparison (Grid of 2) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartPlaceholder 
-          title="Reach & Impressions" 
-          subtitle="In thousands (k)"
-          icon={<BarChart3 size={48} />}
-        />
-        <ChartPlaceholder 
-          title="Platform Comparison" 
-          subtitle="Audience split by social network"
-          icon={<PieChart size={48} />}
-        />
-      </div>
-    </div>
-  );
-}
-
-// --- Internal Components ---
-
-// 1. Top Row Stat Card
-function AnalyticsCard({ title, value, change, isPositive, icon, subValue }: any) {
-  return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between h-full">
-      <div className="flex justify-between items-start mb-4">
-        <div className="p-2 bg-gray-50 rounded-lg">{icon}</div>
-        {change && (
-          <div className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            {isPositive ? <ArrowUpRight size={12} className="mr-1" /> : <ArrowDownRight size={12} className="mr-1" />}
-            {change}
-          </div>
-        )}
-      </div>
-      
-      <div>
-        <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
-        {subValue && <span className="text-xs text-green-600 font-medium">{subValue}</span>}
-        <p className="text-sm text-muted mt-1">{title}</p>
-      </div>
-    </div>
-  );
-}
-
-// 2. Large Chart Placeholder
-function ChartPlaceholder({ title, subtitle, icon }: any) {
-  return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[350px] flex flex-col">
-      <div className="mb-8">
-        <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-        <p className="text-sm text-muted">{subtitle}</p>
-      </div>
-      
-      {/* The "Empty State" Visual */}
-      <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 rounded-lg bg-gray-50/50">
-        <div className="text-gray-300 mb-2">
-          {icon}
+        {/* Primary Card (Dark Blue) */}
+        <div className="bg-primary text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+          <p className="text-sm opacity-80 mb-1">Total Followers</p>
+          <h3 className="text-4xl font-bold mb-4">6,302</h3>
+          <p className="text-xs italic opacity-60">As of February 11, 2026</p>
         </div>
-        <p className="text-sm text-gray-400 font-medium">Chart Visualization Loading...</p>
-        <p className="text-xs text-gray-300 mt-1">Waiting for real data connection</p>
+
+        {/* Standard Cards (White) */}
+        <StatCard title="Avg. Engagement" value="500" date="February 11, 2026" />
+        <StatCard title="Total Reach" value="10,000" date="February 11, 2026" />
+        <StatCard title="Total Impression" value="702" date="February 11, 2026" />
       </div>
+
+      {/* 3. Middle Charts (Row 2) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Engagement Rate Trend (Line Chart) */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-800 mb-6">Engagement Rate Trend</h3>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#eee" />
+                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip />
+                <Line type="monotone" dataKey="rate" stroke="#274C77" strokeWidth={2} dot={{ r: 4, fill: "#274C77" }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Follower Growth (Bar Chart) */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-semibold text-gray-800">Follower Growth (14 Days)</h3>
+            <div className="flex gap-4 text-xs">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#6096BA]"></span> Total</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#274C77]"></span> New</span>
+            </div>
+          </div>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={growthData} barGap={4}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip />
+                <Bar dataKey="total" fill="#274C77" radius={[4, 4, 0, 0]} barSize={12} />
+                <Bar dataKey="new" fill="#6096BA" radius={[4, 4, 0, 0]} barSize={12} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Bottom Charts (Row 3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Reach vs Impressions (Bar Chart) - Spans 2 cols */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-800 mb-6">Reach and Impressions</h3>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={reachData} barGap={8}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
+                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip />
+                <Bar dataKey="reach" fill="#274C77" radius={[2, 2, 0, 0]} barSize={20} />
+                <Bar dataKey="impress" fill="#6096BA" radius={[2, 2, 0, 0]} barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Platform Split (Donut Chart) - Spans 1 col */}
+        <div className="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
+          <h3 className="text-lg font-semibold text-gray-800 w-full mb-2">Platform Comparison</h3>
+          <div className="h-64 w-full relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={platformData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={2}
+                  dataKey="value"
+                >
+                  {platformData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            
+            {/* Center Text Trick */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-primary">Platforms</p>
+                <p className="text-xs text-gray-400">Connected</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Legend */}
+          <div className="flex flex-wrap gap-2 justify-center mt-2">
+            {platformData.map((p) => (
+              <div key={p.name} className="flex items-center gap-1 text-[10px] text-gray-500">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }}></span>
+                {p.name} {p.value}%
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// Helper for white cards
+function StatCard({ title, value, date }: { title: string, value: string, date: string }) {
+  return (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
+      <p className="text-sm text-gray-500 font-medium mb-1">{title}</p>
+      <h3 className="text-4xl font-bold text-gray-900 mb-4">{value}</h3>
+      <p className="text-xs italic text-gray-400">As of {date}</p>
     </div>
   );
 }
