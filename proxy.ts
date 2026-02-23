@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 // Updated to 'proxy' instead of 'middleware' because "middleware" is deprecated
 export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const isPublicPath = path === "/login" || path === "/signup";
+  const isPublicPath = path === "/login" || path === "/register";
   const token = request.cookies.get("auth-token")?.value || "";
 
   // SCENARIO A: User is on public page but logged in -> Go to Dashboard
