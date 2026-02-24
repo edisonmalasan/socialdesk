@@ -15,7 +15,7 @@ export default function LoginPage() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     Cookies.set("auth-token", "valid-token", { expires: 1 });
-    router.push("/");
+    router.push("/dashboard");
   };
 
   return (

@@ -12,7 +12,7 @@ export default function RegisterPage() {
     // In a real app, this would send data to your backend to create a user.
     // For the MVP, we will automatically log them in after registering.
     Cookies.set("auth-token", "valid-token", { expires: 1 });
-    router.push("/");
+    router.push("/dashboard");
   };
 
   return (

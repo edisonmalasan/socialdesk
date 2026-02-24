@@ -22,7 +22,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   const menuItems = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Scheduler", href: "/schedule", icon: CalendarClock },
     { name: "Analytics", href: "/analytics", icon: BarChart3 },
     { name: "Accounts", href: "/accounts", icon: LinkIcon },
