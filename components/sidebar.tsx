@@ -22,7 +22,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   const menuItems = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Scheduler", href: "/schedule", icon: CalendarClock },
     { name: "Analytics", href: "/analytics", icon: BarChart3 },
     { name: "Accounts", href: "/accounts", icon: LinkIcon },
@@ -31,80 +31,80 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* 1. Overlay for mobile:*/}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-50 md:hidden"
+          className="fixed inset-0 bg-black/40 z-40 md:hidden transition-opacity"
           onClick={onClose}
         />
       )}
 
+      {/* 2. Main Sidebar */}
       <aside
         className={`w-64 bg-white h-screen fixed left-0 top-0 flex flex-col z-50 border-r border-gray-100 font-sans transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
+          isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        } md:translate-x-0 md:shadow-none`}
       >
         {/* Close button for mobile */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-4 text-gray-400 hover:text-gray-600 md:hidden"
+          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg md:hidden z-50"
         >
-          <X size={24} />
+          <X size={20} />
         </button>
 
-        {/* 1. Logo Section */}
-        {/* Increased padding-top to give it headroom */}
-      <div className="flex flex-col px-6 pt-8 pb-4">
-        <div className="relative w-full h-20"> 
-            <Image 
-              src="/logo-v2.png" 
-              alt="SocialDesk" 
-              fill
-              sizes="200px"
-              className="object-contain object-left" 
-              priority
-            />
-        </div>
-      </div>
-
-      {/* 2. Navigation Menu */}
-      <nav className="flex-1 overflow-y-auto px-4 space-y-2">
-        {menuItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={onClose}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
-                isActive 
-                  ? "bg-primary text-white shadow-md shadow-primary/30" 
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-              }`}
-            >
-              <item.icon 
-                size={20} 
-                className={`${isActive ? "text-white" : "text-gray-400 group-hover:text-gray-600"}`} 
-                strokeWidth={2}
+        {/* Logo Section */}
+        <div className="flex flex-col px-6 pt-8 pb-4">
+          <div className="relative w-full h-20"> 
+              <Image 
+                src="/logo-v2.png" 
+                alt="SocialDesk" 
+                fill
+                sizes="200px"
+                className="object-contain object-left" 
+                priority
               />
-              <span className={`text-sm font-medium ${isActive ? "font-semibold" : ""}`}>
-                {item.name}
-              </span>
-            </Link>
-          );
-        })}
-      </nav>
+          </div>
+        </div>
 
-      {/* 3. Log Out */}
-      <div className="p-4 mb-4">
-        <Link 
-          href="/logout"
-          className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-        >
-          <LogOut size={20} />
-          <span className="text-sm font-medium">Log out</span>
-        </Link>
-      </div>
+        {/* Navigation Menu */}
+        <nav className="flex-1 overflow-y-auto px-4 space-y-2">
+          {menuItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={onClose} // Closes menu when a link is clicked on mobile
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+                  isActive 
+                    ? "bg-primary text-white shadow-md shadow-primary/30" 
+                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                <item.icon 
+                  size={20} 
+                  className={`${isActive ? "text-white" : "text-gray-400 group-hover:text-gray-600"}`} 
+                  strokeWidth={2}
+                />
+                <span className={`text-sm font-medium ${isActive ? "font-semibold" : ""}`}>
+                  {item.name}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Log Out:*/}
+        <div className="p-4 mb-4 mt-auto">
+          <Link 
+            href="/logout"
+            className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <LogOut size={20} />
+            <span className="text-sm font-medium">Log out</span>
+          </Link>
+        </div>
       </aside>
     </>
   );
