@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connected Accounts - SocialDesk</title>
+    <link rel="stylesheet" href="ca.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-th-large"></i>
+                <div>
+                    <div style="font-size: 24px; font-weight: 700; color: #2563eb;">SocialDesk</div>
+                    <div style="font-size: 12px; color: #64748b;">Manage, Analyze, Grow</div>
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Scheduler</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="nav-item active">
+                    <i class="fas fa-link"></i>
+                    <span>Accounts</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-newspaper"></i>
+                    <span>Posts</span>
+                </a>
+            </nav>
+            <div class="logout-section">
+                <a href="#" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Log out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search">
+                </div>
+                <div class="user-info">
+                    <div class="notifications">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name">John Doe</span>
+                            <span class="user-email">johndoe@gmail.com</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Connected Accounts Section -->
+            <section class="content-section">
+                <h1 class="section-title">Connected Accounts</h1>
+                <p class="section-subtitle">Manage your social media accounts</p>
+
+                <div class="accounts-grid">
+                    <!-- Facebook Card -->
+                    <div class="account-card" data-platform="facebook" data-connected="true" data-username="facebook_user_741" data-date="February 14, 2026">
+                        <div class="card-header-wrapper">
+                            <div class="platform-banner facebook">
+                                <i class="fab fa-facebook-f"></i>
+                                <span>Facebook</span>
+                            </div>
+                            <div class="status-indicator active"></div>
+                            <i class="fas fa-cog settings-icon"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <span class="label">Username</span>
+                                <span class="value username-display">facebook_user_741</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Connected</span>
+                                <span class="value date-display">February 14, 2026</span>
+                            </div>
+                        </div>
+                        <button class="btn disconnect-btn" onclick="showDisconnectModal('facebook')">
+                            <i class="fas fa-unlink"></i> Disconnect
+                        </button>
+                    </div>
+
+                    <!-- Instagram Card -->
+                    <div class="account-card" data-platform="instagram" data-connected="true" data-username="instagram_user_143" data-date="February 16, 2026">
+                        <div class="card-header-wrapper">
+                            <div class="platform-banner instagram">
+                                <i class="fab fa-instagram"></i>
+                                <span>Instagram</span>
+                            </div>
+                            <div class="status-indicator active"></div>
+                            <i class="fas fa-cog settings-icon"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <span class="label">Username</span>
+                                <span class="value username-display">instagram_user_143</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Connected</span>
+                                <span class="value date-display">February 16, 2026</span>
+                            </div>
+                        </div>
+                        <button class="btn disconnect-btn" onclick="showDisconnectModal('instagram')">
+                            <i class="fas fa-unlink"></i> Disconnect
+                        </button>
+                    </div>
+
+                    <!-- X (Twitter) Card -->
+                    <div class="account-card" data-platform="x" data-connected="false">
+                        <div class="card-header-wrapper">
+                            <div class="platform-banner x">
+                                <i class="fab fa-x-twitter"></i>
+                                <span>X</span>
+                            </div>
+                            <div class="status-indicator inactive"></div>
+                            <i class="fas fa-cog settings-icon"></i>
+                        </div>
+                        <div class="card-body empty-state">
+                            <p>No account connected</p>
+                        </div>
+                        <button class="btn connect-btn" onclick="showConnectModal('x')">
+                            Connect Account
+                        </button>
+                    </div>
+
+                    <!-- TikTok Card -->
+                    <div class="account-card" data-platform="tiktok" data-connected="true" data-username="tiktok_user_067" data-date="February 17, 2026">
+                        <div class="card-header-wrapper">
+                            <div class="platform-banner tiktok">
+                                <i class="fab fa-tiktok"></i>
+                                <span>TikTok</span>
+                            </div>
+                            <div class="status-indicator active"></div>
+                            <i class="fas fa-cog settings-icon"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <span class="label">Username</span>
+                                <span class="value username-display">tiktok_user_067</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Connected</span>
+                                <span class="value date-display">February 17, 2026</span>
+                            </div>
+                        </div>
+                        <button class="btn disconnect-btn" onclick="showDisconnectModal('tiktok')">
+                            <i class="fas fa-unlink"></i> Disconnect
+                        </button>
+                    </div>
+
+                    <!-- Pinterest Card -->
+                    <div class="account-card" data-platform="pinterest" data-connected="false">
+                        <div class="card-header-wrapper">
+                            <div class="platform-banner pinterest">
+                                <i class="fab fa-pinterest-p"></i>
+                                <span>Pinterest</span>
+                            </div>
+                            <div class="status-indicator inactive"></div>
+                            <i class="fas fa-cog settings-icon"></i>
+                        </div>
+                        <div class="card-body empty-state">
+                            <p>No account connected</p>
+                        </div>
+                        <button class="btn connect-btn" onclick="showConnectModal('pinterest')">
+                            Connect Account
+                        </button>
+                    </div>
+
+                    <!-- YouTube Shorts Card -->
+                    <div class="account-card" data-platform="youtube" data-connected="true" data-username="youtube_user_123" data-date="February 18, 2026">
+                        <div class="card-header-wrapper">
+                            <div class="platform-banner youtube">
+                                <i class="fab fa-youtube"></i>
+                                <span>YouTube Shorts</span>
+                            </div>
+                            <div class="status-indicator active"></div>
+                            <i class="fas fa-cog settings-icon"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <span class="label">Username</span>
+                                <span class="value username-display">youtube_user_123</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Connected</span>
+                                <span class="value date-display">February 18, 2026</span>
+                            </div>
+                        </div>
+                        <button class="btn disconnect-btn" onclick="showDisconnectModal('youtube')">
+                            <i class="fas fa-unlink"></i> Disconnect
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="available-social">Available Social</div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Connect Account Modal -->
+    <div id="connectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon" id="connectModalIcon">
+                    <i class="fab fa-pinterest-p"></i>
+                </div>
+                <h2>Add account</h2>
+                <p id="connectModalSubtitle">Have a Pinterest account? Log in to easily switch between them</p>
+            </div>
+            <form class="login-form" onsubmit="handleConnect(event)">
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input type="email" placeholder="E-mail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="password-input">
+                        <input type="password" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password"></i>
+                    </div>
+                </div>
+                <a href="#" class="forgot-password">Forgotten your password?</a>
+                <button type="submit" class="btn btn-primary btn-block">Log in</button>
+                <div class="divider">
+                    <span>Or</span>
+                </div>
+                <button type="button" class="btn btn-google btn-block">
+                    <i class="fab fa-google"></i> Continue with Google
+                </button>
+                <p class="signup-link" id="signupLink">Not on Pinterest yet? <a href="#">Sign up</a></p>
+            </form>
+            <button class="close-modal" onclick="closeModal('connectModal')">&times;</button>
+        </div>
+    </div>
+
+    <!-- Disconnect Modal -->
+    <div id="disconnectModal" class="modal">
+        <div class="modal-content disconnect-modal">
+            <div class="modal-icon danger">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h2>Delete account</h2>
+            <p>Are you sure you want to delete the account linked to <span id="disconnectUsername" class="username-highlight"></span>?</p>
+            <div class="checkbox-group">
+                <input type="checkbox" id="confirmDisconnect" required>
+                <label for="confirmDisconnect">I understand that I won't be able to recover my account.</label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="confirmDisconnect()">Delete</button>
+                <button class="btn btn-secondary" onclick="closeModal('disconnectModal')">Cancel</button>
+            </div>
+            <button class="close-modal" onclick="closeModal('disconnectModal')">&times;</button>
+        </div>
+    </div>
+
+    <script src="cas.js"></script>
+</body>
+</html>
