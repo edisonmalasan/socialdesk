@@ -431,7 +431,7 @@ export default function Home() {
       {/* ── Popups ── */}
 
       {openModal === "followers" && (
-        <Modal title="Total Followers" subtitle="Overview for Egarlinx2 total followers performance." badge="Total: 7,852 Followers" onClose={() => setOpenModal(null)}>
+        <Modal title="Total Followers" subtitle="Overview for '' total followers performance." badge="Total: 7,852 Followers" onClose={() => setOpenModal(null)}>
           {followersData.map((r) => (
             <PopupRow key={r.platform}>
               <div className="flex items-center gap-3">
@@ -445,7 +445,7 @@ export default function Home() {
       )}
 
       {openModal === "posted" && (
-        <Modal title="Total Posted Content" subtitle="Overview for Egarlinx2 total posted content performance." badge="Published: 120 Posts" onClose={() => setOpenModal(null)}>
+        <Modal title="Total Posted Content" subtitle="Overview for '' total posted content performance." badge="Published: 120 Posts" onClose={() => setOpenModal(null)}>
           {postedData.map((r) => (
             <PopupRow key={r.platform}>
               <div className="flex items-center gap-3">
@@ -459,7 +459,7 @@ export default function Home() {
       )}
 
       {openModal === "scheduled" && (
-        <Modal title="Total Scheduled Content" subtitle="Overview for Egarlinx2 total scheduled content performance." badge="Scheduled Post: 8" onClose={() => setOpenModal(null)}>
+        <Modal title="Total Scheduled Content" subtitle="Overview for '' total scheduled content performance." badge="Scheduled Post: 8" onClose={() => setOpenModal(null)}>
           {scheduledData.map((r) => (
             <PopupRow key={r.platform}>
               <div className="flex items-center gap-3">
@@ -478,7 +478,7 @@ export default function Home() {
       )}
 
       {openModal === "engagement" && (
-        <Modal title="Total Engagement" subtitle="Overview for Egarlinx2 total engagement performance." badge="Total Interactions:" onClose={() => setOpenModal(null)}>
+        <Modal title="Total Engagement" subtitle="Overview for '' total engagement performance." badge="Total Interactions:" onClose={() => setOpenModal(null)}>
           {engagementData.map((r) => (
             <PopupRow key={r.platform}>
               <div className="flex items-center gap-3">
