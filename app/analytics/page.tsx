@@ -161,13 +161,13 @@ export default function AnalyticsPage() {
                   <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400"></span> Like</div>
                 </div>
               </div>
-              <div className="w-full h-[250px] min-h-[250px] mt-4 -ml-4 sm:ml-0">
+              <div className="w-full h-[250px] min-h-[250px] mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={pageStatsData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <LineChart data={pageStatsData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                     <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} width={60} tickFormatter={(value: number) => value.toLocaleString()} />
+                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value: number) => [value.toLocaleString(), '']} />
                     <Line type="monotone" dataKey="followers" stroke="#22c55e" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
                     <Line type="monotone" dataKey="likes" stroke="#f59e0b" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
                   </LineChart>
