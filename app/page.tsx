@@ -6,7 +6,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// Types 
 interface StatCardProps {
   title: string;
   value: string;
@@ -22,7 +22,7 @@ interface AccountRowProps {
   online?: boolean;
 }
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
+// Data 
 const weeklyData = [
   { day: "Mon", Comments: 35, Reacts: 18 },
   { day: "Tue", Comments: 40, Reacts: 22 },
@@ -40,7 +40,7 @@ const platformData = [
   { name: "Pinterest", value: 10.8,  color: "#d0eaf9" },
 ];
 
-// ─── Popup Data ───────────────────────────────────────────────────────────────
+// Popup Data 
 const followersData = [
   { platform: "Facebook",  value: "6,302 followers" },
   { platform: "Instagram", value: "4,500 followers" },
@@ -69,7 +69,7 @@ const engagementData = [
   { platform: "Twitter"   },
 ];
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
+// Icons 
 function FacebookIcon({ size = 18 }: { size?: number }) {
   return (
     <div className="rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#1877f2", width: size * 2, height: size * 2 }}>
@@ -142,7 +142,7 @@ function getPlatformIcon(name: string, size = 18) {
   }
 }
 
-// ─── Popup Modal ──────────────────────────────────────────────────────────────
+// Popup Modal
 function Modal({ title, subtitle, badge, onClose, children }: {
   title: string;
   subtitle: string;
@@ -210,7 +210,7 @@ function PopupRow({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// Sub-components 
 function StatCard({ title, value, subtitle, highlighted = false, onClick }: StatCardProps) {
   return (
     <div
@@ -264,7 +264,7 @@ function AccountRow({ platform, handle, icon, online = true }: AccountRowProps) 
   );
 }
 
-// ─── Platform Chart ───────────────────────────────────────────────────────────
+// Platform Chart 
 const PlatformChart = memo(function PlatformChart() {
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const labelRef = useRef<SVGTextElement | null>(null);
@@ -365,7 +365,7 @@ const PlatformChart = memo(function PlatformChart() {
 
         <svg width="100%" height={220} viewBox="0 0 220 220" onMouseMove={handleMouseMove} onMouseLeave={handleLeave}>
           <defs>
-            {/* Reveal mask: sweeps counter-clockwise from top-right */}
+            {/* Reveal mask: counter-clockwise from top-right */}
             <mask id={`reveal-${animKey}`}>
               <circle
                 cx={cx} cy={cy} r={(r + ri) / 2}
@@ -421,14 +421,14 @@ const PlatformChart = memo(function PlatformChart() {
   );
 });
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// Main Component 
 export default function Home() {
   const [openModal, setOpenModal] = useState<null | "followers" | "posted" | "scheduled" | "engagement">(null);
 
   return (
     <div className="space-y-6" style={{ fontFamily: "'DM Sans', sans-serif" }}>
 
-      {/* ── Popups ── */}
+      {/* Popups */}
 
       {openModal === "followers" && (
         <Modal title="Total Followers" subtitle="Overview for '' total followers performance." badge="Total: 7,852 Followers" onClose={() => setOpenModal(null)}>
