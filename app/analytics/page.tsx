@@ -55,11 +55,11 @@ export default function AnalyticsPage() {
 
   // --- MOCK DATA FOR "ALL PAGES" VIEW ---
   const topPosts = [
-    { id: 1, title: "FibeiTravel.com | Post-Valentine's Bohol Dive 🤿", platform: "Instagram", reach: "7k", growth: "12%" },
-    { id: 2, title: "eGetinnz.com | Celebrate CNY in Cebu 🧧", platform: "Facebook", reach: "19k", growth: "27%" },
-    { id: 3, title: "FibeiTravel.com | Last-Minute Romantic Vienna 🎻", platform: "Twitter", reach: "2.1k", growth: "15%" },
-    { id: 4, title: "eGetinnz.com | Valentine's Day Memories 💖", platform: "Tiktok", reach: "5k", growth: "11%" },
-    { id: 5, title: "FibeiTravel.com | Extend the Romance — 11-Day Luzon Tour 💗", platform: "Pinterest", reach: "23k", growth: "23%" },
+    { id: 1, title: "FibeiTravel.com | Post-Valentine's Bohol Dive 🤿", platform: "Instagram", caption: "Celebrate the post-Valentine's vibes underwater! Explore Bohol's reefs...", date: "February 20, 2026", views: "3k", reacts: "1.5k", comments: "157", shares: "25", engagement: "12%", status: "Completed" },
+    { id: 2, title: "eGetinnz.com | Celebrate CNY in Cebu 🧧", platform: "Facebook", caption: "Ring in the Year of the Snake with stunning Cebu getaways!", date: "February 15, 2026", views: "19k", reacts: "4k", comments: "290", shares: "30", engagement: "27%", status: "Completed" },
+    { id: 3, title: "FibeiTravel.com | Last-Minute Romantic Vienna 🎻", platform: "Twitter", caption: "Still looking for the perfect Valentine's escape? Vienna awaits...", date: "February 12, 2026", views: "2.1k", reacts: "800", comments: "95", shares: "18", engagement: "15%", status: "Completed" },
+    { id: 4, title: "eGetinnz.com | Valentine's Day Memories 💖", platform: "Tiktok", caption: "Make your Valentine's Day unforgettable with these dreamy stays...", date: "February 14, 2026", views: "5k", reacts: "2.3k", comments: "210", shares: "45", engagement: "11%", status: "Completed" },
+    { id: 5, title: "FibeiTravel.com | Extend the Romance — 11-Day Luzon Tour 💗", platform: "Pinterest", caption: "Valentine's may be over, but love and adventure continue! Explore Luzon's...", date: "February 18, 2026", views: "23k", reacts: "6k", comments: "450", shares: "120", engagement: "23%", status: "Completed" },
   ];
 
   const pageStatsData = [
@@ -270,34 +270,52 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 min-w-0 max-w-full overflow-hidden">
             <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 overflow-hidden">
               <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900 mb-2 sm:mb-4">Top Posts this Week</h3>
-              <div className="flex flex-col">
+              <div className="flex flex-col divide-y divide-gray-50">
                 {topPosts.map((post) => (
-                  <div key={post.id} className="flex flex-col gap-2 py-3 sm:py-4 border-b border-gray-50 last:border-0">
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div key={post.id} className="py-3 sm:py-4 space-y-2">
+                    <div className="flex items-start gap-2 sm:gap-3 min-w-0">
                       <div className="w-10 h-7 sm:w-12 sm:h-8 relative rounded-md overflow-hidden shrink-0 bg-gray-200">
                         <Image src="/greece.png" alt="Thumbnail" fill className="object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] sm:text-xs font-medium text-gray-800 truncate">{post.title}</p>
-                        <p className="text-[10px] text-gray-400 md:hidden mt-0.5">{post.platform}</p>
+                        <div className="flex items-start justify-between gap-1.5">
+                          <p className="text-[11px] sm:text-xs font-bold text-gray-900 truncate flex-1 min-w-0">{post.title}</p>
+                          <span className={`inline-block px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold tracking-wide shrink-0 ${getStatusBadge(post.status)}`}>
+                            {post.status}
+                          </span>
+                        </div>
+                        <p className="text-[9px] sm:text-[10px] text-gray-500 truncate mt-0.5">{post.caption}</p>
+                        <p className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5">{post.date}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 sm:gap-4 pl-[52px] sm:pl-[60px] md:pl-0">
-                      <span className="hidden md:inline-block text-[11px] text-gray-500 w-16">{post.platform}</span>
-                      <span className="text-[11px] font-medium text-gray-900"><Eye size={12} className="inline mr-1 text-gray-400"/>{post.reach}</span>
-                      <span className="flex items-center text-[11px] font-bold text-gray-700">
-                        <ArrowUp size={10} className="mr-0.5" /> {post.growth}
-                      </span>
-                      <button className="text-gray-400 hover:text-primary transition-colors ml-auto">
-                        <ExternalLink size={14} />
-                      </button>
+                    <div className="grid grid-cols-5 gap-2 text-center">
+                      <div>
+                        <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Views</p>
+                        <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.views}</p>
+                      </div>
+                      <div>
+                        <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Reacts</p>
+                        <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.reacts}</p>
+                      </div>
+                      <div>
+                        <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Comments</p>
+                        <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.comments}</p>
+                      </div>
+                      <div>
+                        <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Shares</p>
+                        <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.shares}</p>
+                      </div>
+                      <div>
+                        <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Engage</p>
+                        <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.engagement}</p>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 flex flex-col min-w-0 overflow-hidden">
+            <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 overflow-hidden self-start">
               <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900 mb-2 sm:mb-4">Engagement Rate Trend</h3>
               <div className="w-full h-[180px] sm:h-[220px] lg:h-[250px] min-w-0">
                 {/* BACKEND NOTE: Updated to BarChart as per new wireframe */}
