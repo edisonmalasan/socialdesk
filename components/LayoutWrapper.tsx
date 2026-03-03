@@ -23,12 +23,12 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
       {/* MOBILE FIX: Changed "ml-64" to "md:ml-64". 
           This means on mobile it takes full width, on desktop it leaves room for the sidebar. */}
-      <main className={`flex-1 min-h-screen transition-all ${!isAuthPage ? "md:ml-64" : ""}`}>
+      <main className={`flex-1 min-h-screen min-w-0 max-w-full overflow-x-hidden transition-all ${!isAuthPage ? "md:ml-64" : ""}`}>
         
         {/* Pass the opener function to the Navbar */}
         {!isAuthPage && <Navbar onMenuClick={() => setIsSidebarOpen(true)} />}
         
-        <div className={!isAuthPage ? "p-4 md:p-8" : ""}>
+        <div className={!isAuthPage ? "p-3 sm:p-4 md:p-6 lg:p-8 min-w-0 max-w-full" : ""}>
           {children}
         </div>
       </main>
