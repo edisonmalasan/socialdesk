@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { 
   FileText, 
@@ -12,7 +12,8 @@ import {
   Heart,
   MessageCircle,
   Share2,
-  Share
+  Download,
+  ImageDown
 } from "lucide-react";
 
 import { FaTiktok, FaPinterest } from "react-icons/fa";
@@ -33,7 +34,19 @@ import {
 export default function AnalyticsPage() {
   const [selectedPage, setSelectedPage] = useState("All Pages");
   const [selectedPlatform, setSelectedPlatform] = useState("All Platforms");
-  const [activeTab, setActiveTab] = useState("All"); // For the Specific Page Table
+  const [activeTab, setActiveTab] = useState("All");
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // BACKEND NOTE: These arrays should eventually be fetched from the database
   const pages = ["All Pages", "eGetinnz PH", "eGetinnz USA", "Fibei PH", "Fibei USA", "Digitimmerse PH", "Digitimmerse USA"];
@@ -50,12 +63,12 @@ export default function AnalyticsPage() {
   ];
 
   const pageStatsData = [
-    { month: "Jan", followers: 15000, likes: 8000 },
-    { month: "Feb", followers: 20000, likes: 12000 },
-    { month: "Mar", followers: 35000, likes: 25000 },
-    { month: "Apr", followers: 28000, likes: 18000 },
-    { month: "May", followers: 22000, likes: 10000 },
-    { month: "Jun", followers: 30000, likes: 15000 },
+    { month: "Jan", followers: 15000, likes: 8000, views: 12000, shares: 3000, comments: 5000 },
+    { month: "Feb", followers: 20000, likes: 12000, views: 18000, shares: 5000, comments: 7000 },
+    { month: "Mar", followers: 35000, likes: 25000, views: 30000, shares: 8000, comments: 12000 },
+    { month: "Apr", followers: 28000, likes: 18000, views: 24000, shares: 6000, comments: 9000 },
+    { month: "May", followers: 22000, likes: 10000, views: 20000, shares: 4500, comments: 6500 },
+    { month: "Jun", followers: 30000, likes: 15000, views: 26000, shares: 7000, comments: 10000 },
   ];
 
   const engagementTrendBarData = [
@@ -65,9 +78,6 @@ export default function AnalyticsPage() {
     { month: "Nov", rate: 30 }, { month: "Dec", rate: 50 },
   ];
   const barColors = ['#A3CEF1', '#D6E6F2', '#8B8C89', '#FDE68A', '#FBCFE8', '#E9D5FF', '#FECDD3', '#E5E7EB', '#A7F3D0', '#BAE6FD', '#FED7AA'];
-
-  const linkClicksData = [{ name: 'A', uv: 10 }, { name: 'B', uv: 25 }, { name: 'C', uv: 15 }, { name: 'D', uv: 30 }, { name: 'E', uv: 12 }, { name: 'F', uv: 18 }, { name: 'G', uv: 5 }];
-  const photoClicksData = [{ name: 'A', uv: 5 }, { name: 'B', uv: 15 }, { name: 'C', uv: 8 }, { name: 'D', uv: 20 }, { name: 'E', uv: 12 }, { name: 'F', uv: 25 }, { name: 'G', uv: 30 }];
 
   // --- MOCK DATA FOR "SPECIFIC PAGE" VIEW ---
   // BACKEND NOTE: Fetch this table data based on the selectedPage, selectedPlatform, and activeTab filters
@@ -90,55 +100,163 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 overflow-x-hidden">
+    <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6 overflow-x-hidden overflow-y-visible w-full max-w-full min-w-0 box-border">
       
       {/* Header & Filters */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-2">
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-2 sm:gap-3 pb-1">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-500 mt-1">Track your social media performance</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Analytics</h1>
+          <p className="text-xs sm:text-sm lg:text-base text-gray-500 mt-0.5">Track your social media performance</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
           {/* BACKEND NOTE: Dropdowns update state. Use useEffect to refetch data on change. */}
-          <div className="relative w-full sm:w-auto flex-1">
+          <div className="relative flex-1 min-w-0">
+            <label htmlFor="analytics-page-select" className="sr-only">Select Page</label>
             <select 
+              id="analytics-page-select"
+              name="analytics-page"
               value={selectedPage}
               onChange={(e) => setSelectedPage(e.target.value)}
-              className="w-full appearance-none bg-white border border-gray-200 text-gray-700 py-2.5 pl-4 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm font-medium"
+              className="w-full appearance-none bg-white border border-gray-200 text-gray-700 py-1.5 sm:py-2 pl-3 pr-7 sm:pr-9 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm font-medium text-xs sm:text-sm"
             >
               {pages.map((page) => <option key={page} value={page}>{page}</option>)}
             </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
           </div>
 
-          <div className="relative w-full sm:w-auto flex-1">
+          <div className="relative flex-1 min-w-0">
+            <label htmlFor="analytics-platform-select" className="sr-only">Select Platform</label>
             <select 
+              id="analytics-platform-select"
+              name="analytics-platform"
               value={selectedPlatform}
               onChange={(e) => setSelectedPlatform(e.target.value)}
-              className="w-full appearance-none bg-white border border-gray-200 text-gray-700 py-2.5 pl-4 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm font-medium"
+              className="w-full appearance-none bg-white border border-gray-200 text-gray-700 py-1.5 sm:py-2 pl-3 pr-7 sm:pr-9 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm font-medium text-xs sm:text-sm"
             >
               {platforms.map((platform) => <option key={platform} value={platform}>{platform}</option>)}
             </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            <ChevronDown size={16} className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
           </div>
 
-          {/* Conditional Export Buttons based on selected view */}
-          <div className="flex gap-2 w-full sm:w-auto justify-end">
-            {selectedPage === "All Pages" ? (
-              <>
-                <button className="p-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors shadow-sm" title="Export as PDF">
-                  <FileText size={20} />
+          {/* Export Dropdown */}
+          <div className="relative" ref={exportRef}>
+            <button
+              id="analytics-export-btn"
+              name="analytics-export"
+              onClick={() => setExportOpen(!exportOpen)}
+              className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors shadow-sm"
+              title="Export"
+              aria-label="Export data"
+              aria-expanded={exportOpen}
+              aria-haspopup="true"
+            >
+              <Download size={20} />
+            </button>
+            {exportOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
+                <button
+                  onClick={() => setExportOpen(false)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <FileSpreadsheet size={16} className="text-gray-400 shrink-0" /> Export as CSV
                 </button>
-                <button className="p-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors shadow-sm" title="Export as CSV">
-                  <FileSpreadsheet size={20} />
+                <button
+                  onClick={() => setExportOpen(false)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <FileText size={16} className="text-gray-400 shrink-0" /> Export as PDF
                 </button>
-              </>
-            ) : (
-              <button className="px-5 py-2.5 bg-[#274C77] text-white rounded-lg hover:bg-blue-900 transition-colors shadow-sm font-medium flex items-center gap-2">
-                Export <Share size={16} />
-              </button>
+                <div className="border-t border-gray-100 my-1" />
+                <button
+                  onClick={() => setExportOpen(false)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <ImageDown size={16} className="text-gray-400 shrink-0" /> Export Page Stats (JPG)
+                </button>
+              </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================= */}
+      {/* Page Stats & Engagement Overview           */}
+      {/* Always visible regardless of page filter   */}
+      {/* ========================================= */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 min-w-0 max-w-full overflow-hidden">
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 flex flex-col min-w-0 overflow-hidden">
+          <div className="flex flex-col gap-1.5 sm:gap-3 mb-2 sm:mb-4">
+            <div>
+              <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">Page Stats</h3>
+              <p className="text-[10px] sm:text-[11px] text-gray-500">February 11 - February 24, 2026</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 text-[10px] sm:text-xs font-medium text-gray-600">
+              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500"></span> Follower</div>
+              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-orange-400"></span> Like</div>
+              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-500"></span> Views</div>
+              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple-500"></span> Shares</div>
+              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-pink-500"></span> Comments</div>
+            </div>
+          </div>
+          <div className="w-full h-[180px] sm:h-[220px] lg:h-[250px] min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={pageStatsData} margin={{ top: 5, right: 5, left: -5, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} dy={8} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#9ca3af' }} width={35} tickFormatter={(value: number) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toString()} />
+                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value: number) => [value.toLocaleString(), '']} />
+                <Line type="monotone" dataKey="followers" stroke="#22c55e" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="likes" stroke="#f59e0b" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="shares" stroke="#8b5cf6" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="comments" stroke="#ec4899" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 overflow-hidden">
+          <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900 mb-2 sm:mb-4">Engagement Overview</h3>
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:gap-4">
+            <div className="bg-[#9ABDD3]/40 p-1.5 sm:p-2 lg:p-5 rounded-lg sm:rounded-xl lg:rounded-2xl flex flex-col items-start justify-between min-h-[100px] sm:min-h-[130px] lg:min-h-[160px]">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 lg:w-10 lg:h-10 bg-white rounded-md lg:rounded-lg flex items-center justify-center text-primary shadow-sm shrink-0">
+                <ChevronDown size={12} className="rotate-180 sm:hidden" />
+                <ChevronDown size={14} className="rotate-180 hidden sm:block lg:hidden" />
+                <ChevronDown size={20} className="rotate-180 hidden lg:block" />
+              </div>
+              <div className="w-full">
+                <h4 className="text-sm sm:text-lg lg:text-2xl xl:text-3xl font-bold text-gray-900">24.6k</h4>
+                <p className="text-[7px] sm:text-[9px] lg:text-xs text-gray-600 font-medium leading-tight mt-0.5">Engagement Rate Trend</p>
+                <div className="mt-1 sm:mt-1.5 lg:mt-3 inline-flex items-center gap-0.5 bg-white/60 px-1 sm:px-1.5 py-0.5 rounded text-[6px] sm:text-[7px] lg:text-[10px] font-bold text-gray-700">
+                  <ArrowUp size={6} className="text-gray-500" /> 0.8% <span className="text-gray-400 font-normal ml-0.5">Weekly</span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-yellow-50 p-1.5 sm:p-2 lg:p-5 rounded-lg sm:rounded-xl lg:rounded-2xl flex flex-col items-start justify-between min-h-[100px] sm:min-h-[130px] lg:min-h-[160px]">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 lg:w-10 lg:h-10 bg-white rounded-md lg:rounded-lg flex items-center justify-center text-yellow-500 shadow-sm shrink-0">
+                <span className="font-bold text-xs sm:text-sm lg:text-xl">★</span>
+              </div>
+              <div className="w-full">
+                <h4 className="text-sm sm:text-lg lg:text-2xl xl:text-3xl font-bold text-gray-900">16.2k</h4>
+                <p className="text-[7px] sm:text-[9px] lg:text-xs text-gray-600 font-medium leading-tight mt-0.5">Account Likes</p>
+                <div className="mt-1 sm:mt-1.5 lg:mt-3 inline-flex items-center gap-0.5 bg-white/60 px-1 sm:px-1.5 py-0.5 rounded text-[6px] sm:text-[7px] lg:text-[10px] font-bold text-gray-700">
+                  <ArrowUp size={6} className="text-yellow-500" /> 0.3% <span className="text-gray-400 font-normal ml-0.5">Monthly</span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-pink-50 p-1.5 sm:p-2 lg:p-5 rounded-lg sm:rounded-xl lg:rounded-2xl flex flex-col items-start justify-between min-h-[100px] sm:min-h-[130px] lg:min-h-[160px]">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 lg:w-10 lg:h-10 bg-white rounded-md lg:rounded-lg flex items-center justify-center text-pink-500 shadow-sm shrink-0">
+                <span className="font-bold text-xs sm:text-sm lg:text-xl">💬</span>
+              </div>
+              <div className="w-full">
+                <h4 className="text-sm sm:text-lg lg:text-2xl xl:text-3xl font-bold text-gray-900">27.8k</h4>
+                <p className="text-[7px] sm:text-[9px] lg:text-xs text-gray-600 font-medium leading-tight mt-0.5">User Comments</p>
+                <div className="mt-1 sm:mt-1.5 lg:mt-3 inline-flex items-center gap-0.5 bg-white/60 px-1 sm:px-1.5 py-0.5 rounded text-[6px] sm:text-[7px] lg:text-[10px] font-bold text-gray-700">
+                  <ArrowUp size={6} className="text-pink-500" /> 5.36% <span className="text-gray-400 font-normal ml-0.5">Weekly</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -148,140 +266,29 @@ export default function AnalyticsPage() {
       {/* ========================================= */}
       {selectedPage === "All Pages" ? (
         <>
-          {/* Row 1: Page Stats & Engagement Overview */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-                <div>
-                  <h3 className="font-bold text-lg text-gray-900">Page Stats</h3>
-                  <p className="text-xs text-gray-500">February 11 - February 24, 2026</p>
-                </div>
-                <div className="flex items-center gap-3 text-xs font-medium text-gray-600">
-                  <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span> Follower</div>
-                  <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400"></span> Like</div>
-                </div>
-              </div>
-              <div className="w-full h-[250px] min-h-[250px] mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={pageStatsData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} width={60} tickFormatter={(value: number) => value.toLocaleString()} />
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value: number) => [value.toLocaleString(), '']} />
-                    <Line type="monotone" dataKey="followers" stroke="#22c55e" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="likes" stroke="#f59e0b" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h3 className="font-bold text-lg text-gray-900 mb-6">Engagement Overview</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 h-[250px] sm:h-auto">
-                <div className="bg-[#9ABDD3]/40 p-5 rounded-2xl flex sm:flex-col justify-between items-center sm:items-start sm:aspect-[4/5] gap-4 sm:gap-0">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm shrink-0">
-                    <ChevronDown size={20} className="rotate-180" />
-                  </div>
-                  <div className="flex-1 sm:flex-none w-full">
-                    <h4 className="text-2xl xl:text-3xl font-bold text-gray-900">24.6k</h4>
-                    <p className="text-xs text-gray-600 font-medium leading-tight mt-1">Engagement Rate Trend</p>
-                    <div className="mt-3 inline-flex items-center gap-1 bg-white/60 px-2 py-1 rounded text-[10px] font-bold text-gray-700">
-                      <ArrowUp size={10} className="text-gray-500" /> 0.8% <span className="text-gray-400 font-normal ml-1">Weekly</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-yellow-50 p-5 rounded-2xl flex sm:flex-col justify-between items-center sm:items-start sm:aspect-[4/5] gap-4 sm:gap-0">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-yellow-500 shadow-sm shrink-0">
-                    <span className="font-bold text-xl">★</span>
-                  </div>
-                  <div className="flex-1 sm:flex-none w-full">
-                    <h4 className="text-2xl xl:text-3xl font-bold text-gray-900">16.2k</h4>
-                    <p className="text-xs text-gray-600 font-medium leading-tight mt-1">Account Likes</p>
-                    <div className="mt-3 inline-flex items-center gap-1 bg-white/60 px-2 py-1 rounded text-[10px] font-bold text-gray-700">
-                      <ArrowUp size={10} className="text-yellow-500" /> 0.3% <span className="text-gray-400 font-normal ml-1">Monthly</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-pink-50 p-5 rounded-2xl flex sm:flex-col justify-between items-center sm:items-start sm:aspect-[4/5] gap-4 sm:gap-0">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-pink-500 shadow-sm shrink-0">
-                    <span className="font-bold text-xl">💬</span>
-                  </div>
-                  <div className="flex-1 sm:flex-none w-full">
-                    <h4 className="text-2xl xl:text-3xl font-bold text-gray-900">27.8k</h4>
-                    <p className="text-xs text-gray-600 font-medium leading-tight mt-1">User Comments</p>
-                    <div className="mt-3 inline-flex items-center gap-1 bg-white/60 px-2 py-1 rounded text-[10px] font-bold text-gray-700">
-                      <ArrowUp size={10} className="text-pink-500" /> 5.36% <span className="text-gray-400 font-normal ml-1">Weekly</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Row 2: Link Clicks & Photo Clicks (NEW) */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-              <h3 className="font-bold text-lg text-gray-900 mb-2">Link Clicks</h3>
-              <div className="flex items-end justify-between mb-4">
-                <p className="text-xs text-gray-500 font-medium">Male 40% &nbsp;&nbsp; Female 60%</p>
-                <div className="text-right">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Visitors</p>
-                  <p className="text-2xl font-bold text-gray-900 leading-none">22,658</p>
-                </div>
-              </div>
-              <div className="w-full h-[120px] -ml-4 sm:ml-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={linkClicksData}>
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Line type="monotone" dataKey="uv" stroke="#f97316" strokeWidth={3} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-              <h3 className="font-bold text-lg text-gray-900 mb-2">Photo Clicks</h3>
-              <div className="flex items-end justify-between mb-4">
-                <p className="text-xs text-gray-500 font-medium">Male 78% &nbsp;&nbsp; Female 22%</p>
-                <div className="text-right">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Visitors</p>
-                  <p className="text-2xl font-bold text-gray-900 leading-none">18,459</p>
-                </div>
-              </div>
-              <div className="w-full h-[120px] -ml-4 sm:ml-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={photoClicksData}>
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Line type="monotone" dataKey="uv" stroke="#22c55e" strokeWidth={3} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-
-          {/* Row 3: Top Posts & Engagement Bar Chart */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h3 className="font-bold text-lg text-gray-900 mb-4">Top Posts this Week</h3>
+          {/* Top Posts & Engagement Bar Chart */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 min-w-0 max-w-full overflow-hidden">
+            <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 overflow-hidden">
+              <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900 mb-2 sm:mb-4">Top Posts this Week</h3>
               <div className="flex flex-col">
                 {topPosts.map((post) => (
-                  <div key={post.id} className="flex flex-col sm:flex-row sm:items-center gap-3 py-4 border-b border-gray-50 last:border-0">
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <div className="w-12 h-8 relative rounded-md overflow-hidden shrink-0 bg-gray-200">
+                  <div key={post.id} className="flex flex-col gap-2 py-3 sm:py-4 border-b border-gray-50 last:border-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-7 sm:w-12 sm:h-8 relative rounded-md overflow-hidden shrink-0 bg-gray-200">
                         <Image src="/greece.png" alt="Thumbnail" fill className="object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-800 truncate">{post.title}</p>
-                        <p className="text-[10px] text-gray-400 sm:hidden mt-0.5">{post.platform}</p>
+                        <p className="text-[11px] sm:text-xs font-medium text-gray-800 truncate">{post.title}</p>
+                        <p className="text-[10px] text-gray-400 md:hidden mt-0.5">{post.platform}</p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pl-16 sm:pl-0">
-                      <span className="hidden sm:inline-block text-[11px] text-gray-500 w-16">{post.platform}</span>
-                      <span className="text-[11px] font-medium text-gray-900 sm:w-8"><Eye size={12} className="inline mr-1 text-gray-400"/>{post.reach}</span>
-                      <span className="flex items-center text-[11px] font-bold text-gray-700 sm:w-10">
+                    <div className="flex items-center gap-3 sm:gap-4 pl-[52px] sm:pl-[60px] md:pl-0">
+                      <span className="hidden md:inline-block text-[11px] text-gray-500 w-16">{post.platform}</span>
+                      <span className="text-[11px] font-medium text-gray-900"><Eye size={12} className="inline mr-1 text-gray-400"/>{post.reach}</span>
+                      <span className="flex items-center text-[11px] font-bold text-gray-700">
                         <ArrowUp size={10} className="mr-0.5" /> {post.growth}
                       </span>
-                      <button className="text-gray-400 hover:text-primary transition-colors">
+                      <button className="text-gray-400 hover:text-primary transition-colors ml-auto">
                         <ExternalLink size={14} />
                       </button>
                     </div>
@@ -290,9 +297,9 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-              <h3 className="font-bold text-lg text-gray-900 mb-4">Engagement Rate Trend</h3>
-              <div className="w-full h-[250px] min-h-[250px] mt-4 -ml-4 sm:ml-0">
+            <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 flex flex-col min-w-0 overflow-hidden">
+              <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900 mb-2 sm:mb-4">Engagement Rate Trend</h3>
+              <div className="w-full h-[180px] sm:h-[220px] lg:h-[250px] min-w-0">
                 {/* BACKEND NOTE: Updated to BarChart as per new wireframe */}
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={engagementTrendBarData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
@@ -314,50 +321,95 @@ export default function AnalyticsPage() {
         /* ========================================= */
         /* VIEW 2: "SPECIFIC PAGE" SELECTED          */
         /* ========================================= */
-        <div className="flex flex-col gap-6 mt-2">
+        <div className="flex flex-col gap-2 sm:gap-3 lg:gap-6 mt-1 min-w-0 overflow-hidden">
           
           {/* KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <p className="text-xs text-gray-500 font-medium mb-1">Total Posts</p>
-              <h2 className="text-2xl font-bold text-gray-900">15,685</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-2.5 min-w-0">
+            <div className="bg-white p-2 sm:p-2.5 lg:p-4 rounded-lg sm:rounded-xl border border-gray-200 shadow-sm">
+              <p className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 font-medium mb-0.5">Total Posts</p>
+              <h2 className="text-sm sm:text-base lg:text-xl xl:text-2xl font-bold text-gray-900">15,685</h2>
             </div>
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <p className="text-xs text-gray-500 font-medium mb-1">Total Followers</p>
-              <h2 className="text-2xl font-bold text-gray-900">29,451</h2>
+            <div className="bg-white p-2 sm:p-2.5 lg:p-4 rounded-lg sm:rounded-xl border border-gray-200 shadow-sm">
+              <p className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 font-medium mb-0.5">Total Followers</p>
+              <h2 className="text-sm sm:text-base lg:text-xl xl:text-2xl font-bold text-gray-900">29,451</h2>
             </div>
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <p className="text-xs text-gray-500 font-medium mb-1">Total Likes</p>
-              <h2 className="text-2xl font-bold text-gray-900">521,998</h2>
+            <div className="bg-white p-2 sm:p-2.5 lg:p-4 rounded-lg sm:rounded-xl border border-gray-200 shadow-sm">
+              <p className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 font-medium mb-0.5">Total Likes</p>
+              <h2 className="text-sm sm:text-base lg:text-xl xl:text-2xl font-bold text-gray-900">521,998</h2>
             </div>
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <p className="text-xs text-gray-500 font-medium mb-1">Total Comments</p>
-              <h2 className="text-2xl font-bold text-gray-900">21,052</h2>
+            <div className="bg-white p-2 sm:p-2.5 lg:p-4 rounded-lg sm:rounded-xl border border-gray-200 shadow-sm">
+              <p className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 font-medium mb-0.5">Total Comments</p>
+              <h2 className="text-sm sm:text-base lg:text-xl xl:text-2xl font-bold text-gray-900">21,052</h2>
             </div>
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm lg:col-span-1 col-span-2">
-              <p className="text-xs text-gray-500 font-medium mb-1">Total Shares</p>
-              <h2 className="text-2xl font-bold text-gray-900">24,679</h2>
+            <div className="bg-white p-2 sm:p-2.5 lg:p-4 rounded-lg sm:rounded-xl border border-gray-200 shadow-sm col-span-2 lg:col-span-1">
+              <p className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 font-medium mb-0.5">Total Shares</p>
+              <h2 className="text-sm sm:text-base lg:text-xl xl:text-2xl font-bold text-gray-900">24,679</h2>
             </div>
           </div>
 
           {/* Tabbed Data Table */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-w-0 max-w-full">
             
             {/* Tabs */}
-            <div className="flex items-center gap-6 px-6 pt-4 border-b border-gray-100 overflow-x-auto hide-scrollbar">
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-6 px-3 sm:px-4 lg:px-6 pt-2.5 sm:pt-3 border-b border-gray-100 overflow-x-auto hide-scrollbar">
               {tabs.map((tab) => (
                 <button 
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === tab ? "border-primary text-gray-900" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+                  className={`pb-2.5 sm:pb-3 text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === tab ? "border-primary text-gray-900" : "border-transparent text-gray-400 hover:text-gray-600"}`}
                 >
                   {tab}
                 </button>
               ))}
             </div>
 
-            {/* Table Container */}
-            <div className="overflow-x-auto">
+            {/* Mobile Card View (visible below lg) */}
+            <div className="block lg:hidden divide-y divide-gray-50">
+              {specificPagePosts.map((post) => (
+                <div key={post.id} className="p-3 sm:p-4 space-y-2 sm:space-y-3 overflow-hidden">
+                  <div className="flex items-start gap-2 sm:gap-3 min-w-0">
+                    <div className="w-10 h-7 sm:w-12 sm:h-8 relative rounded overflow-hidden bg-gray-200 shrink-0">
+                      <Image src="/greece.png" alt="Thumbnail" fill className="object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className="text-[11px] sm:text-xs font-bold text-gray-900 truncate flex-1 min-w-0">{post.title}</p>
+                        <span className={`inline-block px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold tracking-wide shrink-0 max-w-[72px] truncate ${getStatusBadge(post.status)}`}>
+                          {post.status}
+                        </span>
+                      </div>
+                      <p className="text-[9px] sm:text-[10px] text-gray-500 truncate mt-0.5">{post.caption}</p>
+                      <p className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5">{post.date}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-x-2 gap-y-1.5 sm:grid-cols-5 sm:gap-2 text-center pl-0">
+                    <div>
+                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Views</p>
+                      <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.views}</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Reacts</p>
+                      <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.reacts}</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Comments</p>
+                      <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.comments}</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Shares</p>
+                      <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.shares}</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Engage</p>
+                      <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.engagement}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table (visible at lg+) */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[1000px]">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50/50">
@@ -408,7 +460,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Pagination / Footer */}
-            <div className="px-6 py-4 border-t border-gray-100 text-xs text-gray-500 font-medium">
+            <div className="px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 border-t border-gray-100 text-[10px] sm:text-xs text-gray-500 font-medium">
               Showing <span className="font-bold text-gray-900">1-12</span> of <span className="font-bold text-gray-900">12</span> Entries
             </div>
           </div>
