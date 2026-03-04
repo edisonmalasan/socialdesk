@@ -30,7 +30,8 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer 
+  ResponsiveContainer,
+  ReferenceArea
 } from "recharts";
 
 export default function AnalyticsPage() {
@@ -38,12 +39,17 @@ export default function AnalyticsPage() {
   const [selectedPlatform, setSelectedPlatform] = useState("All Platforms");
   const [activeTab, setActiveTab] = useState("All");
   const [exportOpen, setExportOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const exportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
         setExportOpen(false);
+      }
+      // Close any open component dropdown when clicking outside a [data-dropdown] container
+      if (!(e.target as Element).closest('[data-dropdown]')) {
+        setOpenDropdown(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -218,16 +224,44 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 min-w-0 max-w-full overflow-hidden">
         <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 flex flex-col min-w-0 overflow-hidden">
           <div className="flex flex-col gap-1.5 sm:gap-3 mb-2 sm:mb-4">
-            <div>
-              <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">Page Stats</h3>
-              <p className="text-[10px] sm:text-[11px] text-gray-500">February 11 - February 24, 2026</p>
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">Page Stats</h3>
+                <p className="text-[10px] sm:text-[11px] text-gray-500">February 11 - February 24, 2026</p>
+              </div>
+              {/* Component options dropdown */}
+              <div className="relative shrink-0" data-dropdown>
+                <button
+                  onClick={() => setOpenDropdown(openDropdown === "pageStats" ? null : "pageStats")}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100"
+                  aria-label="More options"
+                >
+                  <MoreHorizontal size={16} />
+                </button>
+                {openDropdown === "pageStats" && (
+                  <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
+                    <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                      <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Save as CSV
+                    </button>
+                    <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                      <FileText size={16} className="text-red-500 shrink-0" /> Save as PDF
+                    </button>
+                    <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGrad1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                        <defs><linearGradient id="jpgGrad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#3b82f6" /></linearGradient></defs>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                      </svg> Save as Image (JPG)
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 text-[10px] sm:text-xs font-medium text-gray-600">
-              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500"></span> Follower</div>
-              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-orange-400"></span> Like</div>
-              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-500"></span> Views</div>
-              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple-500"></span> Shares</div>
-              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-pink-500"></span> Comments</div>
+              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" style={{backgroundColor:'#4e9a6e'}}></span> Follower</div>
+              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" style={{backgroundColor:'#c4882a'}}></span> Like</div>
+              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" style={{backgroundColor:'#5278c0'}}></span> Views</div>
+              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" style={{backgroundColor:'#7565b8'}}></span> Shares</div>
+              <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" style={{backgroundColor:'#c46080'}}></span> Comments</div>
             </div>
           </div>
           <div className="w-full h-[180px] sm:h-[220px] lg:h-[250px] min-w-0">
@@ -237,18 +271,50 @@ export default function AnalyticsPage() {
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} dy={8} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#9ca3af' }} width={35} tickFormatter={(value: number) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toString()} />
                 <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value: number | undefined) => [value !== undefined ? value.toLocaleString() : '', '']} />
-                <Line type="monotone" dataKey="followers" stroke="#22c55e" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-                <Line type="monotone" dataKey="likes" stroke="#f59e0b" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-                <Line type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-                <Line type="monotone" dataKey="shares" stroke="#8b5cf6" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-                <Line type="monotone" dataKey="comments" stroke="#ec4899" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                {/* Reference highlight bars — mark notable periods (e.g. peak month, campaign window) */}
+                {/* BACKEND NOTE: Replace x1/x2 with actual notable date ranges from API (e.g. campaign start/end) */}
+                <ReferenceArea x1="Mar" x2="Mar" fill="#4e9a6e" fillOpacity={0.1} stroke="#4e9a6e" strokeOpacity={0.25} strokeWidth={1} />
+                <ReferenceArea x1="Jun" x2="Jun" fill="#c4882a" fillOpacity={0.1} stroke="#c4882a" strokeOpacity={0.25} strokeWidth={1} />
+                <Line type="monotone" dataKey="followers" stroke="#4e9a6e" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#4e9a6e' }} />
+                <Line type="monotone" dataKey="likes" stroke="#c4882a" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#c4882a' }} />
+                <Line type="monotone" dataKey="views" stroke="#5278c0" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#5278c0' }} />
+                <Line type="monotone" dataKey="shares" stroke="#7565b8" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#7565b8' }} />
+                <Line type="monotone" dataKey="comments" stroke="#c46080" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#c46080' }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 overflow-hidden">
-          <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900 mb-2 sm:mb-4">Engagement Overview</h3>
+          <div className="flex items-center justify-between mb-2 sm:mb-4">
+            <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">Engagement Overview</h3>
+            {/* Component options dropdown */}
+            <div className="relative shrink-0" data-dropdown>
+              <button
+                onClick={() => setOpenDropdown(openDropdown === "engagementOverview" ? null : "engagementOverview")}
+                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100"
+                aria-label="More options"
+              >
+                <MoreHorizontal size={16} />
+              </button>
+              {openDropdown === "engagementOverview" && (
+                <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
+                  <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Save as CSV
+                  </button>
+                  <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <FileText size={16} className="text-red-500 shrink-0" /> Save as PDF
+                  </button>
+                  <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGrad2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                      <defs><linearGradient id="jpgGrad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#3b82f6" /></linearGradient></defs>
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                    </svg> Save as Image (JPG)
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:gap-4">
             <div className="bg-[#9ABDD3]/40 p-1.5 sm:p-2 lg:p-5 rounded-lg sm:rounded-xl lg:rounded-2xl flex flex-col items-start justify-between min-h-[100px] sm:min-h-[130px] lg:min-h-[160px]">
               <div className="w-6 h-6 sm:w-7 sm:h-7 lg:w-10 lg:h-10 bg-white rounded-md lg:rounded-lg flex items-center justify-center text-primary shadow-sm shrink-0">
@@ -313,9 +379,32 @@ export default function AnalyticsPage() {
                     {/* BACKEND NOTE: Replace bestTimeVisitors with the API-returned total visitor count */}
                     <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{bestTimeVisitors}</p>
                   </div>
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100" aria-label="More options">
-                    <MoreHorizontal size={16} />
-                  </button>
+                  {/* Component options dropdown */}
+                  <div className="relative shrink-0" data-dropdown>
+                    <button
+                      onClick={() => setOpenDropdown(openDropdown === "bestTime" ? null : "bestTime")}
+                      className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100"
+                      aria-label="More options"
+                    >
+                      <MoreHorizontal size={16} />
+                    </button>
+                    {openDropdown === "bestTime" && (
+                      <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
+                        <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                          <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Save as CSV
+                        </button>
+                        <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                          <FileText size={16} className="text-red-500 shrink-0" /> Save as PDF
+                        </button>
+                        <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGrad3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                            <defs><linearGradient id="jpgGrad3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#3b82f6" /></linearGradient></defs>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                          </svg> Save as Image (JPG)
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="w-full h-[160px] sm:h-[200px] lg:h-[220px] min-w-0">
@@ -364,7 +453,35 @@ export default function AnalyticsPage() {
 
             {/* Engagement Rate Trend */}
             <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 overflow-hidden self-start">
-              <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900 mb-2 sm:mb-4">Engagement Rate Trend</h3>
+              <div className="flex items-center justify-between mb-2 sm:mb-4">
+                <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">Engagement Rate Trend</h3>
+                {/* Component options dropdown */}
+                <div className="relative shrink-0" data-dropdown>
+                  <button
+                    onClick={() => setOpenDropdown(openDropdown === "engagementTrend" ? null : "engagementTrend")}
+                    className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100"
+                    aria-label="More options"
+                  >
+                    <MoreHorizontal size={16} />
+                  </button>
+                  {openDropdown === "engagementTrend" && (
+                    <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
+                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Save as CSV
+                      </button>
+                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <FileText size={16} className="text-red-500 shrink-0" /> Save as PDF
+                      </button>
+                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGrad4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                          <defs><linearGradient id="jpgGrad4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#3b82f6" /></linearGradient></defs>
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                        </svg> Save as Image (JPG)
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="w-full h-[160px] sm:h-[200px] lg:h-[220px] min-w-0">
                 {/* BACKEND NOTE: Replace engagementTrendBarData with real monthly engagement rates from the API */}
                 <ResponsiveContainer width="100%" height="100%">
@@ -386,7 +503,35 @@ export default function AnalyticsPage() {
 
           {/* Top Posts this Week — full width in All Pages view */}
           <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 overflow-hidden">
-              <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900 mb-2 sm:mb-4">Top Posts this Week</h3>
+              <div className="flex items-center justify-between mb-2 sm:mb-4">
+                <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">Top Posts this Week</h3>
+                {/* Export dropdown for Top Posts */}
+                <div className="relative shrink-0" data-dropdown>
+                  <button
+                    onClick={() => setOpenDropdown(openDropdown === "topPosts" ? null : "topPosts")}
+                    className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100"
+                    aria-label="Export Top Posts"
+                  >
+                    <Download size={16} />
+                  </button>
+                  {openDropdown === "topPosts" && (
+                    <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
+                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Save as CSV
+                      </button>
+                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <FileText size={16} className="text-red-500 shrink-0" /> Save as PDF
+                      </button>
+                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGrad5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                          <defs><linearGradient id="jpgGrad5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#3b82f6" /></linearGradient></defs>
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                        </svg> Save as Image (JPG)
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="flex flex-col divide-y divide-gray-50">
                 {topPosts.map((post) => (
                   <div key={post.id} className="py-3 sm:py-4 space-y-2">
@@ -423,7 +568,7 @@ export default function AnalyticsPage() {
                         <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.shares}</p>
                       </div>
                       <div>
-                        <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Engage</p>
+                        <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">Engagement</p>
                         <p className="text-[10px] sm:text-[11px] font-bold text-gray-700">{post.engagement}</p>
                       </div>
                     </div>
