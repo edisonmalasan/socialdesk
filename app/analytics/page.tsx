@@ -6,6 +6,8 @@ import {
   FileText, 
   FileSpreadsheet, 
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ArrowUp,
   ExternalLink,
   Eye,
@@ -13,7 +15,8 @@ import {
   MessageCircle,
   Share2,
   Download,
-  MoreHorizontal
+  MoreHorizontal,
+  CalendarDays
 } from "lucide-react";
 
 import { FaTiktok, FaPinterest } from "react-icons/fa";
@@ -40,12 +43,98 @@ export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState("All");
   const [exportOpen, setExportOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null });
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [activeDateField, setActiveDateField] = useState<'from' | 'to'>('from');
+  const [calViewDate, setCalViewDate] = useState(new Date(2026, 1, 1));
+  const [calMode, setCalMode] = useState<'day' | 'month' | 'year'>('day');
   const exportRef = useRef<HTMLDivElement>(null);
+  const datePickerRef = useRef<HTMLDivElement>(null);
+
+  // --- DATE PICKER HELPERS ---
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const MONTH_SHORT  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const formatCompact = (d: Date | null, mode: 'day' | 'month' | 'year') => {
+    if (!d) return '';
+    if (mode === 'year')  return d.getFullYear().toString();
+    if (mode === 'month') return `${MONTH_SHORT[d.getMonth()]} ${d.getFullYear()}`;
+    return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  };
+
+  const calYear = calViewDate.getFullYear();
+  const calMonth = calViewDate.getMonth();
+  const daysInMonth   = new Date(calYear, calMonth + 1, 0).getDate();
+  const firstDayOfWeek = new Date(calYear, calMonth, 1).getDay();
+  const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+  const decadeStart = Math.floor(calYear / 10) * 10;
+
+  const commitRange = (clicked: Date, isFrom: boolean) => {
+    if (isFrom) {
+      setDateRange(r => ({ from: clicked, to: r.to && clicked > r.to ? null : r.to }));
+      setActiveDateField('to');
+    } else {
+      if (dateRange.from && clicked < dateRange.from) {
+        setDateRange(r => ({ from: clicked, to: r.from }));
+      } else {
+        setDateRange(r => ({ ...r, to: clicked }));
+      }
+      setDatePickerOpen(false);
+    }
+  };
+
+  const handleDayClick = (day: number, type: 'prev' | 'cur' | 'next') => {
+    let clicked: Date;
+    if (type === 'prev') clicked = new Date(calYear, calMonth - 1, day);
+    else if (type === 'next') clicked = new Date(calYear, calMonth + 1, day);
+    else clicked = new Date(calYear, calMonth, day);
+    commitRange(clicked, activeDateField === 'from');
+  };
+
+  const handleMonthClick = (mIdx: number) => {
+    const clicked = activeDateField === 'from'
+      ? new Date(calYear, mIdx, 1)
+      : new Date(calYear, mIdx + 1, 0);
+    commitRange(clicked, activeDateField === 'from');
+  };
+
+  const handleYearClick = (year: number) => {
+    const clicked = activeDateField === 'from'
+      ? new Date(year, 0, 1)
+      : new Date(year, 11, 31);
+    commitRange(clicked, activeDateField === 'from');
+  };
+
+  const isInRange = (d: Date) =>
+    !!(dateRange.from && dateRange.to && d >= dateRange.from && d <= dateRange.to);
+  const isSameDay = (a: Date, b: Date | null) =>
+    b !== null && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  const isMonthSelected = (mIdx: number) => {
+    const first = new Date(calYear, mIdx, 1);
+    const last  = new Date(calYear, mIdx + 1, 0);
+    return !!(  (dateRange.from && isSameDay(first, dateRange.from))
+             || (dateRange.to   && isSameDay(last,  dateRange.to)));
+  };
+  const isMonthInRange = (mIdx: number) => {
+    if (!dateRange.from || !dateRange.to) return false;
+    const first = new Date(calYear, mIdx, 1);
+    return first > dateRange.from && first < dateRange.to;
+  };
+  const isYearSelected = (year: number) =>
+    !!(  (dateRange.from && dateRange.from.getFullYear() === year)
+       || (dateRange.to   && dateRange.to.getFullYear()   === year));
+  const isYearInRange = (year: number) => {
+    if (!dateRange.from || !dateRange.to) return false;
+    return year > dateRange.from.getFullYear() && year < dateRange.to.getFullYear();
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
         setExportOpen(false);
+      }
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+        setDatePickerOpen(false);
       }
       // Close any open component dropdown when clicking outside a [data-dropdown] container
       if (!(e.target as Element).closest('[data-dropdown]')) {
@@ -164,6 +253,160 @@ export default function AnalyticsPage() {
               {platforms.map((platform) => <option key={platform} value={platform}>{platform}</option>)}
             </select>
             <ChevronDown size={16} className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+          </div>
+
+          {/* Date Range Picker */}
+          {/* BACKEND NOTE: Use dateRange.from / dateRange.to (and calMode for granularity) to filter all analytics API calls */}
+          <div className="relative" ref={datePickerRef}>
+            <button
+              onClick={() => { setDatePickerOpen(p => !p); setActiveDateField('from'); }}
+              className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 shadow-sm hover:border-gray-300 transition-colors cursor-pointer font-medium whitespace-nowrap"
+              aria-label="Filter by date range"
+            >
+              <CalendarDays size={14} className="text-gray-500 shrink-0" />
+              {dateRange.from || dateRange.to ? (
+                <span className="text-gray-800">
+                  {formatCompact(dateRange.from, calMode) || 'Start'}
+                  <span className="text-gray-400 mx-1">→</span>
+                  {formatCompact(dateRange.to, calMode) || 'End'}
+                </span>
+              ) : (
+                <span className="text-gray-600">Date Range</span>
+              )}
+              {(dateRange.from || dateRange.to) && (
+                <span
+                  role="button" tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); setDateRange({ from: null, to: null }); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setDateRange({ from: null, to: null }); } }}
+                  className="ml-0.5 text-gray-400 hover:text-gray-600 leading-none cursor-pointer text-[10px]"
+                  aria-label="Clear date range"
+                >✕</span>
+              )}
+            </button>
+
+            {datePickerOpen && (
+              <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+
+                {/* From / To pills */}
+                <div className="flex border-b border-gray-100">
+                  <button onClick={() => setActiveDateField('from')}
+                    className={`flex-1 flex items-center gap-2 px-4 py-2.5 text-xs transition-colors cursor-pointer ${ activeDateField === 'from' ? 'bg-gray-50 font-semibold text-gray-800' : 'text-gray-500 hover:bg-gray-50' }`}>
+                    <CalendarDays size={12} className="text-gray-400 shrink-0" />
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wide text-gray-400 leading-none mb-0.5">From</div>
+                      <div className="text-gray-700">{formatCompact(dateRange.from, calMode) || <span className="text-gray-300 font-normal">not set</span>}</div>
+                    </div>
+                  </button>
+                  <div className="w-px bg-gray-100" />
+                  <button onClick={() => setActiveDateField('to')}
+                    className={`flex-1 flex items-center gap-2 px-4 py-2.5 text-xs transition-colors cursor-pointer ${ activeDateField === 'to' ? 'bg-gray-50 font-semibold text-gray-800' : 'text-gray-500 hover:bg-gray-50' }`}>
+                    <CalendarDays size={12} className="text-gray-400 shrink-0" />
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wide text-gray-400 leading-none mb-0.5">To</div>
+                      <div className="text-gray-700">{formatCompact(dateRange.to, calMode) || <span className="text-gray-300 font-normal">not set</span>}</div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Mode tabs: Day / Month / Year */}
+                <div className="flex items-center gap-1 px-4 pt-3 pb-1">
+                  {(['day','month','year'] as const).map(m => (
+                    <button key={m} onClick={() => setCalMode(m)}
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors cursor-pointer capitalize ${
+                        calMode === m ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-100'
+                      }`}>{m}</button>
+                  ))}
+                </div>
+
+                {/* ── DAY VIEW ── */}
+                {calMode === 'day' && (
+                  <div className="px-4 pt-2 pb-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-gray-800">{MONTH_NAMES[calMonth]} {calYear}</span>
+                      <div className="flex items-center gap-0.5">
+                        <button onClick={() => setCalViewDate(new Date(calYear, calMonth - 1, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
+                        <button onClick={() => setCalViewDate(new Date(calYear, calMonth + 1, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-7 mb-1">
+                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
+                        <div key={d} className="text-center text-[10px] text-gray-400 font-medium">{d}</div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-y-0.5">
+                      {Array.from({ length: firstDayOfWeek }).map((_, i) => {
+                        const day = daysInPrevMonth - firstDayOfWeek + 1 + i;
+                        const d = new Date(calYear, calMonth - 1, day);
+                        return <button key={`p${i}`} onClick={() => handleDayClick(day, 'prev')}
+                          className={`text-center text-[11px] py-1 rounded-full cursor-pointer ${ isInRange(d) ? 'bg-gray-100 text-gray-400' : 'text-gray-300 hover:text-gray-500' }`}>{day}</button>;
+                      })}
+                      {Array.from({ length: daysInMonth }).map((_, i) => {
+                        const day = i + 1;
+                        const d = new Date(calYear, calMonth, day);
+                        const sel = isSameDay(d, dateRange.from) || isSameDay(d, dateRange.to);
+                        const inR = isInRange(d);
+                        return <button key={`c${day}`} onClick={() => handleDayClick(day, 'cur')}
+                          className={`text-center text-[11px] py-1 rounded-full cursor-pointer font-medium ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{day}</button>;
+                      })}
+                      {Array.from({ length: (7 - (firstDayOfWeek + daysInMonth) % 7) % 7 }).map((_, i) => {
+                        const day = i + 1;
+                        const d = new Date(calYear, calMonth + 1, day);
+                        return <button key={`n${i}`} onClick={() => handleDayClick(day, 'next')}
+                          className={`text-center text-[11px] py-1 rounded-full cursor-pointer ${ isInRange(d) ? 'bg-gray-100 text-gray-400' : 'text-gray-300 hover:text-gray-500' }`}>{day}</button>;
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── MONTH VIEW ── */}
+                {calMode === 'month' && (
+                  <div className="px-4 pt-2 pb-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-semibold text-gray-800">{calYear}</span>
+                      <div className="flex items-center gap-0.5">
+                        <button onClick={() => setCalViewDate(new Date(calYear - 1, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
+                        <button onClick={() => setCalViewDate(new Date(calYear + 1, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {MONTH_SHORT.map((m, idx) => {
+                        const sel = isMonthSelected(idx);
+                        const inR = isMonthInRange(idx);
+                        return (
+                          <button key={m} onClick={() => handleMonthClick(idx)}
+                            className={`py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{m}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── YEAR VIEW ── */}
+                {calMode === 'year' && (
+                  <div className="px-4 pt-2 pb-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-semibold text-gray-800">{decadeStart}–{decadeStart + 11}</span>
+                      <div className="flex items-center gap-0.5">
+                        <button onClick={() => setCalViewDate(new Date(calYear - 10, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
+                        <button onClick={() => setCalViewDate(new Date(calYear + 10, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {Array.from({ length: 12 }).map((_, i) => {
+                        const year = decadeStart + i;
+                        const sel = isYearSelected(year);
+                        const inR = isYearInRange(year);
+                        return (
+                          <button key={year} onClick={() => handleYearClick(year)}
+                            className={`py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{year}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            )}
           </div>
 
           {/* Export Dropdown */}
