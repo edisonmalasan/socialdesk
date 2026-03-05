@@ -1,9 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- ============================================
 -- CORE ENTITIES
--- ============================================
-
 -- Platform types (Facebook, TikTok, Instagram, etc.)
 CREATE TABLE platforms (
     id          SERIAL PRIMARY KEY,
@@ -66,9 +62,7 @@ CREATE TABLE oauth_tokens (
 CREATE INDEX idx_oauth_tokens_account ON oauth_tokens(social_account_id);
 CREATE INDEX idx_oauth_tokens_expires ON oauth_tokens(expires_at) WHERE expires_at IS NOT NULL;
 
--- ============================================
 -- CONTENT & SCHEDULING
--- ============================================
 
 -- Content types (post, story, reel, video, etc.)
 CREATE TABLE content_types (
@@ -117,9 +111,7 @@ CREATE TABLE post_targets (
 CREATE INDEX idx_post_targets_post ON post_targets(post_id);
 CREATE INDEX idx_post_targets_account ON post_targets(social_account_id);
 
--- ============================================
 -- ANALYTICS & ENGAGEMENT
--- ============================================
 
 -- Real-time engagement metrics per post per platform
 CREATE TABLE engagement_metrics (
@@ -174,9 +166,7 @@ CREATE TABLE post_engagement_summary (
     last_updated_at     TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ============================================
 -- HELPER FUNCTIONS & TRIGGERS
--- ============================================
 
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
@@ -198,12 +188,7 @@ CREATE TRIGGER oauth_tokens_updated_at
     BEFORE UPDATE ON oauth_tokens
     FOR EACH ROW EXECUTE PROCEDURE update_updated_at();
 
--- ============================================
 -- SEED DATA
--- ============================================
-
--- Note: Add initial admin user via migration or app bootstrap
--- INSERT INTO users (email, password_hash, full_name, role) VALUES ('admin@example.com', '<hashed>', 'Admin', 'admin');
 
 INSERT INTO platforms (code, name) VALUES
     ('facebook', 'Facebook'),
@@ -219,3 +204,4 @@ INSERT INTO content_types (code, name) VALUES
     ('reel', 'Reel'),
     ('video', 'Video'),
     ('carousel', 'Carousel');
+
