@@ -16,7 +16,8 @@ import {
   Share2,
   Download,
   MoreHorizontal,
-  CalendarDays
+  CalendarDays,
+  Image as ImageIcon
 } from "lucide-react";
 
 import { FaTiktok, FaPinterest } from "react-icons/fa";
@@ -37,21 +38,20 @@ import {
   ReferenceArea
 } from "recharts";
 
-export default function AnalyticsPage() {
-  const [selectedPage, setSelectedPage] = useState("All Pages");
-  const [selectedPlatform, setSelectedPlatform] = useState("All Platforms");
-  const [activeTab, setActiveTab] = useState("All");
-  const [exportOpen, setExportOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null });
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
+// --- REUSABLE DATE PICKER COMPONENT ---
+function CustomDatePicker({ 
+  dateRange, 
+  setDateRange, 
+  isOpen, 
+  setIsOpen, 
+  pickerRef, 
+  buttonClassName, 
+  alignRight = true 
+}: any) {
   const [activeDateField, setActiveDateField] = useState<'from' | 'to'>('from');
   const [calViewDate, setCalViewDate] = useState(new Date(2026, 1, 1));
   const [calMode, setCalMode] = useState<'day' | 'month' | 'year'>('day');
-  const exportRef = useRef<HTMLDivElement>(null);
-  const datePickerRef = useRef<HTMLDivElement>(null);
 
-  // --- DATE PICKER HELPERS ---
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const MONTH_SHORT  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -71,15 +71,15 @@ export default function AnalyticsPage() {
 
   const commitRange = (clicked: Date, isFrom: boolean) => {
     if (isFrom) {
-      setDateRange(r => ({ from: clicked, to: r.to && clicked > r.to ? null : r.to }));
+      setDateRange((r: any) => ({ from: clicked, to: r.to && clicked > r.to ? null : r.to }));
       setActiveDateField('to');
     } else {
       if (dateRange.from && clicked < dateRange.from) {
-        setDateRange(r => ({ from: clicked, to: r.from }));
+        setDateRange((r: any) => ({ from: clicked, to: r.from }));
       } else {
-        setDateRange(r => ({ ...r, to: clicked }));
+        setDateRange((r: any) => ({ ...r, to: clicked }));
       }
-      setDatePickerOpen(false);
+      setIsOpen(false);
     }
   };
 
@@ -105,52 +105,221 @@ export default function AnalyticsPage() {
     commitRange(clicked, activeDateField === 'from');
   };
 
-  const isInRange = (d: Date) =>
-    !!(dateRange.from && dateRange.to && d >= dateRange.from && d <= dateRange.to);
-  const isSameDay = (a: Date, b: Date | null) =>
-    b !== null && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  const isInRange = (d: Date) => !!(dateRange.from && dateRange.to && d >= dateRange.from && d <= dateRange.to);
+  const isSameDay = (a: Date, b: Date | null) => b !== null && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  
   const isMonthSelected = (mIdx: number) => {
     const first = new Date(calYear, mIdx, 1);
     const last  = new Date(calYear, mIdx + 1, 0);
-    return !!(  (dateRange.from && isSameDay(first, dateRange.from))
-             || (dateRange.to   && isSameDay(last,  dateRange.to)));
+    return !!((dateRange.from && isSameDay(first, dateRange.from)) || (dateRange.to && isSameDay(last, dateRange.to)));
   };
   const isMonthInRange = (mIdx: number) => {
     if (!dateRange.from || !dateRange.to) return false;
     const first = new Date(calYear, mIdx, 1);
     return first > dateRange.from && first < dateRange.to;
   };
-  const isYearSelected = (year: number) =>
-    !!(  (dateRange.from && dateRange.from.getFullYear() === year)
-       || (dateRange.to   && dateRange.to.getFullYear()   === year));
+  const isYearSelected = (year: number) => !!((dateRange.from && dateRange.from.getFullYear() === year) || (dateRange.to && dateRange.to.getFullYear() === year));
   const isYearInRange = (year: number) => {
     if (!dateRange.from || !dateRange.to) return false;
     return year > dateRange.from.getFullYear() && year < dateRange.to.getFullYear();
   };
 
+  return (
+    <div className="relative" ref={pickerRef}>
+      <button
+        onClick={() => { setIsOpen(!isOpen); setActiveDateField('from'); }}
+        className={buttonClassName}
+      >
+        <CalendarDays size={14} className="text-gray-500 shrink-0" />
+        {dateRange.from || dateRange.to ? (
+          <span className="text-gray-800 text-xs sm:text-sm">
+            {formatCompact(dateRange.from, calMode) || 'Start'}
+            <span className="text-gray-400 mx-1">→</span>
+            {formatCompact(dateRange.to, calMode) || 'End'}
+          </span>
+        ) : (
+          <span className="text-gray-600 text-xs sm:text-sm">Date Range</span>
+        )}
+        <ChevronDown size={12} className="text-gray-500 shrink-0 ml-1" />
+        {(dateRange.from || dateRange.to) && (
+          <span
+            role="button" tabIndex={0}
+            onClick={(e) => { e.stopPropagation(); setDateRange({ from: null, to: null }); }}
+            className="ml-1 text-gray-400 hover:text-gray-600 leading-none cursor-pointer text-[10px] bg-gray-100 rounded-full p-0.5"
+            aria-label="Clear date range"
+          >✕</span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div className={`absolute mt-2 w-72 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden ${alignRight ? 'right-0' : 'left-0'}`}>
+          <div className="flex border-b border-gray-100">
+            <button onClick={() => setActiveDateField('from')}
+              className={`flex-1 flex items-center gap-2 px-4 py-2.5 text-xs transition-colors cursor-pointer ${ activeDateField === 'from' ? 'bg-gray-50 font-semibold text-gray-800' : 'text-gray-500 hover:bg-gray-50' }`}>
+              <CalendarDays size={12} className="text-gray-400 shrink-0" />
+              <div className="text-left">
+                <div className="text-[9px] uppercase tracking-wide text-gray-400 leading-none mb-0.5">From</div>
+                <div className="text-gray-700">{formatCompact(dateRange.from, calMode) || <span className="text-gray-300 font-normal">not set</span>}</div>
+              </div>
+            </button>
+            <div className="w-px bg-gray-100" />
+            <button onClick={() => setActiveDateField('to')}
+              className={`flex-1 flex items-center gap-2 px-4 py-2.5 text-xs transition-colors cursor-pointer ${ activeDateField === 'to' ? 'bg-gray-50 font-semibold text-gray-800' : 'text-gray-500 hover:bg-gray-50' }`}>
+              <CalendarDays size={12} className="text-gray-400 shrink-0" />
+              <div className="text-left">
+                <div className="text-[9px] uppercase tracking-wide text-gray-400 leading-none mb-0.5">To</div>
+                <div className="text-gray-700">{formatCompact(dateRange.to, calMode) || <span className="text-gray-300 font-normal">not set</span>}</div>
+              </div>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1 px-4 pt-3 pb-1">
+            {(['day','month','year'] as const).map(m => (
+              <button key={m} onClick={() => setCalMode(m)}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors cursor-pointer capitalize ${
+                  calMode === m ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-100'
+                }`}>{m}</button>
+            ))}
+          </div>
+
+          {calMode === 'day' && (
+            <div className="px-4 pt-2 pb-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-gray-800">{MONTH_NAMES[calMonth]} {calYear}</span>
+                <div className="flex items-center gap-0.5">
+                  <button onClick={() => setCalViewDate(new Date(calYear, calMonth - 1, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
+                  <button onClick={() => setCalViewDate(new Date(calYear, calMonth + 1, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
+                </div>
+              </div>
+              <div className="grid grid-cols-7 mb-1">
+                {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => <div key={d} className="text-center text-[10px] text-gray-400 font-medium">{d}</div>)}
+              </div>
+              <div className="grid grid-cols-7 gap-y-0.5">
+                {Array.from({ length: firstDayOfWeek }).map((_, i) => {
+                  const day = daysInPrevMonth - firstDayOfWeek + 1 + i;
+                  const d = new Date(calYear, calMonth - 1, day);
+                  return <button key={`p${i}`} onClick={() => handleDayClick(day, 'prev')} className={`text-center text-[11px] py-1 rounded-full cursor-pointer ${ isInRange(d) ? 'bg-gray-100 text-gray-400' : 'text-gray-300 hover:text-gray-500' }`}>{day}</button>;
+                })}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const day = i + 1;
+                  const d = new Date(calYear, calMonth, day);
+                  const sel = isSameDay(d, dateRange.from) || isSameDay(d, dateRange.to);
+                  const inR = isInRange(d);
+                  return <button key={`c${day}`} onClick={() => handleDayClick(day, 'cur')} className={`text-center text-[11px] py-1 rounded-full cursor-pointer font-medium ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{day}</button>;
+                })}
+                {Array.from({ length: (7 - (firstDayOfWeek + daysInMonth) % 7) % 7 }).map((_, i) => {
+                  const day = i + 1;
+                  const d = new Date(calYear, calMonth + 1, day);
+                  return <button key={`n${i}`} onClick={() => handleDayClick(day, 'next')} className={`text-center text-[11px] py-1 rounded-full cursor-pointer ${ isInRange(d) ? 'bg-gray-100 text-gray-400' : 'text-gray-300 hover:text-gray-500' }`}>{day}</button>;
+                })}
+              </div>
+            </div>
+          )}
+
+          {calMode === 'month' && (
+            <div className="px-4 pt-2 pb-3">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold text-gray-800">{calYear}</span>
+                <div className="flex items-center gap-0.5">
+                  <button onClick={() => setCalViewDate(new Date(calYear - 1, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
+                  <button onClick={() => setCalViewDate(new Date(calYear + 1, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {MONTH_SHORT.map((m, idx) => {
+                  const sel = isMonthSelected(idx);
+                  const inR = isMonthInRange(idx);
+                  return (
+                    <button key={m} onClick={() => handleMonthClick(idx)} className={`py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{m}</button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {calMode === 'year' && (
+            <div className="px-4 pt-2 pb-3">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold text-gray-800">{decadeStart}–{decadeStart + 11}</span>
+                <div className="flex items-center gap-0.5">
+                  <button onClick={() => setCalViewDate(new Date(calYear - 10, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
+                  <button onClick={() => setCalViewDate(new Date(calYear + 10, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {Array.from({ length: 12 }).map((_, i) => {
+                  const year = decadeStart + i;
+                  const sel = isYearSelected(year);
+                  const inR = isYearInRange(year);
+                  return (
+                    <button key={year} onClick={() => handleYearClick(year)} className={`py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{year}</button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- MAIN PAGE COMPONENT ---
+export default function AnalyticsPage() {
+  const [selectedPage, setSelectedPage] = useState("All Pages");
+  const [selectedPlatform, setSelectedPlatform] = useState("All Platforms");
+  const [activeTab, setActiveTab] = useState("All");
+  
+  const [exportOpen, setExportOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  
+  // Main Date Picker State
+  const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null });
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const datePickerRef = useRef<HTMLDivElement>(null);
+
+  // Top Posts Date Picker State
+  const [topPostsDateRange, setTopPostsDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null });
+  const [topPostsDatePickerOpen, setTopPostsDatePickerOpen] = useState(false);
+  const topPostsDatePickerRef = useRef<HTMLDivElement>(null);
+
+  const [topPostsPage, setTopPostsPage] = useState("All Pages");
+  const [topPostsPlatform, setTopPostsPlatform] = useState("All Platforms");
+
+  // Export Modals State
+  const [modalType, setModalType] = useState<'csv' | 'pdf' | 'chart' | 'confirm' | null>(null);
+  const [pendingExportType, setPendingExportType] = useState<'csv' | 'pdf' | 'chart' | null>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
-        setExportOpen(false);
-      }
-      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
-        setDatePickerOpen(false);
-      }
-      // Close any open component dropdown when clicking outside a [data-dropdown] container
-      if (!(e.target as Element).closest('[data-dropdown]')) {
-        setOpenDropdown(null);
-      }
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) setExportOpen(false);
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) setDatePickerOpen(false);
+      if (topPostsDatePickerRef.current && !topPostsDatePickerRef.current.contains(e.target as Node)) setTopPostsDatePickerOpen(false);
+      if (!(e.target as Element).closest('[data-dropdown]')) setOpenDropdown(null);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // BACKEND NOTE: These arrays should eventually be fetched from the database
+  // BACKEND NOTE: Implement actual download logic here based on pendingExportType
+  const handleConfirmDownload = () => {
+    console.log(`Downloading ${pendingExportType}...`);
+    setModalType(null);
+    setPendingExportType(null);
+  };
+
+  const openExportModal = (type: 'csv' | 'pdf' | 'chart') => {
+    setExportOpen(false);
+    setOpenDropdown(null);
+    setPendingExportType(type);
+    setModalType(type);
+  };
+
   const pages = ["All Pages", "eGetinnz PH", "eGetinnz USA", "Fibei PH", "Fibei USA", "Digitimmerse PH", "Digitimmerse USA"];
   const platforms = ["All Platforms", "Facebook", "YouTube", "Instagram", "X", "Pinterest", "Tiktok"];
   const tabs = ["All", "Completed", "Pending", "Scheduled", "Missing"];
 
-  // --- MOCK DATA FOR "ALL PAGES" VIEW ---
   const topPosts = [
     { id: 1, title: "FibeiTravel.com | Post-Valentine's Bohol Dive 🤿", platform: "Instagram", caption: "Celebrate the post-Valentine's vibes underwater! Explore Bohol's reefs...", date: "February 20, 2026", views: "3k", reacts: "1.5k", comments: "157", shares: "25", engagement: "12%", status: "Completed" },
     { id: 2, title: "eGetinnz.com | Celebrate CNY in Cebu 🧧", platform: "Facebook", caption: "Ring in the Year of the Snake with stunning Cebu getaways!", date: "February 15, 2026", views: "19k", reacts: "4k", comments: "290", shares: "30", engagement: "27%", status: "Completed" },
@@ -176,27 +345,15 @@ export default function AnalyticsPage() {
   ];
   const barColors = ['#A3CEF1', '#D6E6F2', '#8B8C89', '#FDE68A', '#FBCFE8', '#E9D5FF', '#FECDD3', '#E5E7EB', '#A7F3D0', '#BAE6FD', '#FED7AA'];
 
-  // BACKEND NOTE: Replace with real hourly visitor/engagement data per page/platform via API (e.g. GET /analytics/best-time?page=...&platform=...)
-  // The `totalVisitors` value should be the sum across all time slots for the selected period.
   const bestTimeData = [
-    { time: "12am", visitors: 500 },
-    { time: "2am",  visitors: 300 },
-    { time: "4am",  visitors: 800 },
-    { time: "6am",  visitors: 2500 },
-    { time: "8am",  visitors: 5500 },
-    { time: "10am", visitors: 9000 },
-    { time: "12pm", visitors: 14000 },
-    { time: "2pm",  visitors: 16500 },
-    { time: "4pm",  visitors: 15800 },
-    { time: "6pm",  visitors: 11500 },
-    { time: "8pm",  visitors: 10000 },
-    { time: "10pm", visitors: 11000 },
+    { time: "12am", visitors: 500 }, { time: "2am",  visitors: 300 }, { time: "4am",  visitors: 800 },
+    { time: "6am",  visitors: 2500 }, { time: "8am",  visitors: 5500 }, { time: "10am", visitors: 9000 },
+    { time: "12pm", visitors: 14000 }, { time: "2pm",  visitors: 16500 }, { time: "4pm",  visitors: 15800 },
+    { time: "6pm",  visitors: 11500 }, { time: "8pm",  visitors: 10000 }, { time: "10pm", visitors: 11000 },
     { time: "12am", visitors: 8000 },
   ];
-  const bestTimeVisitors = "22,658"; // BACKEND NOTE: Replace with the actual total visitors count from the API
+  const bestTimeVisitors = "22,658"; 
 
-  // --- MOCK DATA FOR "SPECIFIC PAGE" VIEW ---
-  // BACKEND NOTE: Fetch this table data based on the selectedPage, selectedPlatform, and activeTab filters
   const specificPagePosts = [
     { id: 1, title: "FibeiTravel.com | Post-Valentine's...", caption: "Celebrate the post-Valentine's vibes underwater! Explore Bohol's reefs...", date: "February 20, 2026", views: "3k", reacts: "1.5k", comments: "157", shares: "25", engagement: "12%", status: "Completed" },
     { id: 2, title: "FibeiTravel.com | Coron Island Adventure", caption: "Valentine's may be over, but adventure is just getting started! Explore...", date: "February 28, 2026", views: "2k", reacts: "4k", comments: "290", shares: "30", engagement: "13%", status: "Missing" },
@@ -216,7 +373,7 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6 overflow-x-hidden overflow-y-visible w-full max-w-full min-w-0 box-border">
+    <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6 overflow-x-hidden overflow-y-visible w-full max-w-full min-w-0 box-border pb-10">
       
       {/* Header & Filters */}
       <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-2 sm:gap-3 pb-1">
@@ -226,12 +383,8 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
-          {/* BACKEND NOTE: Dropdowns update state. Use useEffect to refetch data on change. */}
           <div className="relative flex-1 min-w-0">
-            <label htmlFor="analytics-page-select" className="sr-only">Select Page</label>
             <select 
-              id="analytics-page-select"
-              name="analytics-page"
               value={selectedPage}
               onChange={(e) => setSelectedPage(e.target.value)}
               className="w-full appearance-none bg-white border border-gray-200 text-gray-700 py-1.5 sm:py-2 pl-3 pr-7 sm:pr-9 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm font-medium text-xs sm:text-sm"
@@ -242,10 +395,7 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="relative flex-1 min-w-0">
-            <label htmlFor="analytics-platform-select" className="sr-only">Select Platform</label>
             <select 
-              id="analytics-platform-select"
-              name="analytics-platform"
               value={selectedPlatform}
               onChange={(e) => setSelectedPlatform(e.target.value)}
               className="w-full appearance-none bg-white border border-gray-200 text-gray-700 py-1.5 sm:py-2 pl-3 pr-7 sm:pr-9 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm font-medium text-xs sm:text-sm"
@@ -255,204 +405,35 @@ export default function AnalyticsPage() {
             <ChevronDown size={16} className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
           </div>
 
-          {/* Date Range Picker */}
-          {/* BACKEND NOTE: Use dateRange.from / dateRange.to (and calMode for granularity) to filter all analytics API calls */}
-          <div className="relative" ref={datePickerRef}>
-            <button
-              onClick={() => { setDatePickerOpen(p => !p); setActiveDateField('from'); }}
-              className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 shadow-sm hover:border-gray-300 transition-colors cursor-pointer font-medium whitespace-nowrap"
-              aria-label="Filter by date range"
-            >
-              <CalendarDays size={14} className="text-gray-500 shrink-0" />
-              {dateRange.from || dateRange.to ? (
-                <span className="text-gray-800">
-                  {formatCompact(dateRange.from, calMode) || 'Start'}
-                  <span className="text-gray-400 mx-1">→</span>
-                  {formatCompact(dateRange.to, calMode) || 'End'}
-                </span>
-              ) : (
-                <span className="text-gray-600">Date Range</span>
-              )}
-              {(dateRange.from || dateRange.to) && (
-                <span
-                  role="button" tabIndex={0}
-                  onClick={(e) => { e.stopPropagation(); setDateRange({ from: null, to: null }); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setDateRange({ from: null, to: null }); } }}
-                  className="ml-0.5 text-gray-400 hover:text-gray-600 leading-none cursor-pointer text-[10px]"
-                  aria-label="Clear date range"
-                >✕</span>
-              )}
-            </button>
+          {/* Reusable Component for Main Date Range */}
+          <CustomDatePicker 
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            isOpen={datePickerOpen}
+            setIsOpen={setDatePickerOpen}
+            pickerRef={datePickerRef}
+            buttonClassName="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 shadow-sm hover:border-gray-300 transition-colors cursor-pointer font-medium whitespace-nowrap"
+          />
 
-            {datePickerOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
-
-                {/* From / To pills */}
-                <div className="flex border-b border-gray-100">
-                  <button onClick={() => setActiveDateField('from')}
-                    className={`flex-1 flex items-center gap-2 px-4 py-2.5 text-xs transition-colors cursor-pointer ${ activeDateField === 'from' ? 'bg-gray-50 font-semibold text-gray-800' : 'text-gray-500 hover:bg-gray-50' }`}>
-                    <CalendarDays size={12} className="text-gray-400 shrink-0" />
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wide text-gray-400 leading-none mb-0.5">From</div>
-                      <div className="text-gray-700">{formatCompact(dateRange.from, calMode) || <span className="text-gray-300 font-normal">not set</span>}</div>
-                    </div>
-                  </button>
-                  <div className="w-px bg-gray-100" />
-                  <button onClick={() => setActiveDateField('to')}
-                    className={`flex-1 flex items-center gap-2 px-4 py-2.5 text-xs transition-colors cursor-pointer ${ activeDateField === 'to' ? 'bg-gray-50 font-semibold text-gray-800' : 'text-gray-500 hover:bg-gray-50' }`}>
-                    <CalendarDays size={12} className="text-gray-400 shrink-0" />
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wide text-gray-400 leading-none mb-0.5">To</div>
-                      <div className="text-gray-700">{formatCompact(dateRange.to, calMode) || <span className="text-gray-300 font-normal">not set</span>}</div>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Mode tabs: Day / Month / Year */}
-                <div className="flex items-center gap-1 px-4 pt-3 pb-1">
-                  {(['day','month','year'] as const).map(m => (
-                    <button key={m} onClick={() => setCalMode(m)}
-                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors cursor-pointer capitalize ${
-                        calMode === m ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-100'
-                      }`}>{m}</button>
-                  ))}
-                </div>
-
-                {/* ── DAY VIEW ── */}
-                {calMode === 'day' && (
-                  <div className="px-4 pt-2 pb-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-gray-800">{MONTH_NAMES[calMonth]} {calYear}</span>
-                      <div className="flex items-center gap-0.5">
-                        <button onClick={() => setCalViewDate(new Date(calYear, calMonth - 1, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
-                        <button onClick={() => setCalViewDate(new Date(calYear, calMonth + 1, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-7 mb-1">
-                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
-                        <div key={d} className="text-center text-[10px] text-gray-400 font-medium">{d}</div>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-7 gap-y-0.5">
-                      {Array.from({ length: firstDayOfWeek }).map((_, i) => {
-                        const day = daysInPrevMonth - firstDayOfWeek + 1 + i;
-                        const d = new Date(calYear, calMonth - 1, day);
-                        return <button key={`p${i}`} onClick={() => handleDayClick(day, 'prev')}
-                          className={`text-center text-[11px] py-1 rounded-full cursor-pointer ${ isInRange(d) ? 'bg-gray-100 text-gray-400' : 'text-gray-300 hover:text-gray-500' }`}>{day}</button>;
-                      })}
-                      {Array.from({ length: daysInMonth }).map((_, i) => {
-                        const day = i + 1;
-                        const d = new Date(calYear, calMonth, day);
-                        const sel = isSameDay(d, dateRange.from) || isSameDay(d, dateRange.to);
-                        const inR = isInRange(d);
-                        return <button key={`c${day}`} onClick={() => handleDayClick(day, 'cur')}
-                          className={`text-center text-[11px] py-1 rounded-full cursor-pointer font-medium ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{day}</button>;
-                      })}
-                      {Array.from({ length: (7 - (firstDayOfWeek + daysInMonth) % 7) % 7 }).map((_, i) => {
-                        const day = i + 1;
-                        const d = new Date(calYear, calMonth + 1, day);
-                        return <button key={`n${i}`} onClick={() => handleDayClick(day, 'next')}
-                          className={`text-center text-[11px] py-1 rounded-full cursor-pointer ${ isInRange(d) ? 'bg-gray-100 text-gray-400' : 'text-gray-300 hover:text-gray-500' }`}>{day}</button>;
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── MONTH VIEW ── */}
-                {calMode === 'month' && (
-                  <div className="px-4 pt-2 pb-3">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold text-gray-800">{calYear}</span>
-                      <div className="flex items-center gap-0.5">
-                        <button onClick={() => setCalViewDate(new Date(calYear - 1, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
-                        <button onClick={() => setCalViewDate(new Date(calYear + 1, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {MONTH_SHORT.map((m, idx) => {
-                        const sel = isMonthSelected(idx);
-                        const inR = isMonthInRange(idx);
-                        return (
-                          <button key={m} onClick={() => handleMonthClick(idx)}
-                            className={`py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{m}</button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── YEAR VIEW ── */}
-                {calMode === 'year' && (
-                  <div className="px-4 pt-2 pb-3">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold text-gray-800">{decadeStart}–{decadeStart + 11}</span>
-                      <div className="flex items-center gap-0.5">
-                        <button onClick={() => setCalViewDate(new Date(calYear - 10, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
-                        <button onClick={() => setCalViewDate(new Date(calYear + 10, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {Array.from({ length: 12 }).map((_, i) => {
-                        const year = decadeStart + i;
-                        const sel = isYearSelected(year);
-                        const inR = isYearInRange(year);
-                        return (
-                          <button key={year} onClick={() => handleYearClick(year)}
-                            className={`py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{year}</button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            )}
-          </div>
-
-          {/* Export Dropdown */}
+          {/* Export Dropdown Triggering Modals */}
           <div className="relative" ref={exportRef}>
             <button
-              id="analytics-export-btn"
-              name="analytics-export"
               onClick={() => setExportOpen(!exportOpen)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-              title="Export"
-              aria-label="Export data"
-              aria-expanded={exportOpen}
-              aria-haspopup="true"
+              className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 bg-white rounded-lg shadow-sm transition-colors cursor-pointer"
             >
-              <Download size={20} />
+              <Download size={18} className="sm:w-[20px] sm:h-[20px]" />
             </button>
             {exportOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
-                <button
-                  onClick={() => setExportOpen(false)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Export as CSV
+                <button onClick={() => openExportModal('csv')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                  <FileSpreadsheet size={16} className="text-gray-600 shrink-0" /> Save as CSV
                 </button>
-                <button
-                  onClick={() => setExportOpen(false)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  <FileText size={16} className="text-red-500 shrink-0" /> Export as PDF
+                <button onClick={() => openExportModal('pdf')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                  <FileText size={16} className="text-gray-600 shrink-0" /> Save as PDF
                 </button>
                 <div className="border-t border-gray-100 my-1" />
-                <button
-                  onClick={() => setExportOpen(false)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                    <defs>
-                      <linearGradient id="jpgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#ef4444" />
-                        <stop offset="100%" stopColor="#3b82f6" />
-                      </linearGradient>
-                    </defs>
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg> Export Page Stats (JPG)
+                <button onClick={() => openExportModal('chart')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                  <ImageIcon size={16} className="text-gray-600 shrink-0" /> Save as Charts
                 </button>
               </div>
             )}
@@ -460,10 +441,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* ========================================= */}
-      {/* Page Stats & Engagement Overview           */}
-      {/* Always visible regardless of page filter   */}
-      {/* ========================================= */}
+      {/* Page Stats & Engagement Overview */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 min-w-0 max-w-full overflow-hidden">
         <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 flex flex-col min-w-0 overflow-hidden">
           <div className="flex flex-col gap-1.5 sm:gap-3 mb-2 sm:mb-4">
@@ -472,28 +450,20 @@ export default function AnalyticsPage() {
                 <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">Page Stats</h3>
                 <p className="text-[10px] sm:text-[11px] text-gray-500">February 11 - February 24, 2026</p>
               </div>
-              {/* Component options dropdown */}
               <div className="relative shrink-0" data-dropdown>
-                <button
-                  onClick={() => setOpenDropdown(openDropdown === "pageStats" ? null : "pageStats")}
-                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100"
-                  aria-label="More options"
-                >
+                <button onClick={() => setOpenDropdown(openDropdown === "pageStats" ? null : "pageStats")} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100">
                   <MoreHorizontal size={16} />
                 </button>
                 {openDropdown === "pageStats" && (
                   <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
-                    <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                      <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Save as CSV
+                    <button onClick={() => openExportModal('csv')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                      <FileSpreadsheet size={16} className="text-gray-600 shrink-0" /> Save as CSV
                     </button>
-                    <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                      <FileText size={16} className="text-red-500 shrink-0" /> Save as PDF
+                    <button onClick={() => openExportModal('pdf')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                      <FileText size={16} className="text-gray-600 shrink-0" /> Save as PDF
                     </button>
-                    <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGrad1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                        <defs><linearGradient id="jpgGrad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#3b82f6" /></linearGradient></defs>
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                      </svg> Save as Image (JPG)
+                    <button onClick={() => openExportModal('chart')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                      <ImageIcon size={16} className="text-gray-600 shrink-0" /> Save as Charts
                     </button>
                   </div>
                 )}
@@ -513,9 +483,7 @@ export default function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} dy={8} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#9ca3af' }} width={35} tickFormatter={(value: number) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toString()} />
-                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value: number | undefined) => [value !== undefined ? value.toLocaleString() : '', '']} />
-                {/* Reference highlight bars — mark notable periods (e.g. peak month, campaign window) */}
-                {/* BACKEND NOTE: Replace x1/x2 with actual notable date ranges from API (e.g. campaign start/end) */}
+                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                 <ReferenceArea x1="Mar" x2="Mar" fill="#4e9a6e" fillOpacity={0.1} stroke="#4e9a6e" strokeOpacity={0.25} strokeWidth={1} />
                 <ReferenceArea x1="Jun" x2="Jun" fill="#c4882a" fillOpacity={0.1} stroke="#c4882a" strokeOpacity={0.25} strokeWidth={1} />
                 <Line type="monotone" dataKey="followers" stroke="#4e9a6e" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#4e9a6e' }} />
@@ -531,28 +499,20 @@ export default function AnalyticsPage() {
         <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 overflow-hidden">
           <div className="flex items-center justify-between mb-2 sm:mb-4">
             <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">Engagement Overview</h3>
-            {/* Component options dropdown */}
             <div className="relative shrink-0" data-dropdown>
-              <button
-                onClick={() => setOpenDropdown(openDropdown === "engagementOverview" ? null : "engagementOverview")}
-                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100"
-                aria-label="More options"
-              >
+              <button onClick={() => setOpenDropdown(openDropdown === "engagementOverview" ? null : "engagementOverview")} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100">
                 <MoreHorizontal size={16} />
               </button>
               {openDropdown === "engagementOverview" && (
                 <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
-                  <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                    <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Save as CSV
+                  <button onClick={() => openExportModal('csv')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <FileSpreadsheet size={16} className="text-gray-600 shrink-0" /> Save as CSV
                   </button>
-                  <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                    <FileText size={16} className="text-red-500 shrink-0" /> Save as PDF
+                  <button onClick={() => openExportModal('pdf')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <FileText size={16} className="text-gray-600 shrink-0" /> Save as PDF
                   </button>
-                  <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGrad2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                      <defs><linearGradient id="jpgGrad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#3b82f6" /></linearGradient></defs>
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                    </svg> Save as Image (JPG)
+                  <button onClick={() => openExportModal('chart')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <ImageIcon size={16} className="text-gray-600 shrink-0" /> Save as Charts
                   </button>
                 </div>
               )}
@@ -561,16 +521,11 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:gap-4">
             <div className="bg-[#9ABDD3]/40 p-1.5 sm:p-2 lg:p-5 rounded-lg sm:rounded-xl lg:rounded-2xl flex flex-col items-start justify-between min-h-[100px] sm:min-h-[130px] lg:min-h-[160px]">
               <div className="w-6 h-6 sm:w-7 sm:h-7 lg:w-10 lg:h-10 bg-white rounded-md lg:rounded-lg flex items-center justify-center text-primary shadow-sm shrink-0">
-                <ChevronDown size={12} className="rotate-180 sm:hidden" />
-                <ChevronDown size={14} className="rotate-180 hidden sm:block lg:hidden" />
-                <ChevronDown size={20} className="rotate-180 hidden lg:block" />
+                <ChevronDown size={20} className="rotate-180" />
               </div>
               <div className="w-full">
                 <h4 className="text-sm sm:text-lg lg:text-2xl xl:text-3xl font-bold text-gray-900">24.6k</h4>
                 <p className="text-[7px] sm:text-[9px] lg:text-xs text-gray-600 font-medium leading-tight mt-0.5">Engagement Rate Trend</p>
-                <div className="mt-1 sm:mt-1.5 lg:mt-3 inline-flex items-center gap-0.5 bg-white/60 px-1 sm:px-1.5 py-0.5 rounded text-[6px] sm:text-[7px] lg:text-[10px] font-bold text-gray-700">
-                  <ArrowUp size={6} className="text-gray-500" /> 0.8% <span className="text-gray-400 font-normal ml-0.5">Weekly</span>
-                </div>
               </div>
             </div>
             <div className="bg-yellow-50 p-1.5 sm:p-2 lg:p-5 rounded-lg sm:rounded-xl lg:rounded-2xl flex flex-col items-start justify-between min-h-[100px] sm:min-h-[130px] lg:min-h-[160px]">
@@ -580,9 +535,6 @@ export default function AnalyticsPage() {
               <div className="w-full">
                 <h4 className="text-sm sm:text-lg lg:text-2xl xl:text-3xl font-bold text-gray-900">16.2k</h4>
                 <p className="text-[7px] sm:text-[9px] lg:text-xs text-gray-600 font-medium leading-tight mt-0.5">Account Likes</p>
-                <div className="mt-1 sm:mt-1.5 lg:mt-3 inline-flex items-center gap-0.5 bg-white/60 px-1 sm:px-1.5 py-0.5 rounded text-[6px] sm:text-[7px] lg:text-[10px] font-bold text-gray-700">
-                  <ArrowUp size={6} className="text-yellow-500" /> 0.3% <span className="text-gray-400 font-normal ml-0.5">Monthly</span>
-                </div>
               </div>
             </div>
             <div className="bg-pink-50 p-1.5 sm:p-2 lg:p-5 rounded-lg sm:rounded-xl lg:rounded-2xl flex flex-col items-start justify-between min-h-[100px] sm:min-h-[130px] lg:min-h-[160px]">
@@ -592,26 +544,16 @@ export default function AnalyticsPage() {
               <div className="w-full">
                 <h4 className="text-sm sm:text-lg lg:text-2xl xl:text-3xl font-bold text-gray-900">27.8k</h4>
                 <p className="text-[7px] sm:text-[9px] lg:text-xs text-gray-600 font-medium leading-tight mt-0.5">User Comments</p>
-                <div className="mt-1 sm:mt-1.5 lg:mt-3 inline-flex items-center gap-0.5 bg-white/60 px-1 sm:px-1.5 py-0.5 rounded text-[6px] sm:text-[7px] lg:text-[10px] font-bold text-gray-700">
-                  <ArrowUp size={6} className="text-pink-500" /> 5.36% <span className="text-gray-400 font-normal ml-0.5">Weekly</span>
-                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ========================================= */}
-      {/* VIEW 1: "ALL PAGES" SELECTED              */}
-      {/* ========================================= */}
+      {/* VIEW 1: ALL PAGES */}
       {selectedPage === "All Pages" ? (
         <>
-          {/* ========================================================================= */}
-          {/* Best Time for Posting & Engagement Rate Trend                             */}
-          {/* Only visible on "All Pages" view — hidden when a specific page is chosen  */}
-          {/* ========================================================================= */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 min-w-0 max-w-full overflow-hidden">
-
             {/* Best Time for Posting */}
             <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 overflow-hidden">
               <div className="flex items-start justify-between mb-2 sm:mb-4">
@@ -619,31 +561,22 @@ export default function AnalyticsPage() {
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="text-right">
                     <p className="text-[9px] sm:text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Visitors</p>
-                    {/* BACKEND NOTE: Replace bestTimeVisitors with the API-returned total visitor count */}
                     <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{bestTimeVisitors}</p>
                   </div>
-                  {/* Component options dropdown */}
                   <div className="relative shrink-0" data-dropdown>
-                    <button
-                      onClick={() => setOpenDropdown(openDropdown === "bestTime" ? null : "bestTime")}
-                      className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100"
-                      aria-label="More options"
-                    >
+                    <button onClick={() => setOpenDropdown(openDropdown === "bestTime" ? null : "bestTime")} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100">
                       <MoreHorizontal size={16} />
                     </button>
                     {openDropdown === "bestTime" && (
                       <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
-                        <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                          <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Save as CSV
+                        <button onClick={() => openExportModal('csv')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                          <FileSpreadsheet size={16} className="text-gray-600 shrink-0" /> Save as CSV
                         </button>
-                        <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                          <FileText size={16} className="text-red-500 shrink-0" /> Save as PDF
+                        <button onClick={() => openExportModal('pdf')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                          <FileText size={16} className="text-gray-600 shrink-0" /> Save as PDF
                         </button>
-                        <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGrad3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                            <defs><linearGradient id="jpgGrad3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#3b82f6" /></linearGradient></defs>
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                          </svg> Save as Image (JPG)
+                        <button onClick={() => openExportModal('chart')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                          <ImageIcon size={16} className="text-gray-600 shrink-0" /> Save as Charts
                         </button>
                       </div>
                     )}
@@ -651,7 +584,6 @@ export default function AnalyticsPage() {
                 </div>
               </div>
               <div className="w-full h-[160px] sm:h-[200px] lg:h-[220px] min-w-0">
-                {/* BACKEND NOTE: bestTimeData drives this chart — replace with real hourly data from the API */}
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={bestTimeData} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
                     <defs>
@@ -661,34 +593,10 @@ export default function AnalyticsPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                    <XAxis
-                      dataKey="time"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 10, fill: '#9ca3af' }}
-                      dy={8}
-                      ticks={["12am", "6am", "12pm", "6pm", "12am"]}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 9, fill: '#9ca3af' }}
-                      width={45}
-                      tickFormatter={(value: number) => value >= 1000 ? `${(value / 1000).toFixed(0)},000` : value.toString()}
-                    />
-                    <Tooltip
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: number | undefined) => [value !== undefined ? value.toLocaleString() : '', 'Visitors']}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="visitors"
-                      stroke="#3b82f6"
-                      strokeWidth={2.5}
-                      fill="url(#bestTimeGradient)"
-                      dot={false}
-                      activeDot={{ r: 4, fill: '#3b82f6' }}
-                    />
+                    <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} dy={8} ticks={["12am", "6am", "12pm", "6pm", "12am"]} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#9ca3af' }} width={45} tickFormatter={(value: number) => value >= 1000 ? `${(value / 1000).toFixed(0)},000` : value.toString()} />
+                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value: number | undefined) => [value !== undefined ? value.toLocaleString() : '', 'Visitors']} />
+                    <Area type="monotone" dataKey="visitors" stroke="#3b82f6" strokeWidth={2.5} fill="url(#bestTimeGradient)" dot={false} activeDot={{ r: 4, fill: '#3b82f6' }} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -698,35 +606,26 @@ export default function AnalyticsPage() {
             <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 overflow-hidden self-start">
               <div className="flex items-center justify-between mb-2 sm:mb-4">
                 <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">Engagement Rate Trend</h3>
-                {/* Component options dropdown */}
                 <div className="relative shrink-0" data-dropdown>
-                  <button
-                    onClick={() => setOpenDropdown(openDropdown === "engagementTrend" ? null : "engagementTrend")}
-                    className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100"
-                    aria-label="More options"
-                  >
+                  <button onClick={() => setOpenDropdown(openDropdown === "engagementTrend" ? null : "engagementTrend")} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100">
                     <MoreHorizontal size={16} />
                   </button>
                   {openDropdown === "engagementTrend" && (
                     <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
-                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                        <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Save as CSV
+                      <button onClick={() => openExportModal('csv')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <FileSpreadsheet size={16} className="text-gray-600 shrink-0" /> Save as CSV
                       </button>
-                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                        <FileText size={16} className="text-red-500 shrink-0" /> Save as PDF
+                      <button onClick={() => openExportModal('pdf')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <FileText size={16} className="text-gray-600 shrink-0" /> Save as PDF
                       </button>
-                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGrad4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                          <defs><linearGradient id="jpgGrad4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#3b82f6" /></linearGradient></defs>
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                        </svg> Save as Image (JPG)
+                      <button onClick={() => openExportModal('chart')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <ImageIcon size={16} className="text-gray-600 shrink-0" /> Save as Charts
                       </button>
                     </div>
                   )}
                 </div>
               </div>
               <div className="w-full h-[160px] sm:h-[200px] lg:h-[220px] min-w-0">
-                {/* BACKEND NOTE: Replace engagementTrendBarData with real monthly engagement rates from the API */}
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={engagementTrendBarData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                     <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} dy={10} />
@@ -741,40 +640,67 @@ export default function AnalyticsPage() {
                 </ResponsiveContainer>
               </div>
             </div>
-
           </div>
 
-          {/* Top Posts this Week — full width in All Pages view */}
+          {/* --- TOP POSTS THIS WEEK WITH FILTERS --- */}
           <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 overflow-hidden">
-              <div className="flex items-center justify-between mb-2 sm:mb-4">
-                <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">Top Posts this Week</h3>
-                {/* Export dropdown for Top Posts */}
-                <div className="relative shrink-0" data-dropdown>
-                  <button
-                    onClick={() => setOpenDropdown(openDropdown === "topPosts" ? null : "topPosts")}
-                    className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100"
-                    aria-label="Export Top Posts"
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+                <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900 shrink-0">Top Posts this Week</h3>
+                
+                <div className="flex flex-wrap items-center gap-2 text-xs w-full sm:w-auto">
+                  <select 
+                    value={topPostsPage}
+                    onChange={(e) => setTopPostsPage(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 bg-white text-gray-700 cursor-pointer shadow-sm min-w-0 flex-1 sm:flex-none h-[32px]"
                   >
-                    <Download size={16} />
-                  </button>
-                  {openDropdown === "topPosts" && (
-                    <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
-                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                        <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Save as CSV
-                      </button>
-                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                        <FileText size={16} className="text-red-500 shrink-0" /> Save as PDF
-                      </button>
-                      <button onClick={() => setOpenDropdown(null)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGrad5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                          <defs><linearGradient id="jpgGrad5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#3b82f6" /></linearGradient></defs>
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                        </svg> Save as Image (JPG)
-                      </button>
-                    </div>
-                  )}
+                    {pages.map((page) => <option key={page} value={page}>{page}</option>)}
+                  </select>
+
+                  <select 
+                    value={topPostsPlatform}
+                    onChange={(e) => setTopPostsPlatform(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 bg-white text-gray-700 cursor-pointer shadow-sm min-w-0 flex-1 sm:flex-none h-[32px]"
+                  >
+                    {platforms.map((platform) => <option key={platform} value={platform}>{platform}</option>)}
+                  </select>
+
+                  {/* Reusable Component for Top Posts Date Range */}
+                  <CustomDatePicker 
+                    dateRange={topPostsDateRange}
+                    setDateRange={setTopPostsDateRange}
+                    isOpen={topPostsDatePickerOpen}
+                    setIsOpen={setTopPostsDatePickerOpen}
+                    pickerRef={topPostsDatePickerRef}
+                    buttonClassName="flex items-center justify-between gap-1 border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 hover:bg-gray-50 shadow-sm min-w-0 flex-1 sm:flex-none h-[32px]"
+                    alignRight={true}
+                  />
+
+                  <div className="relative shrink-0" data-dropdown>
+                    <button
+                      onClick={() => setOpenDropdown(openDropdown === "topPosts" ? null : "topPosts")}
+                      className="p-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 shadow-sm transition-colors cursor-pointer flex items-center justify-center h-[32px] w-[32px]"
+                      aria-label="Export Top Posts"
+                    >
+                      <Download size={14} />
+                    </button>
+                    {openDropdown === "topPosts" && (
+                      <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
+                        <button onClick={() => openExportModal('csv')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                          <FileSpreadsheet size={16} className="text-gray-600 shrink-0" /> Save as CSV
+                        </button>
+                        <button onClick={() => openExportModal('pdf')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                          <FileText size={16} className="text-gray-600 shrink-0" /> Save as PDF
+                        </button>
+                        <button onClick={() => openExportModal('chart')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                          <ImageIcon size={16} className="text-gray-600 shrink-0" /> Save as Charts
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
+
+              {/* BACKEND NOTE: Filter `topPosts` based on `topPostsPage`, `topPostsPlatform`, and date range */}
               <div className="flex flex-col divide-y divide-gray-50">
                 {topPosts.map((post) => (
                   <div key={post.id} className="py-3 sm:py-4 space-y-2">
@@ -821,12 +747,8 @@ export default function AnalyticsPage() {
           </div>
         </>
       ) : (
-        /* ========================================= */
-        /* VIEW 2: "SPECIFIC PAGE" SELECTED          */
-        /* ========================================= */
+        /* VIEW 2: SPECIFIC PAGE */
         <div className="flex flex-col gap-2 sm:gap-3 lg:gap-6 mt-1 min-w-0 overflow-hidden">
-          
-          {/* KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-2.5 min-w-0">
             <div className="bg-white p-2 sm:p-2.5 lg:p-4 rounded-lg sm:rounded-xl border border-gray-200 shadow-sm">
               <p className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 font-medium mb-0.5">Total Posts</p>
@@ -850,10 +772,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          {/* Tabbed Data Table */}
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-w-0 max-w-full">
-            
-            {/* Tabs */}
             <div className="flex items-center gap-2 sm:gap-3 lg:gap-6 px-3 sm:px-4 lg:px-6 pt-2.5 sm:pt-3 border-b border-gray-100 overflow-x-auto hide-scrollbar">
               {tabs.map((tab) => (
                 <button 
@@ -866,7 +785,6 @@ export default function AnalyticsPage() {
               ))}
             </div>
 
-            {/* Mobile Card View (visible below lg) */}
             <div className="block lg:hidden divide-y divide-gray-50">
               {specificPagePosts.map((post) => (
                 <div key={post.id} className="p-3 sm:p-4 space-y-2 sm:space-y-3 overflow-hidden">
@@ -911,10 +829,9 @@ export default function AnalyticsPage() {
               ))}
             </div>
 
-            {/* Desktop Table (visible at lg+) */}
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[1000px]">
-                <thead>
+                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50/50">
                     <th className="py-4 px-6 text-[11px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Photo <ChevronDown size={12} className="inline ml-1"/></th>
                     <th className="py-4 px-6 text-[11px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Post Title <ChevronDown size={12} className="inline ml-1"/></th>
@@ -930,7 +847,6 @@ export default function AnalyticsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {/* BACKEND NOTE: Map through filtered posts here */}
                   {specificPagePosts.map((post) => (
                     <tr key={post.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="py-4 px-6">
@@ -961,12 +877,97 @@ export default function AnalyticsPage() {
                 </tbody>
               </table>
             </div>
-
-            {/* Pagination / Footer */}
             <div className="px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 border-t border-gray-100 text-[10px] sm:text-xs text-gray-500 font-medium">
               Showing <span className="font-bold text-gray-900">1-12</span> of <span className="font-bold text-gray-900">12</span> Entries
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ========================================= */}
+      {/* EXPORT MODALS OVERLAYS                    */}
+      {/* ========================================= */}
+      {modalType && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          
+          {/* CSV / PDF MODAL */}
+          {(modalType === 'csv' || modalType === 'pdf') && (
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-[400px] p-6 lg:p-8 relative overflow-hidden">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Save as {modalType.toUpperCase()}</h2>
+              <p className="text-sm text-gray-500 mb-6">Select Date Range</p>
+              
+              {/* BUG FIX: Changed to flex-col on mobile, added min-w-0 so inputs can shrink */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8">
+                <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 flex-1 min-w-0">
+                  <label className="text-xs text-gray-400 font-medium shrink-0">From</label>
+                  <input type="date" className="w-full text-sm text-gray-700 focus:outline-none bg-transparent min-w-0" />
+                </div>
+                <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 flex-1 min-w-0">
+                  <label className="text-xs text-gray-400 font-medium shrink-0">To</label>
+                  <input type="date" className="w-full text-sm text-gray-700 focus:outline-none bg-transparent min-w-0" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 mt-2">
+                <button onClick={() => setModalType(null)} className="px-6 py-2.5 border border-gray-200 text-gray-600 font-medium rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                  Cancel
+                </button>
+                <button onClick={() => setModalType('confirm')} className="px-8 py-2.5 bg-[#274C77] text-white font-medium rounded-lg hover:bg-[#1a385b] transition-colors cursor-pointer">
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* CHART MODAL */}
+          {modalType === 'chart' && (
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-[700px] p-6 lg:p-8 relative flex flex-col overflow-hidden">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Save as Chart</h2>
+              <p className="text-sm text-gray-500 mb-4">Preview</p>
+              
+              {/* BUG FIX: Changed to flex-col on mobile, added flex-1 and min-w-0 */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
+                <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 flex-1 sm:max-w-[180px] min-w-0">
+                  <label className="text-[10px] text-gray-400 font-medium shrink-0">From</label>
+                  <input type="date" className="w-full text-xs text-gray-700 focus:outline-none bg-transparent min-w-0" />
+                </div>
+                <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 flex-1 sm:max-w-[180px] min-w-0">
+                  <label className="text-[10px] text-gray-400 font-medium shrink-0">To</label>
+                  <input type="date" className="w-full text-xs text-gray-700 focus:outline-none bg-transparent min-w-0" />
+                </div>
+              </div>
+
+              <div className="flex-1 w-full bg-gray-200 rounded-xl min-h-[250px] sm:min-h-[300px] mb-6 flex items-center justify-center">
+                <ImageIcon size={64} className="text-gray-400 opacity-50" />
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <button onClick={() => setModalType(null)} className="px-6 py-2.5 border border-gray-200 text-gray-600 font-medium rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                  Cancel
+                </button>
+                <button onClick={() => setModalType('confirm')} className="px-8 py-2.5 bg-[#274C77] text-white font-medium rounded-lg hover:bg-[#1a385b] transition-colors cursor-pointer">
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* CONFIRMATION MODAL */}
+          {modalType === 'confirm' && (
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-[400px] p-6 lg:p-8 relative text-center mx-4">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-2">Confirmation</h2>
+              <p className="text-sm text-gray-500 mb-8">Are you sure you want to download the file?</p>
+              
+              <div className="flex items-center justify-center gap-3">
+                <button onClick={() => setModalType(null)} className="px-6 py-2.5 border border-gray-200 text-gray-600 font-medium rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                  Cancel
+                </button>
+                <button onClick={handleConfirmDownload} className="px-8 py-2.5 bg-[#274C77] text-white font-medium rounded-lg hover:bg-[#1a385b] transition-colors cursor-pointer">
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 import {
   Facebook,
   Instagram,
   Youtube,
   Trash2,
   Plus,
-  CheckCircle2,
   AlertCircle,
 } from "lucide-react";
 
@@ -18,17 +19,30 @@ type Account = {
   username?: string;
   connectedDate?: string;
   isConnected: boolean;
-  color: string; // For the icon background/color
+  color: string; 
   icon: React.ReactNode;
 };
 
 export default function AccountsPage() {
+  const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  // --- ADMIN ROUTE GUARD ---
+  useEffect(() => {
+    const role = Cookies.get("user-role");
+    if (role !== "admin") {
+      router.push("/dashboard");
+    } else {
+      setIsAuthorized(true);
+    }
+  }, [router]);
+
   // Initial Mock Data - Facebook is connected, others are available
   const [accounts, setAccounts] = useState<Account[]>([
     {
       id: "facebook",
       name: "Facebook",
-      username: "@facebook_user_741",
+      username: "@john_doe123",
       connectedDate: "Feb 11, 2026",
       isConnected: true,
       color: "text-blue-600 bg-blue-50",
@@ -65,12 +79,8 @@ export default function AccountsPage() {
   ]);
 
   // Modal state
-  const [connectPlatformId, setConnectPlatformId] = useState<string | null>(
-    null
-  );
-  const [disconnectTarget, setDisconnectTarget] = useState<Account | null>(
-    null
-  );
+  const [connectPlatformId, setConnectPlatformId] = useState<string | null>(null);
+  const [disconnectTarget, setDisconnectTarget] = useState<Account | null>(null);
 
   // Form state for connect modal
   const [connectEmail, setConnectEmail] = useState("");
@@ -85,20 +95,14 @@ export default function AccountsPage() {
 
   // Helpers
   const formatLongDate = (date = new Date()) =>
-    date.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+    date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
-  // Open connect modal for a platform
   const openConnectModal = (id: string) => {
     setConnectPlatformId(id);
     setConnectEmail("");
     setConnectPassword("");
   };
 
-  // Submit connect form (simulates OAuth / login)
   const handleConnectSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!connectPlatformId) return;
@@ -109,26 +113,20 @@ export default function AccountsPage() {
           ? {
               ...acc,
               isConnected: true,
-              // prefer local-part of email if provided, otherwise create a generic username
-              username: connectEmail
-                ? `@${connectEmail.split("@")[0]}`
-                : `@${acc.id}_official`,
+              username: connectEmail ? `@${connectEmail.split("@")[0]}` : `@${acc.id}_official`,
               connectedDate: formatLongDate(),
             }
           : acc
       )
     );
-
     setConnectPlatformId(null);
   };
 
-  // Open disconnect modal
   const openDisconnectModal = (account: Account) => {
     setDisconnectTarget(account);
     setConfirmChecked(false);
   };
 
-  // Confirm disconnect action
   const handleConfirmDisconnect = () => {
     if (!disconnectTarget || !confirmChecked) return;
 
@@ -139,97 +137,71 @@ export default function AccountsPage() {
           : acc
       )
     );
-
     setDisconnectTarget(null);
     setConfirmChecked(false);
   };
 
-  // Close any modal
   const closeModals = () => {
     setConnectPlatformId(null);
     setDisconnectTarget(null);
     setConfirmChecked(false);
   };
 
+  // Prevent rendering until admin check is complete
+  if (!isAuthorized) return null;
+
   return (
-    <div className="max-w-6xl mx-auto space-y-8 py-8">
+    <div className="flex flex-col gap-6 overflow-x-hidden pb-10">
+      
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-primary">Connected Accounts</h1>
-        <p className="text-muted">Manage your social media accounts</p>
+        <h1 className="text-3xl font-bold text-gray-900">Connected Accounts</h1>
+        <p className="text-gray-500 mt-1">Manage your platform connections</p>
       </div>
 
-      {/* SECTION 1: CONNECTED ACCOUNTS */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <CheckCircle2 size={20} className="text-green-600" />
-          Active Connections
-        </h2>
+      {/* SECTION 1: CONNECTED ACCOUNTS (Updated to match Wireframe) */}
+      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+        <h2 className="text-lg font-bold text-gray-900 mb-6">Connected Accounts</h2>
 
         {connectedAccounts.length === 0 ? (
           <div className="p-8 border border-dashed border-gray-200 rounded-xl text-center text-muted bg-gray-50/50">
-            No accounts connected yet.
+            No accounts connected yet. Connect a platform below to get started.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {connectedAccounts.map((account) => (
-              <div
+              <button
                 key={account.id}
-                className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative group"
+                onClick={() => openDisconnectModal(account)}
+                // Hovering changes the border to red and prepares the disconnect action
+                className="w-full flex items-center justify-between p-4 rounded-full border border-gray-200 hover:border-red-200 hover:bg-red-50 transition-all group focus:outline-none"
+                title={`Disconnect ${account.name}`}
               >
-                {/* Header: Icon + Name + Status Dot */}
-                <div className="flex justify-between items-start mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-lg ${account.color}`}>
-                      {account.icon}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800">{account.name}</h3>
-                      <span className="flex items-center gap-1.5 text-[10px] uppercase font-bold text-green-600 tracking-wider bg-green-50 px-2 py-0.5 rounded-full w-fit">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                        Active
-                      </span>
-                    </div>
+                <div className="flex items-center gap-3 text-left min-w-0">
+                  {/* We extract just the text-color from the co-intern's string and use CSS to shrink the icon slightly */}
+                  <div className={`flex items-center justify-center shrink-0 w-6 h-6 ${account.color.split(' ')[0]} [&>svg]:w-5 [&>svg]:h-5`}>
+                    {account.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-gray-900 leading-none truncate">{account.name}</p>
+                    <p className="text-xs text-gray-500 mt-1.5 truncate">{account.username}</p>
                   </div>
                 </div>
-
-                {/* Details */}
-                <div className="space-y-3 mb-6">
-                  <div>
-                    <p className="text-xs text-muted uppercase font-medium">
-                      Username
-                    </p>
-                    <p className="text-sm font-semibold text-gray-700">
-                      {account.username ?? "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted uppercase font-medium">
-                      Connected Since
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      {account.connectedDate ?? "—"}
-                    </p>
-                  </div>
+                
+                {/* Status Indicator: Green dot by default, Red Trash on hover */}
+                <div className="relative w-6 h-6 flex items-center justify-center shrink-0 mr-1">
+                   <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-sm transition-opacity duration-200 group-hover:opacity-0 absolute"></div>
+                   <Trash2 size={16} className="text-red-500 opacity-0 transition-opacity duration-200 group-hover:opacity-100 absolute" />
                 </div>
-
-                {/* Disconnect Button */}
-                <button
-                  onClick={() => openDisconnectModal(account)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-red-100 text-red-600 text-sm font-medium hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 size={16} />
-                  Disconnect
-                </button>
-              </div>
+              </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* SECTION 2: AVAILABLE SOCIAL (Matches Bottom of Wireframe) */}
-      <div className="bg-gray-50/50 rounded-2xl p-8 border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-700 mb-6 flex items-center gap-2">
+      {/* SECTION 2: AVAILABLE INTEGRATIONS */}
+      <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm">
+        <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
           <AlertCircle size={20} className="text-primary" />
           Available Integrations
         </h2>
@@ -238,97 +210,95 @@ export default function AccountsPage() {
           {availableAccounts.map((account) => (
             <div
               key={account.id}
-              className="bg-white p-4 rounded-xl border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow"
+              className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg ${account.color}`}>
-                  {/* Smaller icon for the list view */}
                   <div className="scale-75 origin-center">{account.icon}</div>
                 </div>
-                <span className="font-semibold text-gray-700">
+                <span className="font-bold text-gray-800 text-sm">
                   {account.name}
                 </span>
               </div>
 
               <button
                 onClick={() => openConnectModal(account.id)}
-                className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-primary hover:text-white transition-colors"
-                aria-label={`Connect ${account.name}`}
+                className="p-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-colors shadow-sm"
+                title={`Connect ${account.name}`}
               >
-                <Plus size={20} />
+                <Plus size={18} />
               </button>
             </div>
           ))}
 
           {availableAccounts.length === 0 && (
-            <p className="col-span-full text-center text-muted text-sm py-4">
-              All supported platforms are connected! 🎉
+            <p className="col-span-full text-center text-gray-500 text-sm py-8 font-medium">
+              All supported platforms are currently connected! 🎉
             </p>
           )}
         </div>
       </div>
 
+      {/* ========================================= */}
+      {/* MODALS                                    */}
+      {/* ========================================= */}
+      
       {/* Connect Modal */}
       {connectPlatformId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md bg-white rounded-xl p-6 relative shadow-lg">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 rounded-lg bg-gray-100">
-                {
-                  accounts.find((a) => a.id === connectPlatformId)?.icon ?? null
-                }
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl p-6 md:p-8 relative shadow-xl overflow-hidden">
+            <div className="flex items-center gap-4 mb-6">
+              <div className={`p-3 rounded-xl ${accounts.find((a) => a.id === connectPlatformId)?.color}`}>
+                {accounts.find((a) => a.id === connectPlatformId)?.icon ?? null}
               </div>
               <div>
-                <h3 className="text-lg font-semibold">
-                  Add {accounts.find((a) => a.id === connectPlatformId)?.name}
+                <h3 className="text-xl font-bold text-gray-900">
+                  Connect {accounts.find((a) => a.id === connectPlatformId)?.name}
                 </h3>
-                <p className="text-sm text-muted">
-                  Already have an account? Log in to easily switch between them.
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  Log in to authorize access and begin tracking your analytics.
                 </p>
               </div>
             </div>
 
             <form onSubmit={handleConnectSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs text-muted mb-1">E-mail</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>
                 <input
                   type="email"
                   value={connectEmail}
                   onChange={(e) => setConnectEmail(e.target.value)}
                   required
-                  className="w-full border border-gray-200 rounded-lg p-2 text-sm"
-                  placeholder="E-mail"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-gray-900"
+                  placeholder="name@example.com"
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-muted mb-1">Password</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Password</label>
                 <input
                   type="password"
                   value={connectPassword}
                   onChange={(e) => setConnectPassword(e.target.value)}
                   required
-                  className="w-full border border-gray-200 rounded-lg p-2 text-sm"
-                  placeholder="Password"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-gray-900"
+                  placeholder="••••••••"
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-3 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 btn btn-primary py-2.5 rounded-lg bg-primary text-white"
+                  className="w-full bg-[#274C77] text-white font-bold py-3 rounded-lg hover:bg-[#1a385b] transition-colors shadow-sm"
                 >
-                  Log in
+                  Log In & Authorize
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    // Quick-connect (simulate Google / oauth) - auto fill and submit
-                    setConnectEmail(`${connectPlatformId}@example.com`);
-                    setConnectPassword("oauth");
-                    // small delay to let state update then submit
+                    setConnectEmail(`${connectPlatformId}@company.com`);
+                    setConnectPassword("oauth-token-pass");
                     setTimeout(() => {
-                      // directly perform the connection without requiring an explicit form submit
                       setAccounts((prev) =>
                         prev.map((acc) =>
                           acc.id === connectPlatformId
@@ -344,95 +314,70 @@ export default function AccountsPage() {
                       setConnectPlatformId(null);
                     }, 150);
                   }}
-                  className="py-2.5 px-3 rounded-lg border border-gray-200 text-sm"
+                  className="w-full border border-gray-200 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center gap-2"
                 >
-                  Continue with Google
+                  Quick Connect (Mock OAuth)
                 </button>
               </div>
 
-              <div className="text-right">
-                <button
-                  type="button"
-                  onClick={closeModals}
-                  className="text-sm text-muted underline"
-                >
+              <div className="text-center mt-4">
+                <button type="button" onClick={closeModals} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
                   Cancel
                 </button>
               </div>
             </form>
-
-            <button
-              onClick={closeModals}
-              className="absolute top-3 right-3 text-xl leading-none"
-              aria-label="Close"
-            >
-              &times;
-            </button>
           </div>
         </div>
       )}
 
       {/* Disconnect Modal */}
       {disconnectTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md bg-white rounded-xl p-6 relative shadow-lg">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 rounded-lg bg-red-50 text-red-600">
-                <Trash2 size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">Delete account</h3>
-                <p className="text-sm text-muted">
-                  Are you sure you want to delete the account linked to{" "}
-                  <span className="font-semibold">
-                    {disconnectTarget.username ?? disconnectTarget.name}
-                  </span>
-                  ?
-                </p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl p-6 md:p-8 relative shadow-xl">
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                <Trash2 size={32} />
               </div>
             </div>
+            
+            <h3 className="text-xl font-bold text-center text-gray-900 mb-2">Disconnect Account?</h3>
+            <p className="text-sm text-center text-gray-500 mb-6">
+              You are about to remove <span className="font-bold text-gray-900">{disconnectTarget.username ?? disconnectTarget.name}</span>. We will stop tracking data for this platform immediately.
+            </p>
 
-            <div className="mb-4">
-              <label className="inline-flex items-center gap-2">
+            <div className="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
+              <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={confirmChecked}
                   onChange={(e) => setConfirmChecked(e.target.checked)}
-                  className="form-checkbox"
+                  className="mt-1 w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
                 />
-                <span className="text-sm text-muted">
-                  I understand that I won't be able to recover my account.
+                <span className="text-sm text-gray-700 font-medium leading-tight">
+                  I understand that SocialDesk will no longer have access to this account and historical data may be lost.
                 </span>
               </label>
             </div>
 
             <div className="flex gap-3">
               <button
-                onClick={handleConfirmDisconnect}
-                disabled={!confirmChecked}
-                className={`flex-1 py-2.5 rounded-lg text-white text-sm font-medium ${
-                  confirmChecked
-                    ? "bg-red-600 hover:bg-red-700"
-                    : "bg-red-200 opacity-60 cursor-not-allowed"
-                }`}
-              >
-                Delete
-              </button>
-              <button
                 onClick={closeModals}
-                className="flex-1 py-2.5 rounded-lg border border-gray-200 text-sm"
+                className="flex-1 py-2.5 rounded-lg border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
+              <button
+                onClick={handleConfirmDisconnect}
+                disabled={!confirmChecked}
+                className={`flex-1 py-2.5 rounded-lg text-white font-bold transition-colors shadow-sm ${
+                  confirmChecked
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-red-300 cursor-not-allowed"
+                }`}
+              >
+                Disconnect
+              </button>
             </div>
-
-            <button
-              onClick={closeModals}
-              className="absolute top-3 right-3 text-xl leading-none"
-              aria-label="Close"
-            >
-              &times;
-            </button>
           </div>
         </div>
       )}
@@ -440,8 +385,7 @@ export default function AccountsPage() {
   );
 }
 
-// --- Custom Icons for brands missing from standard libraries ---
-
+// --- Custom Icons ---
 function TikTokIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
