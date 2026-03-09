@@ -151,7 +151,7 @@ export default function AnalyticsPage() {
   // BACKEND NOTE: These arrays should eventually be fetched from the database
   const pages = ["All Pages", "eGetinnz PH", "eGetinnz USA", "Fibei PH", "Fibei USA", "Digitimmerse PH", "Digitimmerse USA"];
   const platforms = ["All Platforms", "Facebook", "YouTube", "Instagram", "X", "Pinterest", "Tiktok"];
-  const tabs = ["All", "Completed", "Pending", "Scheduled", "Missing"];
+  const tabs = ["All", "Completed", "Missing"];
 
   // --- MOCK DATA FOR "ALL PAGES" VIEW ---
   const topPosts = [
