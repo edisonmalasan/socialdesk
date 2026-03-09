@@ -39,6 +39,10 @@ export default function ProfilePage() {
   const [showCurrentPass, setShowCurrentPass] = useState(false);
   const [showNewPass, setShowNewPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
+
+  const [currentPassFocused, setCurrentPassFocused] = useState(false);
+  const [newPassFocused, setNewPassFocused] = useState(false);
+  const [confirmPassFocused, setConfirmPassFocused] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success">("idle");
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -151,7 +155,7 @@ export default function ProfilePage() {
               <button 
                 type="button" 
                 onClick={handlePhotoClick}
-                className="text-sm font-bold text-[#274C77] hover:underline"
+                className="text-sm font-bold text-primary hover:underline"
               >
                 Upload new photo
               </button>
@@ -170,38 +174,37 @@ export default function ProfilePage() {
           {/* Details Column */}
           <div className="flex-1 space-y-6 w-full">
             <h2 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2 mb-6 text-center md:text-left">Personal Details</h2>
-            
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+
+            {/* Full Name — readonly, floating label */}
+            <div className="relative mt-3">
+              <div className="flex items-center gap-3 rounded-lg px-4 py-3.5 border-2 bg-gray-50 border-gray-200 transition-all">
+                <User size={18} className="shrink-0 text-gray-400" />
+                <input
+                  type="text"
+                  disabled
+                  value={profileData.name}
+                  className="w-full bg-transparent text-sm text-gray-500 focus:outline-none cursor-not-allowed"
+                />
+              </div>
+              <label className="absolute transition-all duration-200 pointer-events-none text-xs top-0 -translate-y-1/2 left-3 px-1 bg-gray-50 font-medium text-gray-500">
                 Full Name
               </label>
-              {/* BUG FIX: Switched to robust Flexbox container for inputs */}
-              <div className="flex items-center w-full bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                <User className="text-gray-400 shrink-0" size={18} />
-                <input 
-                  type="text" 
-                  required
-                  value={profileData.name}
-                  onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-                  className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 ml-3 text-gray-900 font-medium min-w-0 w-full p-0 truncate"
-                />
-              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                Email Address
-              </label>
-              {/* BUG FIX: Switched to robust Flexbox container for inputs */}
-              <div className="flex items-center w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 shadow-sm transition-all">
-                <Mail className="text-gray-400 shrink-0" size={18} />
-                <input 
-                  type="email" 
+            {/* Email — readonly, floating label */}
+            <div className="relative mt-6">
+              <div className="flex items-center gap-3 rounded-lg px-4 py-3.5 border-2 bg-gray-50 border-gray-200 transition-all">
+                <Mail size={18} className="shrink-0 text-gray-400" />
+                <input
+                  type="email"
                   disabled
                   value={profileData.email}
-                  className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 ml-3 text-gray-500 font-medium min-w-0 w-full p-0 cursor-not-allowed truncate"
+                  className="w-full bg-transparent text-sm text-gray-500 focus:outline-none cursor-not-allowed"
                 />
               </div>
+              <label className="absolute transition-all duration-200 pointer-events-none text-xs top-0 -translate-y-1/2 left-3 px-1 bg-gray-50 font-medium text-gray-500">
+                Email Address
+              </label>
               <p className="text-[10px] text-gray-500 mt-2 flex items-center gap-1">
                 <ShieldCheck size={12} className="text-green-600" />
                 Email is used for login and cannot be changed directly.
@@ -212,90 +215,115 @@ export default function ProfilePage() {
 
         {/* SECTION 2: Security & Passwords */}
         <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2 mb-6">Security</h2>
+          <h2 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2 mb-6 flex items-center gap-2">
+            <Lock size={18} className="text-gray-500 shrink-0" />
+            Security
+          </h2>
           
           <div className="space-y-6 max-w-xl">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                Current Password
-              </label>
-              {/* BUG FIX: Flexbox container solves text overlap! */}
-              <div className="flex items-center w-full bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                <Lock className="text-gray-400 shrink-0" size={18} />
-                <input 
-                  type={showCurrentPass ? "text" : "password"} 
-                  placeholder="••••••••"
+
+            {/* Current Password — floating label */}
+            <div className="relative mt-3">
+              <div className={`flex items-center gap-3 rounded-lg px-4 py-3.5 border-2 transition-all ${
+                currentPassFocused
+                  ? "border-primary bg-white"
+                  : passwords.current
+                  ? "border-gray-300 bg-white"
+                  : "border-transparent bg-gray-100 hover:bg-gray-200"
+              }`}>
+                <input
+                  type={showCurrentPass ? "text" : "password"}
                   value={passwords.current}
                   onChange={(e) => setPasswords({...passwords, current: e.target.value})}
-                  className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 ml-3 text-gray-900 font-medium min-w-0 w-full p-0 truncate placeholder-gray-400"
+                  onFocus={() => setCurrentPassFocused(true)}
+                  onBlur={() => setCurrentPassFocused(false)}
+                  className="w-full bg-transparent text-sm text-gray-700 focus:outline-none"
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowCurrentPass(!showCurrentPass)}
-                  className="text-gray-400 hover:text-gray-700 transition-colors shrink-0 ml-3 p-1"
-                >
+                <button type="button" onClick={() => setShowCurrentPass(!showCurrentPass)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer shrink-0">
                   {showCurrentPass ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              <label className={`absolute transition-all duration-200 pointer-events-none ${
+                currentPassFocused || passwords.current
+                  ? "text-xs top-0 -translate-y-1/2 left-3 px-1 bg-white font-medium"
+                  : "text-sm top-1/2 -translate-y-1/2 left-4 text-gray-400"
+              } ${currentPassFocused ? "text-primary" : "text-gray-500"}`}>
+                Current Password
+              </label>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                New Password
-              </label>
-              {/* BUG FIX: Flexbox container */}
-              <div className="flex items-center w-full bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                <Lock className="text-gray-400 shrink-0" size={18} />
-                <input 
-                  type={showNewPass ? "text" : "password"} 
-                  placeholder="Leave blank to keep current password"
+            {/* New Password — floating label */}
+            <div className="relative mt-6">
+              <div className={`flex items-center gap-3 rounded-lg px-4 py-3.5 border-2 transition-all ${
+                newPassFocused
+                  ? "border-primary bg-white"
+                  : passwords.new
+                  ? "border-gray-300 bg-white"
+                  : "border-transparent bg-gray-100 hover:bg-gray-200"
+              }`}>
+                <input
+                  type={showNewPass ? "text" : "password"}
                   value={passwords.new}
                   onChange={(e) => setPasswords({...passwords, new: e.target.value})}
-                  className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 ml-3 text-gray-900 font-medium min-w-0 w-full p-0 truncate placeholder-gray-400"
+                  onFocus={() => setNewPassFocused(true)}
+                  onBlur={() => setNewPassFocused(false)}
+                  className="w-full bg-transparent text-sm text-gray-700 focus:outline-none"
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowNewPass(!showNewPass)}
-                  className="text-gray-400 hover:text-gray-700 transition-colors shrink-0 ml-3 p-1"
-                >
+                <button type="button" onClick={() => setShowNewPass(!showNewPass)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer shrink-0">
                   {showNewPass ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              <label className={`absolute transition-all duration-200 pointer-events-none ${
+                newPassFocused || passwords.new
+                  ? "text-xs top-0 -translate-y-1/2 left-3 px-1 bg-white font-medium"
+                  : "text-sm top-1/2 -translate-y-1/2 left-4 text-gray-400"
+              } ${newPassFocused ? "text-primary" : "text-gray-500"}`}>
+                New Password
+              </label>
             </div>
 
-            {passwords.new.length > 0 && (
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                  Confirm New Password
-                </label>
-                {/* BUG FIX: Dynamic Flexbox container */}
-                <div className={`flex items-center w-full bg-white border rounded-lg px-4 py-3 shadow-sm transition-all focus-within:ring-2 ${
-                  passwords.confirm !== "" && passwords.new !== passwords.confirm 
-                    ? "border-red-300 focus-within:ring-red-200" 
-                    : "border-gray-200 focus-within:ring-primary/20"
-                }`}>
-                  <Lock className="text-gray-400 shrink-0" size={18} />
-                  <input 
-                    type={showConfirmPass ? "text" : "password"} 
-                    placeholder="Repeat new password"
-                    required={passwords.new.length > 0}
-                    value={passwords.confirm}
-                    onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
-                    className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 ml-3 text-gray-900 font-medium min-w-0 w-full p-0 truncate placeholder-gray-400"
-                  />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowConfirmPass(!showConfirmPass)}
-                    className="text-gray-400 hover:text-gray-700 transition-colors shrink-0 ml-3 p-1"
-                  >
-                    {showConfirmPass ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {passwords.confirm !== "" && passwords.new !== passwords.confirm && (
-                  <p className="text-xs text-red-500 font-medium mt-2">Passwords do not match.</p>
-                )}
+            {/* Confirm New Password — floating label, always visible */}
+            <div className="relative mt-6">
+              <div className={`flex items-center gap-3 rounded-lg px-4 py-3.5 border-2 transition-all ${
+                passwords.confirm !== "" && passwords.new !== passwords.confirm
+                  ? confirmPassFocused ? "border-red-400 bg-white" : "border-red-300 bg-white"
+                  : confirmPassFocused
+                  ? "border-primary bg-white"
+                  : passwords.confirm
+                  ? "border-gray-300 bg-white"
+                  : "border-transparent bg-gray-100 hover:bg-gray-200"
+              }`}>
+                <input
+                  type={showConfirmPass ? "text" : "password"}
+                  value={passwords.confirm}
+                  onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
+                  onFocus={() => setConfirmPassFocused(true)}
+                  onBlur={() => setConfirmPassFocused(false)}
+                  className="w-full bg-transparent text-sm text-gray-700 focus:outline-none"
+                />
+                <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer shrink-0">
+                  {showConfirmPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
-            )}
+              <label className={`absolute transition-all duration-200 pointer-events-none ${
+                confirmPassFocused || passwords.confirm
+                  ? "text-xs top-0 -translate-y-1/2 left-3 px-1 bg-white font-medium"
+                  : "text-sm top-1/2 -translate-y-1/2 left-4 text-gray-400"
+              } ${
+                passwords.confirm !== "" && passwords.new !== passwords.confirm
+                  ? "text-red-400"
+                  : confirmPassFocused ? "text-primary" : "text-gray-500"
+              }`}>
+                Confirm New Password
+              </label>
+              {passwords.confirm !== "" && passwords.new !== passwords.confirm && (
+                <p className="text-xs text-red-500 font-medium mt-2">Passwords do not match.</p>
+              )}
+            </div>
+
           </div>
         </div>
 
@@ -316,7 +344,7 @@ export default function ProfilePage() {
           <button 
             type="submit"
             disabled={saveStatus === "saving" || (passwords.new !== "" && passwords.new !== passwords.confirm)}
-            className="px-8 py-2.5 text-sm font-bold bg-[#274C77] text-white hover:bg-[#1a385b] disabled:opacity-70 disabled:cursor-not-allowed rounded-lg transition-colors shadow-md flex items-center gap-2 cursor-pointer"
+            className="px-8 py-2.5 text-sm font-bold bg-primary text-white hover:bg-[#1a385b] disabled:opacity-70 disabled:cursor-not-allowed rounded-lg transition-colors shadow-md flex items-center gap-2 cursor-pointer"
           >
             {saveStatus === "saving" ? "Saving..." : "Save Changes"}
           </button>
