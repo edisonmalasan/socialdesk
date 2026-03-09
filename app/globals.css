@@ -7,11 +7,21 @@
   --color-secondary: #6096BA;  /* Medium blue */
   --color-accent: #A3CEF1;     /* Light blue */
   --color-muted: #8B8C89;      /* Grey */
+
+  /* Remove non-width breakpoints so Tailwind doesn't inject them into .container */
+  --breakpoint-landscape: initial;
+  --breakpoint-portrait: initial;
 }
 
 
 html, body {
   min-height: 100vh;
   background-color: #F3F6F8;
+}
+
+/* Allow page-level backgrounds to override the body background */
+body > #__next,
+body > div {
+  min-height: 100vh;
 }
 
