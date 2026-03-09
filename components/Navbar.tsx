@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import { createPortal } from "react-dom";
 import { Search, Bell, User, Menu, ChevronDown, LogOut, CheckCircle2, AlertCircle, MessageSquare } from "lucide-react";
 
 export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
@@ -12,10 +13,17 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [notificationsMenuStyle, setNotificationsMenuStyle] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
   
   // Refs for click-outside handling
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
+  const notificationsMenuRef = useRef<HTMLDivElement>(null);
 
   // Search State
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,13 +44,33 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
       }
-      if (notificationsRef.current && !notificationsRef.current.contains(e.target as Node)) {
+      const clickedNotificationsTrigger = notificationsRef.current?.contains(e.target as Node);
+      const clickedNotificationsMenu = notificationsMenuRef.current?.contains(e.target as Node);
+      if (!clickedNotificationsTrigger && !clickedNotificationsMenu) {
         setNotificationsOpen(false);
+        setNotificationsMenuStyle(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+
+    const handleViewportChange = () => {
+      setNotificationsOpen(false);
+      setNotificationsMenuStyle(null);
+    };
+
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
+
+    return () => {
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
+    };
+  }, [notificationsOpen]);
 
   const handleLogout = () => {
     setShowLogoutModal(false);
@@ -65,6 +93,43 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       case 'social': return <MessageSquare size={16} className="text-blue-500" />;
       default: return <Bell size={16} className="text-gray-500" />;
     }
+  };
+
+  const closeNotificationsMenu = () => {
+    setNotificationsOpen(false);
+    setNotificationsMenuStyle(null);
+  };
+
+  const getNotificationsMenuStyle = (trigger: HTMLElement) => {
+    const rect = trigger.getBoundingClientRect();
+    const viewportPadding = 12;
+    const width = Math.min(window.innerWidth - viewportPadding * 2, window.innerWidth < 640 ? 320 : 384);
+    const left = Math.min(
+      window.innerWidth - width - viewportPadding,
+      Math.max(viewportPadding, rect.right - width)
+    );
+    const spaceBelow = window.innerHeight - rect.bottom - viewportPadding;
+    const spaceAbove = rect.top - viewportPadding;
+
+    if (spaceBelow >= 260 || spaceBelow >= spaceAbove) {
+      const top = rect.bottom + 12;
+      return {
+        top,
+        left,
+        width,
+        maxHeight: Math.max(180, window.innerHeight - top - viewportPadding),
+      };
+    }
+
+    const maxHeight = Math.max(180, Math.min(420, spaceAbove - 12));
+    const top = Math.max(viewportPadding, rect.top - maxHeight - 12);
+
+    return {
+      top,
+      left,
+      width,
+      maxHeight,
+    };
   };
 
   return (
@@ -101,8 +166,14 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
           {/* Notifications Dropdown */}
           <div className="relative" ref={notificationsRef}>
             <button 
-              onClick={() => {
-                setNotificationsOpen(!notificationsOpen);
+              onClick={(e) => {
+                if (notificationsOpen) {
+                  closeNotificationsMenu();
+                  return;
+                }
+
+                setNotificationsMenuStyle(getNotificationsMenuStyle(e.currentTarget));
+                setNotificationsOpen(true);
                 setUserMenuOpen(false); // Close user menu if open
               }}
               className={`relative text-primary hover:bg-blue-50 p-2 rounded-full transition-colors cursor-pointer ${notificationsOpen ? 'bg-blue-50' : ''}`}
@@ -113,67 +184,6 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
               )}
             </button>
 
-            {notificationsOpen && (
-              <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[80vh]">
-                {/* Notifications Header */}
-                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                  <h3 className="font-bold text-gray-900">Notifications</h3>
-                  {unreadCount > 0 && (
-                    <button 
-                      onClick={markAllAsRead}
-                      className="text-xs text-primary font-medium hover:underline cursor-pointer"
-                    >
-                      Mark all as read
-                    </button>
-                  )}
-                </div>
-
-                {/* Notifications List */}
-                <div className="overflow-y-auto flex-1">
-                  {notifications.length === 0 ? (
-                    <div className="py-8 text-center text-gray-500 text-sm">
-                      No new notifications.
-                    </div>
-                  ) : (
-                    <div className="flex flex-col divide-y divide-gray-50">
-                      {notifications.map((notification) => (
-                        <div 
-                          key={notification.id} 
-                          className={`px-4 py-3 flex gap-3 hover:bg-gray-50 transition-colors cursor-pointer ${notification.unread ? 'bg-blue-50/30' : ''}`}
-                        >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${notification.unread ? 'bg-white shadow-sm' : 'bg-gray-100'}`}>
-                            {getNotificationIcon(notification.type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm leading-tight mb-0.5 ${notification.unread ? 'font-bold text-gray-900' : 'font-medium text-gray-800'}`}>
-                              {notification.title}
-                            </p>
-                            <p className="text-xs text-gray-500 truncate">{notification.message}</p>
-                            <p className="text-[10px] text-gray-400 mt-1">{notification.time}</p>
-                          </div>
-                          {notification.unread && (
-                            <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0"></div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                {/* View All Footer */}
-                <div className="p-2 border-t border-gray-100 bg-white">
-                  <button 
-                    onClick={() => {
-                      setNotificationsOpen(false);
-                      router.push("/notifications");
-                    }}
-                    className="w-full py-2 text-xs font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
-                  >
-                    View all notifications
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* User Menu Dropdown */}
@@ -181,13 +191,13 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
             <button
               onClick={() => {
                 setUserMenuOpen(!userMenuOpen);
-                setNotificationsOpen(false); // Close notifications if open
+                closeNotificationsMenu(); // Close notifications if open
               }}
               className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
               aria-expanded={userMenuOpen}
               aria-haspopup="true"
             >
-              <div className="w-10 h-10 rounded-full bg-[#274C77] flex items-center justify-center text-white overflow-hidden shrink-0 shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white overflow-hidden shrink-0 shadow-sm">
                 <User size={24} /> 
               </div>
               <div className="hidden md:flex items-center gap-1.5">
@@ -226,9 +236,84 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         </div>
       </header>
 
+      {notificationsOpen && notificationsMenuStyle && typeof window !== "undefined" && createPortal(
+        <>
+          <div className="fixed inset-0 z-40" onClick={closeNotificationsMenu} />
+          <div
+            ref={notificationsMenuRef}
+            style={{
+              position: "fixed",
+              top: notificationsMenuStyle.top,
+              left: notificationsMenuStyle.left,
+              width: notificationsMenuStyle.width,
+              maxHeight: notificationsMenuStyle.maxHeight,
+              minHeight: 0,
+              zIndex: 50,
+            }}
+            className="bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden flex flex-col"
+          >
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 gap-3">
+              <h3 className="font-bold text-gray-900 truncate">Notifications</h3>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-xs text-primary font-medium hover:underline cursor-pointer shrink-0"
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
+
+            <div className="overflow-y-auto flex-1">
+              {notifications.length === 0 ? (
+                <div className="py-8 text-center text-gray-500 text-sm">
+                  No new notifications.
+                </div>
+              ) : (
+                <div className="flex flex-col divide-y divide-gray-50">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`px-4 py-3 flex gap-3 hover:bg-gray-50 transition-colors cursor-pointer ${notification.unread ? 'bg-blue-50/30' : ''}`}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${notification.unread ? 'bg-white shadow-sm' : 'bg-gray-100'}`}>
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm leading-tight mb-0.5 ${notification.unread ? 'font-bold text-gray-900' : 'font-medium text-gray-800'}`}>
+                          {notification.title}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">{notification.message}</p>
+                        <p className="text-[10px] text-gray-400 mt-1">{notification.time}</p>
+                      </div>
+                      {notification.unread && (
+                        <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-2 border-t border-gray-100 bg-white">
+              <button
+                onClick={() => {
+                  closeNotificationsMenu();
+                  router.push("/notifications");
+                }}
+                className="w-full py-2 text-xs font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+              >
+                View all notifications
+              </button>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+        <div className="fixed inset-0 z-100 flex items-center justify-center">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"

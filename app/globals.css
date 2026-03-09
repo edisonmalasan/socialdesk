@@ -20,8 +20,9 @@ html, body {
 }
 
 /* Allow page-level backgrounds to override the body background */
+/* Target only the first div (app root), not portal-injected divs */
 body > #__next,
-body > div {
+body > div:first-of-type {
   min-height: 100vh;
 }
 

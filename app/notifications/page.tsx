@@ -38,6 +38,7 @@ export default function NotificationsPage() {
   ]);
 
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [menuOpenDir, setMenuOpenDir] = useState<"down" | "up">("down");
 
   // Derived state
   const unreadCount = notifications.filter(n => n.unread).length;
@@ -128,7 +129,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* Notifications List */}
-        <div className="flex flex-col min-h-[400px]">
+        <div className="flex flex-col min-h-100">
           {filteredNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center flex-1 py-16 text-gray-400">
               <BellRing size={48} className="mb-4 opacity-20" />
@@ -174,7 +175,11 @@ export default function NotificationsPage() {
                   {/* Actions Dropdown */}
                   <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
                     <button 
-                      onClick={() => setOpenMenuId(openMenuId === notification.id ? null : notification.id)}
+                      onClick={(e) => {
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        setMenuOpenDir(rect.bottom + 80 > window.innerHeight ? "up" : "down");
+                        setOpenMenuId(openMenuId === notification.id ? null : notification.id);
+                      }}
                       className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-white rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                     >
                       <MoreHorizontal size={20} />
@@ -183,7 +188,7 @@ export default function NotificationsPage() {
                     {openMenuId === notification.id && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setOpenMenuId(null)}></div>
-                        <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
+                        <div className={`absolute right-0 w-40 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden ${menuOpenDir === "up" ? "bottom-full mb-1" : "mt-1"}`}>
                           {notification.unread && (
                             <button 
                               onClick={() => markAsRead(notification.id)}
