@@ -201,7 +201,7 @@ function CloseBtn({ onClick }: { onClick: () => void }) {
 
 function Overlay({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
       <div onClick={e => e.stopPropagation()}>{children}</div>
     </div>
   );
@@ -228,7 +228,7 @@ export default function Home() {
       {/* ── MODAL: Total Followers ── */}
       {modal === "followers" && (
         <Overlay onClose={() => setModal(null)}>
-          <div style={{ background: "#1e3a5f", borderRadius: 16, width: 300, padding: "26px 22px 22px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+          <div style={{ background: "#1e3a5f", borderRadius: 16, maxWidth: 300, width: "90vw", padding: "26px 22px 22px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
             <h2 style={{ color: "#fff", fontSize: 24, fontWeight: 700, margin: "0 0 6px" }}>Total Followers</h2>
             <p style={{ color: "#a8c4e0", fontSize: 13, margin: "0 0 18px" }}>Overview for <strong style={{ color: "#fff" }}>Egetinnz</strong> total followers performance.</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -250,7 +250,7 @@ export default function Home() {
       {/* ── MODAL: Total Posted Content ── */}
       {modal === "posted" && (
         <Overlay onClose={() => setModal(null)}>
-          <div style={{ background: "#fff", borderRadius: 16, width: 340, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+          <div style={{ background: "#fff", borderRadius: 16, maxWidth: 340, width: "90vw", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <div style={{ background: "#1e3a5f", height: 6 }} />
             <div style={{ padding: "22px 26px 24px" }}>
               <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 20px", color: "#1e3a5f" }}>Total Posted Content</h2>
@@ -273,11 +273,12 @@ export default function Home() {
       {/* ── MODAL: Total Scheduled Content ── */}
       {modal === "scheduled" && (
         <Overlay onClose={() => setModal(null)}>
-          <div style={{ background: "#fff", borderRadius: 16, width: 680, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+          <div style={{ background: "#fff", borderRadius: 16, maxWidth: 680, width: "90vw", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <div style={{ background: "#1e3a5f", height: 6 }} />
-            <div style={{ padding: "22px 26px 24px" }}>
+            <div style={{ padding: "22px 26px 24px", maxHeight: "85vh", overflowY: "auto" }}>
               <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 20px", color: "#1e3a5f" }}>Total Scheduled Content</h2>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+              <table style={{ width: "100%", minWidth: 480, borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "#f1f5f9" }}>
                     {["Post Title","Date & Time","Platform","Status","Action"].map(h => (
@@ -300,6 +301,7 @@ export default function Home() {
                   ))}
                 </tbody>
               </table>
+              </div>
               <div style={{ textAlign: "center", marginTop: 20 }}><CloseBtn onClick={() => setModal(null)} /></div>
             </div>
           </div>
@@ -309,15 +311,16 @@ export default function Home() {
       {/* ── MODAL: Total Engagement ── */}
       {modal === "engagement" && (
         <Overlay onClose={() => setModal(null)}>
-          <div style={{ background: "#f0f4f8", borderRadius: 16, width: 740, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.22)", border: "1px solid #dde3ec" }}>
+          <div style={{ background: "#f0f4f8", borderRadius: 16, maxWidth: 740, width: "90vw", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.22)", border: "1px solid #dde3ec" }}>
             {/* thick navy top bar */}
             <div style={{ background: "#1e3a5f", height: 10 }} />
-            <div style={{ padding: "28px 30px 26px" }}>
+            <div style={{ padding: "28px 30px 26px", maxHeight: "85vh", overflowY: "auto" }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 20px", color: "#1a202c" }}>Total Engagement Per Post</h2>
 
               {/* Table wrapper with inner white card */}
-              <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <div style={{ borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                <table style={{ width: "100%", minWidth: 560, borderCollapse: "collapse", background: "#fff" }}>
                   <thead>
                     <tr style={{ background: "#f8fafc" }}>
                       {["Platform","Page","Post","Likes","Comments","Shares","Total"].map(col => (
@@ -377,6 +380,7 @@ export default function Home() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
 
               {/* Footer */}
@@ -392,7 +396,7 @@ export default function Home() {
       {/* ── MODAL: Account Performance Detail ── */}
       {accModal && (
         <Overlay onClose={() => setAccModal(null)}>
-          <div style={{ background: "#fff", borderRadius: 14, width: 420, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.22)", border: "1px solid #dde3ec" }}>
+          <div style={{ background: "#fff", borderRadius: 14, maxWidth: 420, width: "90vw", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.22)", border: "1px solid #dde3ec" }}>
             {/* Navy top bar */}
             <div style={{ background: "#1e3a5f", height: 6 }} />
             <div style={{ padding: "22px 26px 28px" }}>
@@ -433,21 +437,21 @@ export default function Home() {
       )}
 
       {/* ── Page content ── */}
-      <div style={{ padding: "24px 32px" }}>
+      <div className="dash-content">
         <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 6px" }}>Dashboard</h1>
         <p style={{ fontSize: 14, color: "#64748b", margin: "0 0 22px" }}>Overview of all social media accounts performance.</p>
 
         {/* ── Two-column layout ── */}
-        <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+        <div className="dash-two-col">
 
           {/* ── LEFT ── */}
-          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className="dash-left">
 
             {/* Overall Performance card */}
             <div style={{ background: "#fff", borderRadius: 14, padding: "22px 24px", border: "1px solid #e8edf3" }}>
               <p style={{ fontSize: 15, fontWeight: 700, margin: "0 0 4px" }}>Overall Performance <span style={{ fontWeight: 400 }}>(All Accounts)</span></p>
               <p style={{ fontSize: 13, color: "#94a3b8", margin: "0 0 18px" }}>Combined analytics for Egetinnz PH, Egetinnz USA, Fibei Travel, and Digitimmerse.</p>
-              <div style={{ display: "flex", gap: 14 }}>
+              <div className="dash-stat-cards">
                 <StatCard title="Total Followers"         value="41,335" sub="As of February 11, 2026" icon={<FollowerIcon />} onClick={() => setModal("followers")} />
                 <StatCard title="Total Posted Content"    value="674"    sub="Published Post"          icon={<CheckIcon />}   onClick={() => setModal("posted")} />
                 <StatCard title="Total Scheduled Content" value="35"     sub="Scheduled Post"          icon={<CalendarIcon />} onClick={() => setModal("scheduled")} />
@@ -458,7 +462,7 @@ export default function Home() {
             {/* Account Performance */}
             <div>
               <p style={{ fontSize: 15, fontWeight: 700, margin: "0 0 14px" }}>Account Performance</p>
-              <div style={{ display: "flex", gap: 14 }}>
+              <div className="dash-acc-cards">
                 {ACC_PERF.map(a => <AccCard key={a.name} acc={a} onViewMore={() => setAccModal(a)} />)}
               </div>
             </div>
@@ -466,6 +470,7 @@ export default function Home() {
             {/* Scheduled Posts */}
             <div style={{ background: "#fff", borderRadius: 14, padding: "22px 24px 0", border: "1px solid #e8edf3" }}>
               <p style={{ fontSize: 15, fontWeight: 700, margin: "0 0 14px" }}>Scheduled Posts</p>
+              <div className="dash-table-wrap">
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "#f8fafc" }}>
@@ -479,11 +484,12 @@ export default function Home() {
                   {SCHED_POSTS.map((p, i) => <SchedRow key={i} post={p} />)}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
 
           {/* ── RIGHT SIDEBAR ── */}
-          <div style={{ width: 290, flexShrink: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className="dash-right">
 
             {/* Connected Accounts */}
             <div style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", border: "1px solid #e8edf3" }}>
@@ -515,19 +521,20 @@ function StatCard({ title, value, sub, icon, onClick }: { title: string; value: 
   const [h, setH] = useState(false);
   return (
     <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{
-      flex: 1, minWidth: 0, padding: "18px 20px", cursor: "pointer",
+      flex: 1, minWidth: 0, cursor: "pointer",
       background: "#f0f2f5",
       border: "1px solid #e8edf3",
       borderRadius: 12,
       boxShadow: h ? "0 4px 14px rgba(0,0,0,0.09)" : "0 1px 4px rgba(0,0,0,0.06)",
       transform: h ? "translateY(-1px)" : "translateY(0)",
       transition: "all 0.15s",
-    }}>
+      overflow: "hidden",
+    }} className="dash-stat-card">
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         {icon}
         <p style={{ fontSize: 13, fontWeight: 500, margin: 0, color: "#64748b" }}>{title}</p>
       </div>
-      <p style={{ fontSize: 40, fontWeight: 700, margin: "0 0 6px", lineHeight: 1, color: "#1a202c" }}>{value}</p>
+      <p className="dash-stat-value" style={{ fontWeight: 700, margin: "0 0 6px", lineHeight: 1, color: "#1a202c" }}>{value}</p>
       <p style={{ fontSize: 12, fontStyle: "italic", margin: 0, color: "#94a3b8" }}>{sub}</p>
     </div>
   );
