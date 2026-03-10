@@ -11,7 +11,6 @@ import {
   BarChart3, 
   Link as LinkIcon, 
   FileText, 
-  LogOut,
   X,
   Users
 } from "lucide-react";
@@ -33,17 +32,18 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     }
   }, []);
 
-  const menuItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Scheduler", href: "/schedule", icon: CalendarClock },
-    { name: "Analytics", href: "/analytics", icon: BarChart3 },
-    { name: "Accounts", href: "/accounts", icon: LinkIcon },
-    { name: "Posts", href: "/posts", icon: FileText },
+  // --- NEW: Cleaner conditional menu logic ---
+  const allMenuItems = [
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, reqAdmin: false },
+    { name: "Scheduler", href: "/schedule", icon: CalendarClock, reqAdmin: false },
+    { name: "Analytics", href: "/analytics", icon: BarChart3, reqAdmin: false },
+    { name: "Accounts", href: "/accounts", icon: LinkIcon, reqAdmin: true }, // Accounts restricted
+    { name: "Posts", href: "/posts", icon: FileText, reqAdmin: false },
+    { name: "Management", href: "/management", icon: Users, reqAdmin: true }, // Management restricted
   ];
 
-  if (isAdmin) {
-    menuItems.push({ name: "Management", href: "/management", icon: Users });
-  }
+  // Filter the list: Only show items where reqAdmin is false, OR if the user is an admin
+  const menuItems = allMenuItems.filter(item => !item.reqAdmin || isAdmin);
 
   return (
     <>
@@ -105,16 +105,6 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             );
           })}
         </nav>
-
-        <div className="p-4 mb-4 mt-auto">
-          <Link 
-            href="/logout"
-            className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <LogOut size={20} />
-            <span className="text-sm font-medium">Log out</span>
-          </Link>
-        </div>
       </aside>
     </>
   );

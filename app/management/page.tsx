@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { 
   Search, 
   Plus, 
@@ -11,24 +12,52 @@ import {
   UserCheck, 
   UserMinus, 
   ShieldCheck,
-  X // Added X icon for the modal
+  X,
+  Pencil,
+  KeyRound,
+  Ban,
+  Trash2
 } from "lucide-react";
 
 export default function ManagementPage() {
   
   // BACKEND NOTE: This mock data should be fetched from the database via a GET request.
   const [users, setUsers] = useState([
-    { id: "1", name: "Admin 1", email: "admin1.egetinzz@gmail.com", role: "Admin", status: "Active", lastActive: "1 minute ago" },
-    { id: "2", name: "User 1", email: "user1.egetinzz@gmail.com", role: "User", status: "Active", lastActive: "2 hours ago" },
-    { id: "3", name: "User 2", email: "user2.egetinzz@gmail.com", role: "User", status: "Inactive", lastActive: "30 days ago" },
-    { id: "4", name: "Sarah Connor", email: "s.connor@gmail.com", role: "Admin", status: "Inactive", lastActive: "5 days ago" },
-    { id: "5", name: "John Smith", email: "john.smith@yahoo.com", role: "User", status: "Active", lastActive: "10 mins ago" },
+    { id: "1", name: "Admin 1",      email: "admin1.egetinzz@gmail.com", role: "Admin", status: "Active",   lastActive: "1 minute ago",  business: "eGetinnz PH"  },
+    { id: "2", name: "User 1",       email: "user1.egetinzz@gmail.com",  role: "User",  status: "Active",   lastActive: "2 hours ago",   business: "Fibei Travel" },
+    { id: "3", name: "User 2",       email: "user2.egetinzz@gmail.com",  role: "User",  status: "Inactive", lastActive: "30 days ago",   business: "eGetinnz USA" },
+    { id: "4", name: "Sarah Connor", email: "s.connor@gmail.com",         role: "Admin", status: "Inactive", lastActive: "5 days ago",    business: "Digitimmerse" },
+    { id: "5", name: "John Smith",   email: "john.smith@yahoo.com",       role: "User",  status: "Active",   lastActive: "10 mins ago",  business: "eGetinnz PH"  },
   ]);
+
+  const businesses = ["eGetinnz PH", "eGetinnz USA", "Fibei Travel", "Digitimmerse"];
 
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("All"); 
-  const [statusFilter, setStatusFilter] = useState("All"); 
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [businessFilter, setBusinessFilter] = useState("All");
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const [filterAlign, setFilterAlign] = useState<"left" | "right">("right");
+  const [actionMenuAnchor, setActionMenuAnchor] = useState<{ id: string; top: number; right: number } | null>(null);
+
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setIsFilterMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Close actions dropdown when user scrolls
+  useEffect(() => {
+    const handleScroll = () => setActionMenuAnchor(null);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, []);
 
   // --- NEW: Add User Modal State ---
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -37,6 +66,13 @@ export default function ManagementPage() {
   // BACKEND NOTE: Delete handler. Implement the DELETE API call here.
   const handleDeleteUser = (id: string) => {
     setUsers(users.filter(user => user.id !== id));
+    setOpenActionMenu(null);
+  };
+
+  const handleDisableUser = (id: string) => {
+    // BACKEND NOTE: Implement PATCH /api/users/:id/disable
+    setUsers(users.map(u => u.id === id ? { ...u, status: u.status === "Active" ? "Inactive" : "Active" } : u));
+    setOpenActionMenu(null);
   };
 
   // --- NEW: Add User Handler ---
@@ -53,8 +89,9 @@ export default function ManagementPage() {
       name: newUser.name,
       email: newUser.email,
       role: newUser.role,
-      status: "Active", // Default to Active when created
-      lastActive: "Just now"
+      status: "Active",
+      lastActive: "Just now",
+      business: "eGetinnz PH",
     };
 
     // Add to the top of the list
@@ -72,8 +109,9 @@ export default function ManagementPage() {
     
     const matchesRole = roleFilter === "All" || user.role === roleFilter;
     const matchesStatus = statusFilter === "All" || user.status === statusFilter;
+    const matchesBusiness = businessFilter === "All" || user.business === businessFilter;
 
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesRole && matchesStatus && matchesBusiness;
   });
 
   const totalUsers = users.length;
@@ -92,24 +130,24 @@ export default function ManagementPage() {
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className="bg-[#274C77] p-5 rounded-xl shadow-md flex flex-col justify-between relative overflow-hidden">
+        <div className="bg-primary p-5 rounded-xl shadow-md flex flex-col justify-between relative overflow-hidden">
           <p className="text-sm font-bold text-white z-10">Total Users</p>
           <h2 className="text-4xl font-bold text-white mt-2 z-10">{totalUsers}</h2>
           <Users size={40} className="absolute bottom-4 right-4 text-white/20 z-0" />
         </div>
         <div className="bg-white border border-gray-100 p-5 rounded-xl shadow-sm flex flex-col justify-between relative">
-          <p className="text-sm font-bold text-[#274C77]">Active</p>
-          <h2 className="text-4xl font-bold text-[#274C77] mt-2">{activeUsers}</h2>
+          <p className="text-sm font-bold text-primary">Active</p>
+          <h2 className="text-4xl font-bold text-primary mt-2">{activeUsers}</h2>
           <UserCheck size={32} className="absolute bottom-5 right-5 text-blue-500" />
         </div>
         <div className="bg-white border border-gray-100 p-5 rounded-xl shadow-sm flex flex-col justify-between relative">
-          <p className="text-sm font-bold text-[#274C77]">Inactive</p>
-          <h2 className="text-4xl font-bold text-[#274C77] mt-2">{inactiveUsers}</h2>
+          <p className="text-sm font-bold text-primary">Inactive</p>
+          <h2 className="text-4xl font-bold text-primary mt-2">{inactiveUsers}</h2>
           <UserMinus size={32} className="absolute bottom-5 right-5 text-blue-500" />
         </div>
         <div className="bg-white border border-gray-100 p-5 rounded-xl shadow-sm flex flex-col justify-between relative">
-          <p className="text-sm font-bold text-[#274C77]">Admins</p>
-          <h2 className="text-4xl font-bold text-[#274C77] mt-2">{adminUsers}</h2>
+          <p className="text-sm font-bold text-primary">Admins</p>
+          <h2 className="text-4xl font-bold text-primary mt-2">{adminUsers}</h2>
           <ShieldCheck size={32} className="absolute bottom-5 right-5 text-blue-500" />
         </div>
       </div>
@@ -128,26 +166,30 @@ export default function ManagementPage() {
             />
           </div>
 
-          <div className="relative">
+          <div className="relative" ref={filterRef}>
             <button 
-              onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+              onClick={(e) => {
+                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                setFilterAlign(rect.left + 256 > window.innerWidth ? "right" : "left");
+                setIsFilterMenuOpen(prev => !prev);
+              }}
               className={`flex items-center gap-2 px-4 py-2.5 bg-white border text-sm rounded-lg font-medium transition-colors shadow-sm shrink-0 ${
-                isFilterMenuOpen || roleFilter !== "All" || statusFilter !== "All" 
+                isFilterMenuOpen || roleFilter !== "All" || statusFilter !== "All" || businessFilter !== "All"
                   ? "border-primary text-primary bg-blue-50" 
                   : "border-gray-200 text-gray-700 hover:bg-gray-50"
               }`}
             >
                <Filter size={16} /> Filter 
-               {(roleFilter !== "All" || statusFilter !== "All") && (
+               {(roleFilter !== "All" || statusFilter !== "All" || businessFilter !== "All") && (
                  <span className="flex items-center justify-center w-5 h-5 bg-primary text-white text-[10px] rounded-full ml-1">
-                   {(roleFilter !== "All" ? 1 : 0) + (statusFilter !== "All" ? 1 : 0)}
+                   {(roleFilter !== "All" ? 1 : 0) + (statusFilter !== "All" ? 1 : 0) + (businessFilter !== "All" ? 1 : 0)}
                  </span>
                )}
                <ChevronDown size={14} className={`ml-1 transition-transform ${isFilterMenuOpen ? "rotate-180" : ""}`} />
             </button>
 
             {isFilterMenuOpen && (
-              <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 w-64 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-4 flex flex-col gap-4">
+              <div className={`absolute top-full mt-2 w-64 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-4 flex flex-col gap-4 ${filterAlign === "right" ? "right-0" : "left-0"}`}>
                 <div>
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Role</label>
                   <select 
@@ -172,9 +214,20 @@ export default function ManagementPage() {
                     <option value="Inactive">Inactive</option>
                   </select>
                 </div>
-                {(roleFilter !== "All" || statusFilter !== "All") && (
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Business</label>
+                  <select 
+                    value={businessFilter} 
+                    onChange={(e) => setBusinessFilter(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:border-primary text-sm"
+                  >
+                    <option value="All">All Businesses</option>
+                    {businesses.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+                {(roleFilter !== "All" || statusFilter !== "All" || businessFilter !== "All") && (
                   <button 
-                    onClick={() => { setRoleFilter("All"); setStatusFilter("All"); }}
+                    onClick={() => { setRoleFilter("All"); setStatusFilter("All"); setBusinessFilter("All"); }}
                     className="text-xs text-red-500 font-bold hover:underline mt-1 text-center"
                   >
                     Clear Filters
@@ -188,7 +241,7 @@ export default function ManagementPage() {
         {/* --- NEW: Trigger Modal Button --- */}
         <button 
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#A3CEF1] text-[#274C77] text-sm rounded-lg font-bold hover:bg-[#8ebfe6] transition-colors shadow-sm shrink-0"
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-accent text-primary text-sm rounded-lg font-bold hover:bg-[#8ebfe6] transition-colors shadow-sm shrink-0"
         >
            <Plus size={18} /> Add User
         </button>
@@ -196,28 +249,29 @@ export default function ManagementPage() {
 
       {/* Main Table Container */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-hidden mt-2">
-        <div className="hidden md:grid md:grid-cols-[3fr_1.5fr_1.5fr_2fr_1fr] bg-[#274C77] text-white text-xs font-bold uppercase tracking-wider py-3 px-6">
+        <div className="hidden md:grid md:grid-cols-[3fr_1.5fr_1.5fr_2fr_2fr_1fr] bg-primary text-white text-xs font-bold uppercase tracking-wider py-3 px-6">
            <div>User</div>
            <div>Role</div>
            <div>Status</div>
            <div>Last Active</div>
+           <div>Business</div>
            <div className="text-center">Actions</div>
         </div>
 
         <div className="flex flex-col">
           {filteredUsers.map((user) => (
-            <div key={user.id} className="grid grid-cols-1 md:grid-cols-[3fr_1.5fr_1.5fr_2fr_1fr] gap-3 md:gap-4 p-4 md:px-6 md:py-4 items-center border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors group">
+            <div key={user.id} className="grid grid-cols-1 md:grid-cols-[3fr_1.5fr_1.5fr_2fr_2fr_1fr] gap-3 md:gap-4 p-4 md:px-6 md:py-4 items-center border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors group">
               <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-[#274C77] flex items-center justify-center shrink-0 text-white">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0 text-white">
                      <UserCircle2 size={24} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-900 leading-tight truncate">{user.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    <p className="text-sm font-bold text-gray-900 leading-tight truncate" title={user.name}>{user.name}</p>
+                    <p className="text-xs text-gray-500 truncate" title={user.email}>{user.email}</p>
                   </div>
               </div>
               <div className="flex items-center pl-13 md:pl-0">
-                  <span className={`text-xs font-bold px-4 py-1.5 rounded-full ${user.role === "Admin" ? "bg-[#274C77] text-white" : "bg-[#A3CEF1] text-[#274C77]"}`}>
+                  <span className={`text-xs font-bold px-4 py-1.5 rounded-full ${user.role === "Admin" ? "bg-primary text-white" : "bg-accent text-primary"}`}>
                      {user.role}
                   </span>
               </div>
@@ -228,11 +282,19 @@ export default function ManagementPage() {
               <div className="flex items-center pl-13 md:pl-0 text-sm text-gray-600 font-medium">
                   {user.lastActive}
               </div>
+              <div className="flex items-center pl-13 md:pl-0 text-sm font-semibold text-gray-800">
+                  {user.business}
+              </div>
               <div className="flex items-center justify-end md:justify-center pl-13 md:pl-0 pt-2 md:pt-0">
-                  <button 
-                    onClick={() => handleDeleteUser(user.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Delete User"
+                  <button
+                    onClick={(e) => {
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      setActionMenuAnchor(prev =>
+                        prev?.id === user.id ? null : { id: user.id, top: rect.bottom + 4, right: window.innerWidth - rect.right }
+                      );
+                    }}
+                    className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Actions"
                   >
                      <MoreVertical size={18} />
                   </button>
@@ -257,7 +319,7 @@ export default function ManagementPage() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative z-10 overflow-hidden">
             {/* Header */}
             <div className="bg-gray-50 border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[#274C77]">Add New User</h2>
+              <h2 className="text-lg font-bold text-primary">Add New User</h2>
               <button 
                 onClick={() => setIsAddModalOpen(false)}
                 className="text-gray-400 hover:text-gray-900 transition-colors"
@@ -328,7 +390,7 @@ export default function ManagementPage() {
                 </button>
                 <button 
                   type="submit"
-                  className="px-5 py-2.5 text-sm font-bold bg-[#274C77] text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm"
+                  className="px-5 py-2.5 text-sm font-bold bg-primary text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm"
                 >
                   Create User
                 </button>
@@ -336,6 +398,56 @@ export default function ManagementPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ========================================= */}
+      {/* ACTIONS PORTAL — renders outside table    */}
+      {/* ========================================= */}
+      {actionMenuAnchor && typeof window !== "undefined" && createPortal(
+        <>
+          {/* Backdrop */}
+          <div className="fixed inset-0 z-100" onClick={() => setActionMenuAnchor(null)} />
+          {/* Dropdown */}
+          <div
+            style={{ position: "fixed", top: actionMenuAnchor.top, right: actionMenuAnchor.right, zIndex: 101, minHeight: 0 }}
+            className="w-44 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden"
+          >
+            {(() => {
+              const u = users.find(u => u.id === actionMenuAnchor.id);
+              if (!u) return null;
+              return (
+                <>
+                  <button
+                    onClick={() => { /* BACKEND NOTE: open edit details modal */ setActionMenuAnchor(null); }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <Pencil size={15} className="text-gray-400" /> Edit Details
+                  </button>
+                  <button
+                    onClick={() => { /* BACKEND NOTE: open edit access/role modal */ setActionMenuAnchor(null); }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <KeyRound size={15} className="text-gray-400" /> Edit Access
+                  </button>
+                  <button
+                    onClick={() => handleDisableUser(u.id)}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-700 transition-colors text-left"
+                  >
+                    <Ban size={15} className="text-yellow-500" /> {u.status === "Active" ? "Disable" : "Enable"}
+                  </button>
+                  <div className="border-t border-gray-100" />
+                  <button
+                    onClick={() => handleDeleteUser(u.id)}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                  >
+                    <Trash2 size={15} className="text-red-500" /> Remove User
+                  </button>
+                </>
+              );
+            })()}
+          </div>
+        </>,
+        document.body
       )}
 
     </div>

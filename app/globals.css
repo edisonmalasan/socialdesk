@@ -7,11 +7,78 @@
   --color-secondary: #6096BA;  /* Medium blue */
   --color-accent: #A3CEF1;     /* Light blue */
   --color-muted: #8B8C89;      /* Grey */
+
+  /* Remove non-width breakpoints so Tailwind doesn't inject them into .container */
+  --breakpoint-landscape: initial;
+  --breakpoint-portrait: initial;
 }
 
 
 html, body {
   min-height: 100vh;
   background-color: #F3F6F8;
+}
+
+/* Allow page-level backgrounds to override the body background */
+/* Target only the first div (app root), not portal-injected divs */
+body > #__next,
+body > div:first-of-type {
+  min-height: 100vh;
+}
+
+/* ── Dashboard responsive layout ─────────────────────────── */
+.dash-content { padding: 16px; }
+@media (min-width: 640px) { .dash-content { padding: 24px 32px; } }
+
+.dash-two-col {
+  display: flex; flex-direction: column; gap: 14px; align-items: stretch;
+}
+@media (min-width: 1024px) {
+  .dash-two-col { flex-direction: row; align-items: flex-start; gap: 20px; }
+}
+
+.dash-left {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px;
+}
+
+.dash-right {
+  width: 100%; display: flex; flex-direction: column; gap: 14px;
+}
+@media (min-width: 1024px) {
+  .dash-right { width: 290px; flex-shrink: 0; }
+}
+
+.dash-stat-cards {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+}
+@media (min-width: 640px) {
+  .dash-stat-cards { gap: 12px; }
+}
+@media (min-width: 1024px) {
+  .dash-stat-cards { display: flex; gap: 14px; }
+}
+
+/* Stat card padding: tighter on mobile, normal on desktop */
+.dash-stat-card { padding: 12px 12px; }
+@media (min-width: 480px) { .dash-stat-card { padding: 16px; } }
+@media (min-width: 1024px) { .dash-stat-card { padding: 18px 20px; } }
+
+/* Stat value font: scale from small screens up */
+.dash-stat-value { font-size: clamp(18px, 5vw, 40px); }
+@media (min-width: 480px) { .dash-stat-value { font-size: clamp(22px, 5.5vw, 40px); } }
+@media (min-width: 1024px) { .dash-stat-value { font-size: 40px; } }
+
+.dash-acc-cards {
+  display: grid; grid-template-columns: 1fr; gap: 10px;
+}
+@media (min-width: 480px) {
+  .dash-acc-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+@media (min-width: 1024px) {
+  .dash-acc-cards { display: flex; gap: 14px; }
+}
+
+.dash-table-wrap {
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
 }
 
