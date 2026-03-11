@@ -232,7 +232,16 @@ export default function AnalyticsPage() {
     { month: "Jul", rate: 10 }, { month: "Sep", rate: 4 },  { month: "Oct", rate: 18 },
     { month: "Nov", rate: 30 }, { month: "Dec", rate: 50 },
   ];
-  const barColors = ['#A3CEF1', '#D6E6F2', '#8B8C89', '#FDE68A', '#FBCFE8', '#E9D5FF', '#FECDD3', '#E5E7EB', '#A7F3D0', '#BAE6FD', '#FED7AA'];
+
+  // Map engagement rate to blue shade (higher rate = darker blue)
+  const getEngagementColor = (rate: number) => {
+    if (rate < 10) return '#E0F2FE';   // Very light blue
+    if (rate < 20) return '#BAE6FD';   // Light blue
+    if (rate < 30) return '#7DD3FC';   // Medium-light blue
+    if (rate < 40) return '#38BDF8';   // Medium blue
+    if (rate < 50) return '#0EA5E9';   // Dark blue
+    return '#0284C7';                  // Very dark blue
+  };
 
   // BACKEND NOTE: Replace with real hourly visitor/engagement data per page/platform via API (e.g. GET /analytics/best-time?page=...&platform=...)
   // The `totalVisitors` value should be the sum across all time slots for the selected period.
@@ -554,7 +563,12 @@ export default function AnalyticsPage() {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">Page Stats</h3>
-                <p className="text-[10px] sm:text-[11px] text-gray-500">February 11 - February 24, 2026</p>
+                {/* BACKEND NOTE: Pass dateRange as a query param to the Page Stats API call */}
+                <p className="text-[10px] sm:text-[11px] text-gray-500">
+                  {dateRange.from || dateRange.to
+                    ? `${formatCompact(dateRange.from, calMode) || '—'} – ${formatCompact(dateRange.to, calMode) || '—'}`
+                    : 'February 11 – February 24, 2026'}
+                </p>
               </div>
               {/* Page Stats controls: filter + options dropdown */}
               <div className="flex items-center gap-0.5">
@@ -894,7 +908,7 @@ export default function AnalyticsPage() {
                     <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                     <Bar dataKey="rate" radius={[4, 4, 0, 0]} barSize={20}>
                       {engagementTrendBarData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={barColors[index % barColors.length]} />
+                        <Cell key={`cell-${index}`} fill={getEngagementColor(entry.rate)} />
                       ))}
                     </Bar>
                   </BarChart>
