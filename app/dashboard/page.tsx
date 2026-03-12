@@ -67,10 +67,10 @@ const FIBEI_LOGO =
   "dEiMKqc8IcfL9PlX8qDCrGpL4HY5zUtfS50i5srqGRbpnkTZChB2ptO4q2GGdw+Xqe1TeGbkFp9R" +
   "vnt7V5v3CRKuwEI20nHrnitj+wtM2qos0+Vy+dzbiTjOTnJzgcE9hU50608ryjbR+XuZtp9WbcT+" +
   "J5rOVJSmpvdf1+pdKpiIQcG1Z/8AA/yHHUrMY/0qHkkD5xzirQOaojSLDbgWcQHTgY9fT/eP51dV" +
-  "AigdAOBzmtRx5vtDDHt6H601hhdw5YGmGYhjxxQzFo2IyKm9ynpuK0ofhTz3xSNI2wgLuJ9DUCjB" +
-  "IXtTwwJwOT61NxKQ+K4KthgQvfIqaOQySMSMADABqlIFI+aTn0pYVbYRvYfShMOZ9T//2Q==";
+  "AigdAOBzmtRx5vtDDHt6H201hhdw5YGmGYhjxxQzFo2IyKm9ynpuK0ofhTz3xSNI2wgLuJ9DUCjB" +
+  "IXtTwwJwOT61NxKQ+K4KthgQvfIqaOQySMSMADABqlIFI+eTn0pYVbYRvYfShMOZ9T//2Q==";
 
-const DIGITIMMERSE_LOGO = "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zzzzzzzzzzzzzzzyoIQAP7zzzzzzzzzzzzzzzzzzypZeALzzzzzzzzzzzzzzzzzzyy45XdzzzzzzzzzzzzzzzzzzzzzzhbTzzzzzzzzzzzzzz7/PPPPnObv/AB/LXz5/K288888/XvpN7jUfNkm8Tu+QuDe8888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888//EABwRAAMAAwEBAQAAAAAAAAAAAAABERAxQCFwMP/aAAgBAwEBPxD6k2J4peV7FvDFyvYt4fM9i2UfM9i3hiXK0JYnROGlKUpS4pRuFKUpS/gz0mPRCIQhCExCeCRPpv8A/8QAHhEBAQEAAgMBAQEAAAAAAAAAAREAITEQQEFhcCD/2gAIAQIBAT8Q/qKXMAdELn4Osgxmnq9u6fAiO5j1e3dPj48dXqdu6ddk3x4EB6nfunwtHq4061hNQTfcW1YAIevz2egZrp+jkk/cAw5wEXRLMPQw2DNMJDKTF3ySfuL+OA/HcFwrJosjiyzDf9NAyPgy7HzXnlibcxLng4tNDBhTrHNkiveRMCk3aMwuMxa6wSsxZEwT+l//xAAoEAEAAQMCBgIDAQEBAAAAAAABEQAhMUFREGFxgZGhUPAwscEgkNH/2gAIAQEAAT8Q/wCmaeXM1km0KaRUNiyXCY0Xj19zPUtXRlNmi4W3TwJo9sCr7FyjiLUQd0vqoocugr1GTvV/jeMaVqPwNxnubPMpqgy3Karmf+OtP2OVA6JUvKsS/RMnM90HAwokR1PjMMeKFUjproHhntxcsELmIv8A1O/L4zDHigRJPII4trHNCGYp14N9xJPi8MeKcVz2fB4yIy+xfxT8VhjxTivsd3ilF0E86fisF9UiiXiKVTkA1MNOVNf3PGSuX9Dp8XgRJFX3G6votlIGwK0jOUrxYhEX2RL7X4vDGl9hur6rZRqsM9zEHtOPRGll582O/wAZhjS+w3V9VsqN6c9kn3Dw8C3GGlToFOQUaF46F5a8+3xFv8MY0vsN1c2yUTDMVIwSwwWByKZANNi5avYoiKxAccho98/iZ4wq0Ssr5vHaiIHEBhsS8UAH0tXsUxMN8vmkXF2aCJebUe4JMSIGnAfi290vv5D7DdX1Wz5BJaTB7axiliBeKVZaLsBJoRkprSFim1hPwPf8N/x2424Wq3+71f8AM3snq3ZnItTIUjvQo2ScjQEhvDkbiCetCWv0iA0ScmuKYYoc5JakqjzwEmW4BqxfbGafS0w/dLE9qWqjG7yEC/WaUo2nWQyIje3qsQ4WUwGwb1NO83g7FSt8hNYFcmw1OgaWIiPCajKpikIltlKKCCRCm46BVmV9ujgLOPHDZvpEs3DbQ6TrQqwiwGzQKxzIMAgKCr0gE7mC0jZ7VfSI3Wgc1gqVIijDNgmVqXwyRddKIxyoEvKE5DOSuXRkyfEhOgtU6AIzWBXOwaQcIWCBlYG1MjldghYGL8opqGVkKzE2CbYpVoYSIRw2Y7U9W1KGOQRExeSMVNPD3AsF6JKATOJI4poHOQJs3UVphN0ESEFlWFwF2r3IvYvCADDEIEzi1/yfZc6svOoJe4u1EZJ3QwA64aWANuiy/wBK9v8AtUyhMXUER+u1AFEdAoW6SLeedZMSPikg9quRYjgsNjtwG9v+yvUqfc7uPwm30kJmSz3el2om+sbXuLdZaspQhLzh/XSK9b+lfe76l4KIwdblfw8qdYTGQmw8pR55UOgyYc/sPUV97lp7jaTFmJEz14GUVsO5wMot2hKQsIZYWaqCUJEJDaEJJxRNXY7LDM4gmd6dyrlhwBietMUkR+/pE70zEOS0SIr5A719xuoNKoRMdGMYpg6TONbAKfFKgBMAe6AgkMltIqODEYRJAABLYNfypWeC0t14cETprLdYJ91Dw+MAIvW81DcYKDZP7S4nOOzduTJTJ7WFeYVBcNYD3Bnu1HcPIldYpIXGEASM26VLcLKUo1ZAKDJ/VGgoKk0kigZ6lEoMeqBcAiRBM361IiEQWZCbUkRLgQym7PKaDfsQcCRHelHgMIi86UumIEBLMe6dIJBLLU7Sd6YmzgAnlI1i3doaWYtIFZv1oVPLgy0scEGsMgsADZFqsdzFBk/qpxhoMkkScymxqoEAiJ4aSTUCHjiDnrZq7q2BHzRYGobLNiLB0oR9QYFZjghD5bKDao/6T//Z";
+const DIGITIMMERSE_LOGO = "/9j/4AAQSkZJRgABAQAAAQABAAD/4gKgSUNDX1BST0ZJTEUAAQEAAAKQbGNtcwQwAABtbnRyUkdCIFhZWiAAAAAAAAAAAAAAAABhY3NwQVBQTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA9tYAAQAAAADTLWxjbXMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtkZXNjAAABCAAAADhjcHJ0AAABQAAAAE53dHB0AAABkAAAABRjaGFkAAABpAAAACxyWFlaAAAB0AAAABRiWFlaAAAB5AAAABRnWFlaAAAB+AAAABRyVFJDAAACDAAAACBnVFJDAAACLAAAACBiVFJDAAACTAAAACBjaHJtAAACbAAAACRtbHVjAAAAAAAAAAEAAAAMZW5VUwAAABwAAAAcAHMAUgBHAEIAIABiAHUAaQBsAHQALQBpAG4AAG1sdWMAAAAAAAAAAQAAAAxlblVTAAAAMgAAABwATgBvACAAYwBvAHAAeQByAGkAZwBoAHQALAAgAHUAcwBlACAAZgByAGUAZQBsAHkAAAAAWFlaIAAAAAAAAPbWAAEAAAAA0y1zZjMyAAAAAAABDEoAAAXj///zKgAAB5sAAP2H///7ov///aMAAAPYAADAlFhZWiAAAAAAAABvlAAAOO4AAAOQWFlaIAAAAAAAACSdAAAPgwAAtr5YWVogAAAAAAAAYqUAALeQAAAY3nBhcmEAAAAAAAMAAAACZmYAAPKnAAANWQAAE9AAAApbcGFyYQAAAAAAAwAAAAJmZgAA8qcAAA1ZAAAT0AAACltwYXJhAAAAAAADAAAAAmZmAADypwAADVkAABPQAAAKW2Nocm0AAAAAAAMAAAAAo9cAAFR7AABMzQAAmZoAACZmAAAPXP/bAEMABQMEBAQDBQQEBAUFBQYHDAgHBwcHDwsLCQwRDxISEQ8RERMWHBcTFBoVEREYIRgaHR0fHx8TFyIkIh4kHB4fHv/bAEMBBQUFBwYHDggIDh4UERQeHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHv/CABEIAZABkAMBIgACEQEDEQH/xAAbAAEBAQEBAQEBAAAAAAAAAAAABgUEAwcBAv/EABgBAQEBAQEAAAAAAAAAAAAAAAABAgME/9oADAMBAAIQAxAAAAH7KAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABn6CJnmTnKUfXI1J28tN49GRrQvBzfUEnVdL/Q0AAAAAAAAAAAAAAAAAAAkJyjnPPFTLVNVI73GhvpnzPjFRL+mJ9Ofz/Xp0AAAAAAAAAAAAAAAAAABITlHOeeKmWqaqR3r5f8AUPmPKeY5T6Do4+x6dBQAAAAAAAAAAAAAAAAAEhOUc554o5ypNtBfm30X5x9N+Xn4OUvNbk6/RoNAAAAAAAAAAAAAAAAAAJCco5zzxUy1STv5+/kn0H5xYx267+K6y1h6KAAAAAAAAAAAAAAAAAAM+MCcsvPlJGp9fUk/P+vzE/vqtuvpcvUOlCgAAAAAAAAAAAAAAAAAAAB4Hzv8qvzhKN4e/egAAAAAAAAAAAAACUyq0b/GZasjEqyT+SWyK2zaS/OWCE3DfRGgU6RrrSO7ZKRC7xuPCJq9T+LF0ktQ2UL1RYJjyqsRGwb6J94r2B36ug4+ygoAAABD3GNifxk93rlnZ1xlk5T9ePXD2e/YYdD499RNzkbJ851dPpymuukyzE7aHwqJ1tTViW5acZuFaZxz63D3VGae1rRGf3s+5KaPTrkTr6HlHb3Ze70c/QWhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH//xAArEAACAgEDAwQBAwUAAAAAAAADBAIFAQAQMzITUBEUFVASISQlMTM0YGD/2gAIAQEAAQUC/kzYmzGTDzIM/LE18sTS7rR9ZO/jWbOcMjtF5aEUZceKvebah2IOBIvre2NHOY5Sss6xn18Te821Dvbj61NqZnxN7zbUO549YdhTyMkc4lHw97zbUP4S/SW1bLqS8Pe821D+BOTao+j4e95tqYoxY94tr3i2hFGXROTapx/QeHvebah0fnBzZ/TGf87KQ6FvD3vNtQ6Pzg5m5dC2yAu814i95tqHR+cHNdl6Q6xjOc1q3txeIvebah0fnhnpmwWRirpHNpNIS/iWASLMlb3NfEj18SPQ67t6Lj0KLHqUS4BeQPzg5vHljOWJVcJSxVQxkUZx/wCRs2jiZGSzJDLzoZwa7ySTjJGrF7sygSxNgVgyKb7EsJVjLBiTnaQgJt4k1Mveq7rU2LZk4WK98mT6efJ36lgximdaiarayeBiREKT7WZROX4kTbxZ/wB21ibEK4bbxJzJaDihYTIV6wJgvcscQr2ikk06zBnErXOEvf8AfYJLEhSn1fuXP3awoopXBxFzXYz7Ct+9Zxzh5JkHtJWTMZOkkapovsWP0qn75eNT7V59r2/VXZsM+xmv266i5mOdyEk232ctzsRYAWH+iUxmRuyTTUoyr1e7g7BbHAqgcJtOjV78hyEOqZPJh37kBT6EfQeCixPQh4H+62hFgvxI9QqwY1kUewvXQCZlYTEc1MdRqg4jJOMlE0orTOPuiWr4ANLHrEVZCBHEoskWXiEGKoXW2vhgSScVpzq4SmyCJwqIDXK4jFkuFI4S+JHr4kegpRGutXwAYsMEGvXRCZpETGficaUVEvg1bAhfiR6BXQEX+Sf/xAAUEQEAAAAAAAAAAAAAAAAAAACQ/9oACAEDAQE/ARx//8QAIREAAgICAgIDAQAAAAAAAAAAAAECERIxIUADECBBcFH/2gAIAQIBAT8B/UnJpkW2ymZtbE76stkN+vIJ0+rLZDfryelrqS2Q2Znk9LXUlshs+yb5Iq31XFtkYtP1h/exi+g3RkZIcjIyFKzJVYnZmroUkxyoyLMzNCkZl/OStHNUY6KafBTEuCKpGLoxf0Y8mLMWxxYkxRdGPAouymL9M//EAD8QAAEDAQMJBQQHCAMAAAAAAAEAAgMREiExEBMiQVFhcXKBBDNQkcEjMqGxFCAwQlJikCQlNDVDYIKSk9Hw/9oACAEBAAY/Av1M/YxNeN5QEsDBXeu6Yu6ajmoGGmN6/hB0cqS9mLeq0g5nRVjeHcPC4+XLN09cll7Q4Kz90+6qtJB3IM7Rh+JVHhMfLlm6euUu1svy/R3nl8Jj5cs3T1yvbtaRla8Yg1QcMD4RHy5Zunr9QjLEd1PCI+XLN09fqO45W8T4RHy5ZTI8NrTHqu+Yu+YvZvDqbE7jlZ1+fhEfLlm6eqk5imcw+rGzY3wiPlyzdPVScxTOYKR35crW6sT4THy5ZunqpOYpnMEIhi75ZKAVK0vfdj4THy5ZunqpOYoO2FGR+JVzLLdpVfef+LwkEdokjuwaqv7RI7iu9d5LvXeSNjtMra7E4Itemg4ErQiaPEJOYpnMPENCQs6IkzOqdyBEzqjctOUv6U/tGxHJQU2IPYSWngqS+TmqSVmi5rT0KYx8lWk7Fmoxp6ydStsLyFZl0qYgi9NmgdSpCeHvtUbdci5xIA4IMZJVx3BPPaK0s3YYqNrpbi4A3BNbG+yLNcFYnfUO+GQiB9Gi7iniR9oAbE8CW4OOoIskPtG/FOkdgEaSU3URmt+029VZjkqeAX3vgnvlNJRVBjJCXHcFadaoNwQilAvwITo4bg26qzlZKcFm5mmup1FI1stAHbFUVoeC/aK2KblYaaYfFWHmt1ftf8QmB0rAb8Xb0xsZDrOJC7U7UW+ii4qSuu9MGcY0tbShNFT2XRMkdiXJ/KpeCj6/JO4KLnHzTeRCduLSa8FY/q+7XchM4aT3CnBScqk5imzR+6bx/wBJkUNaeqZGNTL0f/a1QTZr81aL+Zj/AJFJZeH0biCm5jvNSOdtBhxuCBc69t4G1PLZ7Lq3tLSrbO1MI2NdehE5xe07dSl5yh+8gLsLaLX9rbM4m7SWwrGp+1zheRcu9d5LSc9yMLRZaRS5NkEjjZVJBwIV0x8kavcTtTez2zQa0XB5dUUToyaWkJRI40RG1NfnHaJqg8vLaCizVbQ3qtt1K4LNk2RWtyLg8uqEXZ115rgs27zWctFx1VWcLyLqL6NaNNq713ku9d5KSG2SH602USONE5hwcKJsokdUK0atdtC74/6rQvJ1lOfnHC0arvXeSbIJHGz+pR//xAArEAEAAgAEBAUEAwEAAAAAAAABABEhMVFhQaGx8BAgUHHxgZHB0TCQ4WD/2gAIAQEAAT8h/szKlZxacYrRFmefKM+VZwWvg5zEVTYfzLvbenUiFb02OU+rDMvS+cdfLzNx4MShbjr8QaVZKpgFV5DT7wAJY5J6Tzrr5uOsxK+3HxRcRxbzPSeddfN3Y8HjkFoTFICz0jnXXz8Nga8djOU16Rzrr5+5/wCPfNfSOddfEhCiQ+Wny0CUHNHMPGjdtzekc66+Tu5aztmsQjwIrTr42dmF+/pHOuvk7vWs7ZrNvlXv4q2WX6J6Tzrr5O71rO2awVWLb7P98DbkaA4wbqZ23b0nnHXyd3rWYbXQ1F02NDSJC3sZAa7q/GnpI5spZQ7wELzJxz4tPi09wlluXUkMt44wC1hH7ykWNat+/qHetZ2zX1A0KmaBv7xQ1LcEJpSzBBURclNPt/yN/Fdqky60NTRsXYdIefEGeBGM4gU09otaaXkI36KAEo7VVRCIhwRrhEW2UUMYaarWpVFlCBK0W3OhGGJxmF+0sRpRRxtgHIYUC3hq6dQ21j5rEwHGKHAA3vaXgMS9EZGhv3ixTXADDlHpwNJshRj8IX8EtKAhQ+ky26H+ESYCtx4tplFWO8dMZatqyuxnjR5Sv9S8DfvEyLAUwPtCd0LMJdHEM+L6QKjUKtVQY5QGPUlwvca/lzoD+WIAc0ZyW4DGoZxiA+i/c7DaVZzA3KjqBiFiI0ak0WdZSbWuvdnb7ngPabpzfpO/6JyvqzBXDt/+I83b4up7zkAUo9Z2m87VrBZr2TeAOTrDVfqcGNtq22zqZECdOknyz9wZwZbGMTFs2EHhjntOEmFVzIAUgS0N25A8cYZ4TJ5IJum87g1ndNY9TAs3DbObggl6yjVaKuhs0RzloiQq2sjIKyP5bO+hQT4NF72C6JX4jhZXFCiukhDEmiSXsMb3/MIG5hkr6Riit4MeP7jfrAJCcAKsjGG+CalTYlUH7I1o4MenYIN5UqvbpncCb2Nh4aQqkBgTB1ViRvgtkRtacQZjKAoaoygReYARhjunHO58WnwaDzNNMo5BvgmpUzOwo3NwUzm9Z8T3hfjV21iqjms6LliIonxaO0FdJ/ZR/9oADAMBAAIAAwAAABDzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz7jT0Z7zzzzzzzzzzzzzzzzzzzypTwJfTzzzzzzzzzzzzzzzzzzypTy4OjzzzzzzzzzzzzzzzzzzyoIQAP7zzzzzzzzzzzzzzzzzzypZeALzzzzzzzzzzzzzzzzzzyy45XdzzzzzzzzzzzzzzzzzzzzzzhbTzzzzzzzzzzzzzz7/PPPPnObv/AB/LXz5/K288888/XvpN7jUfNkm8Tu+QuDe8888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888//EABwRAAMAAwEBAQAAAAAAAAAAAAABERAxQCFwMP/aAAgBAwEBPxD6k2J4peV7FvDFyvYt4fM9i2UfM9i3hiXK0JYnROGlKUpS4pRuFKUpS/gz0mPRCIQhCExCeCRPpv8A/8QAHhEBAQEAAgMBAQEAAAAAAAAAAREAITEQQEFhcCD/2gAIAQIBAT8Q/qKXMAdELn4Osgxmnq9u6fAiO5j1e3dPj48dXqdu6ddk3x4EB6nfunwtHq4061hNQTfcW1YAIevz2egZrp+jkk/cAw5wEXRLMPQw2DNMJDKTF3ySfuL+OA/HcFwrJosjiyzDf9NAyPgy7HzXnlibcxLng4tNDBhTrHNkiveRMCk3aMwuMxa6wSsxZEwT+l//xAAoEAEAAQMCBgIDAQEBAAAAAAABEQAhMUFREGFxgZGhUPAwscEgkNH/2gAIAQEAAT8Q/wCmaeXM1km0KaRUNiyXCY0Xj19zPUtXRlNmi4W3TwJo9sCr7FyjiLUQd0vqoocugr1GTvV/jeMaVqPwNxnubPMpqgy3Karmf+OtP2OVA6JUvKsS/RMnM90HAwokR1PjMMeKFUjproHhntxcsELmIv8A1O/L4zDHigRJPII4trHNCGYp14N9xJPi8MeKcVz2fB4yIy+xfxT8VhjxTivsd3ilF0E86fisF9UiiXiKVTkA1MNOVNf3PGSuX9Dp8XgRJFX3G6votlIGwK0jOUrxYhEX2RL7X4vDGl9hur6rZRqsM9zEHtOPRGll582O/wAZhjS+w3V9VsqN6c9kn3Dw8C3GGlToFOQUaF46F5a8+3xFv8MY0vsN1c2yUTDMVIwSwwWByKZANNi5avYoiKxAccho98/iZ4wq0Ssr5vHaiIHEBhsS8UAH0tXsUxMN8vmkXF2aCJebUe4JMSIGnAfi290vv5D7DdX1Wz5BJaTB7axiliBeKVZaLsBJoRkprSFim1hPwPf8N/x2424Wq3+71f8AM3snq3ZnItTIUjvQo2ScjQEhvDkbiCetCWv0iA0ScmuKYYoc5JakqjzwEmW4BqxfbGafS0w/dLE9qWqjG7yEC/WaUo2nWQyIje3qsQ4WUwGwb1NO83g7FSt8hNYFcmw1OgaWIiPCajKpikIltlKKCCRCm46BVmV9ujgLOPHDZvpEs3DbQ6TrQqwiwGzQKxzIMAgKCr0gE7mC0jZ7VfSI3Wgc1gqVIijDNgmVqXwyRddKIxyoEvKE5DOSuXRkyfEhOgtU6AIzWBXOwaQcIWCBlYG1MjldghYGL8opqGVkKzE2CbYpVoYSIRw2Y7U9W1KGOQRExeSMVNPD3AsF6JKATOJI4poHOQJs3UVphN0ESEFlWFwF2r3IvYvCADDEIEzi1/yfZc6svOoJe4u1EZJ3QwA64aWANuiy/wBK9v8AtUyhMXUER+u1AFEdAoW6SLeedZMSPikg9quRYjgsNjtwG9v+yvUqfc7uPwm30kJmSz3el2om+sbXuLdZaspQhLzh/XSK9b+lfe76l4KIwdblfw8qdYTGQmw8pR55UOgyYc/sPUV97lp7jaTFmJEz14GUVsO5wMot2hKQsIZYWaqCUJEJDaEJJxRNXY7LDM4gmd6dyrlhwBietMUkR+/pE70zEOS0SIr5A719xuoNKoRMdGMYpg6TONbAKfFKgBMAe6AgkMltIqODEYRJAABLYNfypWeC0t14cETprLdYJ91Dw+MAIvW81DcYKDZP7S4nOOzduTJTJ7WFeYVBcNYD3Bnu1HcPIldYpIXGEASM26VLcLKUo1ZAKDJ/VGgoKk0kigZ6lEoMeqBcAiRBM361IiEQWZCbUkRLgQym7PKaDfsQcCRHelHgMIi86UumIEBLMe6dIJBLLU7Sd6YmzgAnlI1i3doaWYtIFZv1oVPLgy0scEGsMgsADZFqsdzFBk/qpxhoMkkScymxqoEAiJ4aSTUCHjiDnrZq7q2BHzRYGobLNiLB0oR9QYFZjghD5bKDao/6T//Z";
 
 const ACCOUNT_ICONS: Record<string, ({ size }: { size: number }) => JSX.Element> = {
   "eGetinnz PH": ({ size }) => (
@@ -159,8 +159,17 @@ const CONNECTED = [
 ];
 
 const SUMMARY_PAGES = [
-  { name: "Egetinnz PH",   plt: "Facebook", engagement: "500", third: "10,000", thirdLabel: "Reach",  posts: "120" },
-  { name: "@Digitimmerse", plt: "Tiktok",   engagement: "500", third: "10,000", thirdLabel: "Views",  posts: "120" },
+  { name: "Egetinnz PH",   plt: "Facebook",  engagement: "500", third: "10,000", thirdLabel: "Reach",  posts: "120", avgLikes: "42", engRate: 5  },
+  { name: "@Digitimmerse", plt: "Tiktok",    engagement: "500", third: "10,000", thirdLabel: "Views",  posts: "120", avgLikes: "38", engRate: 4  },
+];
+
+const ALL_SUMMARY_PAGES = [
+  { name: "Egetinnz PH",   plt: "Facebook",  engagement: "500", third: "10,000", thirdLabel: "Reach",  posts: "120", avgLikes: "42", engRate: 5  },
+  { name: "Egetinnz USA",  plt: "Instagram", engagement: "320", third: "8,500",  thirdLabel: "Reach",  posts: "98",  avgLikes: "35", engRate: 3  },
+  { name: "Fibei Travel",  plt: "Pinterest", engagement: "410", third: "12,400", thirdLabel: "Reach",  posts: "75",  avgLikes: "28", engRate: 6  },
+  { name: "@Digitimmerse", plt: "Tiktok",    engagement: "500", third: "10,000", thirdLabel: "Views",  posts: "120", avgLikes: "38", engRate: 4  },
+  { name: "@egetinnz",     plt: "YouTube",   engagement: "290", third: "6,200",  thirdLabel: "Views",  posts: "44",  avgLikes: "55", engRate: 7  },
+  { name: "@fibei_travel", plt: "X",         engagement: "180", third: "3,800",  thirdLabel: "Reach",  posts: "60",  avgLikes: "22", engRate: 2  },
 ];
 
 // ── Modal data ────────────────────────────────────────────────────────────────
@@ -221,6 +230,8 @@ function SmBtn({ children, onClick }: { children: React.ReactNode; onClick?: () 
 export default function Home() {
   const [modal, setModal] = useState<"followers"|"posted"|"scheduled"|"engagement"|null>(null);
   const [accModal, setAccModal] = useState<typeof ACC_PERF[0] | null>(null);
+  const [summaryModal, setSummaryModal] = useState<typeof SUMMARY_PAGES[0] | null>(null);
+  const [viewAllSummary, setViewAllSummary] = useState(false);
 
   return (
     <div style={{ fontFamily: "'DM Sans','Inter',sans-serif", color: "#1a202c", fontSize: 15 }}>
@@ -312,12 +323,9 @@ export default function Home() {
       {modal === "engagement" && (
         <Overlay onClose={() => setModal(null)}>
           <div style={{ background: "#f0f4f8", borderRadius: 16, maxWidth: 740, width: "90vw", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.22)", border: "1px solid #dde3ec" }}>
-            {/* thick navy top bar */}
             <div style={{ background: "#1e3a5f", height: 10 }} />
             <div style={{ padding: "28px 30px 26px", maxHeight: "85vh", overflowY: "auto" }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 20px", color: "#1a202c" }}>Total Engagement Per Post</h2>
-
-              {/* Table wrapper with inner white card */}
               <div style={{ borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
                 <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
                 <table style={{ width: "100%", minWidth: 560, borderCollapse: "collapse", background: "#fff" }}>
@@ -331,23 +339,19 @@ export default function Home() {
                   <tbody>
                     {ENGAGEMENT_DATA.map((r, i) => (
                       <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#fafbfc", borderBottom: "1px solid #f1f5f9" }}>
-                        {/* Platform */}
                         <td style={{ padding: "13px 14px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <Icon name={r.plt} size={28} />
                             <span style={{ fontSize: 13, fontWeight: 500 }}>{r.plt}</span>
                           </div>
                         </td>
-                        {/* Page: logo + "Egetinnz" label */}
                         <td style={{ padding: "13px 14px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                             <img src={`data:image/jpeg;base64,${EGETINNZ_LOGO}`} style={{ width: 26, height: 26, borderRadius: 6, objectFit: "cover", flexShrink: 0 }} />
                             <span style={{ fontSize: 13, fontWeight: 500 }}>Egetinnz</span>
                           </div>
                         </td>
-                        {/* Post title */}
                         <td style={{ padding: "13px 14px", fontSize: 13 }}>{r.post}</td>
-                        {/* Likes — red thumb icon */}
                         <td style={{ padding: "13px 14px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                             <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -356,7 +360,6 @@ export default function Home() {
                             <span style={{ fontSize: 13, fontWeight: 600 }}>{r.likes}</span>
                           </div>
                         </td>
-                        {/* Comments — red speech bubble icon */}
                         <td style={{ padding: "13px 14px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                             <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -365,7 +368,6 @@ export default function Home() {
                             <span style={{ fontSize: 13, fontWeight: 600 }}>{r.comments}</span>
                           </div>
                         </td>
-                        {/* Shares — red forward arrow icon */}
                         <td style={{ padding: "13px 14px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                             <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -374,7 +376,6 @@ export default function Home() {
                             <span style={{ fontSize: 13, fontWeight: 600 }}>{r.shares}</span>
                           </div>
                         </td>
-                        {/* Total */}
                         <td style={{ padding: "13px 14px", fontWeight: 700, fontSize: 14 }}>{r.total}</td>
                       </tr>
                     ))}
@@ -382,8 +383,6 @@ export default function Home() {
                 </table>
                 </div>
               </div>
-
-              {/* Footer */}
               <div style={{ borderTop: "1px solid #dde3ec", margin: "22px 0 16px", paddingTop: 16, textAlign: "center" }}>
                 <p style={{ fontSize: 16, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>Total: 8 Scheduled Posts</p>
               </div>
@@ -397,11 +396,8 @@ export default function Home() {
       {accModal && (
         <Overlay onClose={() => setAccModal(null)}>
           <div style={{ background: "#fff", borderRadius: 14, maxWidth: 420, width: "90vw", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.22)", border: "1px solid #dde3ec" }}>
-            {/* Navy top bar */}
             <div style={{ background: "#1e3a5f", height: 6 }} />
             <div style={{ padding: "22px 26px 28px" }}>
-
-              {/* Header: avatar + account name + X close */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <Avatar name={accModal.name} color={accModal.color} size={40} />
@@ -414,11 +410,7 @@ export default function Home() {
                   onMouseLeave={e => (e.currentTarget.style.color = "#94a3b8")}
                 >✕</button>
               </div>
-
-              {/* Divider */}
               <div style={{ borderTop: "1px solid #e8edf3", marginBottom: 22 }} />
-
-              {/* Platform stats: icon | label above | value below */}
               <div style={{ display: "flex", gap: 24 }}>
                 {accModal.pairs.map(p => (
                   <div key={p.plt} style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -430,7 +422,192 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </Overlay>
+      )}
 
+      {/* ── MODAL: View All Summary Pages ── */}
+      {viewAllSummary && (
+        <Overlay onClose={() => setViewAllSummary(false)}>
+          <div style={{
+            background: "#fff", borderRadius: 16, maxWidth: 700,
+            width: "94vw", overflow: "hidden",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.22)", border: "1px solid #dde3ec"
+          }}>
+            <div style={{ background: "#1e3a5f", height: 6 }} />
+            <div style={{ padding: "24px 26px 26px", maxHeight: "85vh", overflowY: "auto" }}>
+
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#1a202c" }}>All Pages Summary</h2>
+                  <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>Performance overview across all connected pages.</p>
+                </div>
+                <button
+                  onClick={() => setViewAllSummary(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px", borderRadius: 6, color: "#94a3b8", fontSize: 18, lineHeight: 1, fontFamily: "inherit" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#374151")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#94a3b8")}
+                >✕</button>
+              </div>
+
+              <div style={{ borderTop: "1px solid #e8edf3", marginBottom: 20 }} />
+
+              {/* Table */}
+              <div style={{ borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                  <table style={{ width: "100%", minWidth: 560, borderCollapse: "collapse", background: "#fff" }}>
+                    <thead>
+                      <tr style={{ background: "#f8fafc" }}>
+                        {["Page","Platform","Engagement","Reach / Views","Posts","Avg. Likes","Eng. Rate","Action"].map(col => (
+                          <th key={col} style={{ textAlign: "left", padding: "11px 14px", fontSize: 12, fontWeight: 600, color: "#64748b", borderBottom: "1px solid #e8edf3", whiteSpace: "nowrap" }}>{col}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ALL_SUMMARY_PAGES.map((pg, i) => (
+                        <tr key={pg.name} style={{ background: i % 2 === 0 ? "#fff" : "#fafbfc", borderBottom: "1px solid #f1f5f9" }}>
+                          {/* Page name */}
+                          <td style={{ padding: "13px 14px" }}>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: "#1a202c" }}>{pg.name}</span>
+                          </td>
+                          {/* Platform */}
+                          <td style={{ padding: "13px 14px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                              <Icon name={pg.plt} size={26} />
+                              <span style={{ fontSize: 13 }}>{pg.plt}</span>
+                            </div>
+                          </td>
+                          {/* Engagement */}
+                          <td style={{ padding: "13px 14px", fontSize: 13, fontWeight: 600 }}>{pg.engagement}</td>
+                          {/* Reach/Views */}
+                          <td style={{ padding: "13px 14px" }}>
+                            <div>
+                              <span style={{ fontSize: 13, fontWeight: 600 }}>{pg.third}</span>
+                              <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: 4 }}>{pg.thirdLabel}</span>
+                            </div>
+                          </td>
+                          {/* Posts */}
+                          <td style={{ padding: "13px 14px", fontSize: 13 }}>{pg.posts}</td>
+                          {/* Avg Likes */}
+                          <td style={{ padding: "13px 14px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                              <svg viewBox="0 0 24 24" fill="#ef4444" style={{width:13,height:13,flexShrink:0}}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                              <span style={{ fontSize: 13 }}>{pg.avgLikes}</span>
+                            </div>
+                          </td>
+                          {/* Eng Rate bar */}
+                          <td style={{ padding: "13px 14px", minWidth: 100 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                              <div style={{ flex: 1, background: "#e2e8f0", borderRadius: 99, height: 6, overflow: "hidden" }}>
+                                <div style={{ width: `${pg.engRate * 10}%`, height: "100%", background: "linear-gradient(90deg,#1e3a5f,#2563eb)", borderRadius: 99 }} />
+                              </div>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: "#2563eb", flexShrink: 0 }}>{pg.engRate}%</span>
+                            </div>
+                          </td>
+                          {/* Action */}
+                          <td style={{ padding: "13px 14px" }}>
+                            <button
+                              onClick={() => { setViewAllSummary(false); setSummaryModal(pg); }}
+                              style={{ border: "1px solid #e2e8f0", borderRadius: 7, padding: "4px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", background: "#fff", color: "#1a202c", fontFamily: "inherit", whiteSpace: "nowrap", transition: "all 0.15s" }}
+                              onMouseEnter={e => { e.currentTarget.style.background = "#1e3a5f"; e.currentTarget.style.color = "#fff"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#1a202c"; }}
+                            >Details</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div style={{ borderTop: "1px solid #e8edf3", margin: "20px 0 16px", paddingTop: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 13, color: "#64748b" }}>Showing <strong style={{ color: "#1a202c" }}>{ALL_SUMMARY_PAGES.length}</strong> pages total</span>
+                <CloseBtn onClick={() => setViewAllSummary(false)} />
+              </div>
+            </div>
+          </div>
+        </Overlay>
+      )}
+
+      {/* ── MODAL: Summary Page Details ── */}
+      {summaryModal && (
+        <Overlay onClose={() => setSummaryModal(null)}>
+          <div style={{
+            background: "#fff", borderRadius: 16, maxWidth: 400,
+            width: "90vw", overflow: "hidden",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.22)", border: "1px solid #dde3ec"
+          }}>
+            {/* Navy top bar */}
+            <div style={{ background: "#1e3a5f", height: 6 }} />
+            <div style={{ padding: "24px 26px 26px" }}>
+
+              {/* Header: platform icon + page name + X close */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Icon name={summaryModal.plt} size={36} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#1a202c" }}>{summaryModal.name}</p>
+                    <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>{summaryModal.plt} Page</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSummaryModal(null)}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px", borderRadius: 6, color: "#94a3b8", fontSize: 17, lineHeight: 1, fontFamily: "inherit", transition: "color 0.12s" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#374151")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#94a3b8")}
+                >✕</button>
+              </div>
+
+              {/* Divider */}
+              <div style={{ borderTop: "1px solid #e8edf3", marginBottom: 20 }} />
+
+              {/* 4 Stat tiles */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                {[
+                  { label: "Engagement",              value: summaryModal.engagement, bg: "#eff6ff", border: "#bfdbfe", icon: <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" style={{width:18,height:18}}><path d="M3 20h18M5 20V14M9 20V9M13 20V12M17 20V5" strokeLinecap="round"/></svg> },
+                  { label: summaryModal.thirdLabel,   value: summaryModal.third,      bg: "#f0fdf4", border: "#bbf7d0", icon: <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" style={{width:18,height:18}}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> },
+                  { label: "Total Posts",             value: summaryModal.posts,      bg: "#fefce8", border: "#fde68a", icon: <svg viewBox="0 0 24 24" fill="none" stroke="#ca8a04" strokeWidth="2" style={{width:18,height:18}}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> },
+                  { label: "Avg. Likes",              value: summaryModal.avgLikes,   bg: "#fff1f2", border: "#fecdd3", icon: <svg viewBox="0 0 24 24" fill="#ef4444" style={{width:18,height:18}}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> },
+                ].map(stat => (
+                  <div key={stat.label} style={{
+                    background: stat.bg,
+                    border: `1px solid ${stat.border}`,
+                    borderRadius: 10,
+                    padding: "14px 16px",
+                  }}>
+                    <div style={{ marginBottom: 8 }}>{stat.icon}</div>
+                    <p style={{ margin: "0 0 2px", fontSize: 22, fontWeight: 700, color: "#1a202c", lineHeight: 1 }}>{stat.value}</p>
+                    <p style={{ margin: 0, fontSize: 12, color: "#64748b", fontWeight: 500 }}>{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Engagement rate progress bar */}
+              <div style={{ background: "#f8fafc", borderRadius: 10, padding: "14px 16px", marginBottom: 20, border: "1px solid #e8edf3" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Engagement Rate</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#2563eb" }}>{summaryModal.engRate}%</span>
+                </div>
+                <div style={{ background: "#e2e8f0", borderRadius: 99, height: 8, overflow: "hidden" }}>
+                  <div style={{
+                    width: `${summaryModal.engRate}%`,
+                    height: "100%",
+                    background: "linear-gradient(90deg, #1e3a5f, #2563eb)",
+                    borderRadius: 99,
+                  }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                  <span style={{ fontSize: 11, color: "#94a3b8" }}>0%</span>
+                  <span style={{ fontSize: 11, color: "#94a3b8" }}>100%</span>
+                </div>
+              </div>
+
+              <div style={{ textAlign: "center" }}>
+                <CloseBtn onClick={() => setSummaryModal(null)} />
+              </div>
             </div>
           </div>
         </Overlay>
@@ -503,10 +680,15 @@ export default function Home() {
             <div style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", border: "1px solid #e8edf3" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                 <p style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Summary per Pages</p>
-                <SmBtn>View All</SmBtn>
+                <SmBtn onClick={() => setViewAllSummary(true)}>View All</SmBtn>
               </div>
               {SUMMARY_PAGES.map((pg, i) => (
-                <SummaryCard key={pg.name} page={pg} divider={i < SUMMARY_PAGES.length - 1} />
+                <SummaryCard
+                  key={pg.name}
+                  page={pg}
+                  divider={i < SUMMARY_PAGES.length - 1}
+                  onDetails={() => setSummaryModal(pg)}
+                />
               ))}
             </div>
           </div>
@@ -631,7 +813,7 @@ function ConnRow({ acc }: { acc: typeof CONNECTED[0] }) {
 }
 
 // ── Summary Page Card ─────────────────────────────────────────────────────────
-function SummaryCard({ page, divider }: { page: typeof SUMMARY_PAGES[0]; divider: boolean }) {
+function SummaryCard({ page, divider, onDetails }: { page: typeof SUMMARY_PAGES[0]; divider: boolean; onDetails: () => void }) {
   const [h, setH] = useState(false);
   return (
     <div style={{ paddingBottom: divider ? 14 : 0, marginBottom: divider ? 14 : 0, borderBottom: divider ? "1px solid #f1f5f9" : "none" }}>
@@ -647,7 +829,10 @@ function SummaryCard({ page, divider }: { page: typeof SUMMARY_PAGES[0]; divider
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: 13, color: "#64748b" }}>Posts <strong style={{ color: "#1a202c" }}>{page.posts}</strong></span>
-        <button onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+        <button
+          onClick={onDetails}
+          onMouseEnter={() => setH(true)}
+          onMouseLeave={() => setH(false)}
           style={{ border: "1px solid #e2e8f0", borderRadius: 7, padding: "3px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer", background: h ? "#1e3a5f" : "#fff", color: h ? "#fff" : "#1a202c", transition: "all 0.15s", fontFamily: "inherit" }}>
           Details
         </button>
