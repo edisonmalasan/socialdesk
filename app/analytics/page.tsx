@@ -61,8 +61,15 @@ export default function AnalyticsPage() {
   const exportRef = useRef<HTMLDivElement>(null);
   const datePickerRef = useRef<HTMLDivElement>(null);
   const pageStatsFilterRef = useRef<HTMLDivElement>(null);
+  const filteredExportRef = useRef<HTMLDivElement>(null);
+  const filteredDatePickerRef = useRef<HTMLDivElement>(null);
+  const filteredDatePickerButtonRef = useRef<HTMLButtonElement>(null);
+  const filteredDatePickerPanelRef = useRef<HTMLDivElement>(null);
   const [pageStatsFilter, setPageStatsFilter] = useState<PageStatsSeriesKey[]>(["followers", "likes", "views", "shares", "comments"]);
   const [pageStatsFilterOpen, setPageStatsFilterOpen] = useState(false);
+  const [filteredExportOpen, setFilteredExportOpen] = useState(false);
+  const [filteredDatePickerOpen, setFilteredDatePickerOpen] = useState(false);
+  const [filteredDatePickerPosition, setFilteredDatePickerPosition] = useState({ left: 8, top: 8, width: 288 });
 
   // --- DATE PICKER HELPERS ---
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -93,6 +100,7 @@ export default function AnalyticsPage() {
         setDateRange(r => ({ ...r, to: clicked }));
       }
       setDatePickerOpen(false);
+      setFilteredDatePickerOpen(false);
     }
   };
 
@@ -141,6 +149,35 @@ export default function AnalyticsPage() {
     return year > dateRange.from.getFullYear() && year < dateRange.to.getFullYear();
   };
 
+  const positionFilteredDatePicker = () => {
+    const trigger = filteredDatePickerButtonRef.current;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const gutter = 8;
+    const pickerWidth = Math.min(288, Math.max(220, window.innerWidth - gutter * 2));
+    const measuredPickerHeight = filteredDatePickerPanelRef.current?.getBoundingClientRect().height;
+    const pickerHeight = measuredPickerHeight ?? (calMode === 'day' ? 270 : 220);
+
+    // Prefer right alignment to the trigger, then clamp to viewport bounds.
+    const preferredLeft = rect.right - pickerWidth;
+    const clampedLeft = Math.min(
+      Math.max(preferredLeft, gutter),
+      window.innerWidth - pickerWidth - gutter
+    );
+
+    const belowTop = rect.bottom + gutter;
+    const aboveTop = rect.top - pickerHeight - gutter;
+    const fitsBelow = belowTop + pickerHeight <= window.innerHeight - gutter;
+    const top = fitsBelow || aboveTop < gutter ? belowTop : aboveTop;
+
+    setFilteredDatePickerPosition({
+      left: clampedLeft,
+      top: Math.max(gutter, top),
+      width: pickerWidth,
+    });
+  };
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
@@ -152,6 +189,12 @@ export default function AnalyticsPage() {
       if (pageStatsFilterRef.current && !pageStatsFilterRef.current.contains(e.target as Node)) {
         setPageStatsFilterOpen(false);
       }
+      if (filteredExportRef.current && !filteredExportRef.current.contains(e.target as Node)) {
+        setFilteredExportOpen(false);
+      }
+      if (filteredDatePickerRef.current && !filteredDatePickerRef.current.contains(e.target as Node)) {
+        setFilteredDatePickerOpen(false);
+      }
       // Close any open component dropdown when clicking outside a [data-dropdown] container
       if (!(e.target as Element).closest('[data-dropdown]')) {
         setOpenDropdown(null);
@@ -160,6 +203,23 @@ export default function AnalyticsPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!filteredDatePickerOpen) return;
+
+    const handleReposition = () => positionFilteredDatePicker();
+    handleReposition();
+    const rafId = window.requestAnimationFrame(handleReposition);
+
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
+    };
+  }, [filteredDatePickerOpen, calMode]);
 
   // BACKEND NOTE: These arrays should eventually be fetched from the database
   const pages = ["All Pages", "eGetinnz PH", "eGetinnz USA", "Fibei PH", "Fibei USA", "Digitimmerse PH", "Digitimmerse USA"];
@@ -1035,20 +1095,272 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Tabbed Data Table */}
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-w-0 max-w-full">
-            
-            {/* Tabs */}
-            <div className="flex items-center gap-2 sm:gap-3 lg:gap-6 px-3 sm:px-4 lg:px-6 pt-2.5 sm:pt-3 border-b border-gray-100 overflow-x-auto hide-scrollbar">
-              {tabs.map((tab) => (
-                <button 
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`pb-2.5 sm:pb-3 text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === tab ? "border-primary text-gray-900" : "border-transparent text-gray-400 hover:text-gray-600"}`}
-                >
-                  {tab}
-                </button>
-              ))}
+          <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 min-w-0 max-w-full">
+
+            {/* Export button — top-right of container */}
+            <div className="absolute top-3 right-3 sm:top-3.5 sm:right-4 z-10" ref={filteredExportRef}>
+              <button
+                onClick={() => setFilteredExportOpen(!filteredExportOpen)}
+                className="cursor-pointer transition-opacity hover:opacity-70"
+                title="Export"
+                aria-label="Export data"
+                aria-expanded={filteredExportOpen}
+                aria-haspopup="true"
+              >
+                <Download size={18} className="text-primary" />
+              </button>
+              {filteredExportOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
+                  <button
+                    onClick={() => { openSaveModal("csv"); setFilteredExportOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    <FileSpreadsheet size={16} className="text-green-500 shrink-0" /> Export as CSV
+                  </button>
+                  <button
+                    onClick={() => { openSaveModal("pdf"); setFilteredExportOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    <FileText size={16} className="text-red-500 shrink-0" /> Export as PDF
+                  </button>
+                  <div className="border-t border-gray-100 my-1" />
+                  <button
+                    onClick={() => { openSaveModal("chart"); setFilteredExportOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#jpgGradientF)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                      <defs>
+                        <linearGradient id="jpgGradientF" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#ef4444" />
+                          <stop offset="100%" stopColor="#3b82f6" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg> Export Page Stats (JPG)
+                  </button>
+                </div>
+              )}
             </div>
+            
+            {/* Tabs + Filters Row */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0 px-3 sm:px-4 lg:px-6 pt-2.5 sm:pt-3 border-b border-gray-100 min-w-0">
+              {/* Tabs */}
+              <div className="flex items-center gap-2 sm:gap-3 lg:gap-6 overflow-x-auto hide-scrollbar shrink-0">
+                {tabs.map((tab) => (
+                  <button 
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`pb-2.5 sm:pb-3 text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === tab ? "border-primary text-gray-900" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+
+              {/* Right-Side Filters (pr keeps content away from the absolute export button) */}
+              <div className="flex items-center gap-1.5 sm:gap-2 pb-2.5 sm:pb-3 pt-2.5 sm:pt-0 flex-wrap sm:flex-nowrap shrink-0 pr-10 sm:pr-10">
+
+                {/* All Pages Dropdown */}
+                <div className="relative max-w-22.5 sm:max-w-none">
+                  <select
+                    value={selectedPage}
+                    onChange={(e) => setSelectedPage(e.target.value)}
+                    className="w-full appearance-none bg-white border border-gray-200 text-gray-700 py-1.5 pl-2.5 pr-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm font-medium text-xs truncate"
+                  >
+                    {pages.map((page) => <option key={page} value={page}>{page}</option>)}
+                  </select>
+                  <ChevronDown size={12} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                </div>
+
+                {/* All Platforms Dropdown */}
+                <div className="relative max-w-22.5 sm:max-w-none">
+                  <select
+                    value={selectedPlatform}
+                    onChange={(e) => setSelectedPlatform(e.target.value)}
+                    className="w-full appearance-none bg-white border border-gray-200 text-gray-700 py-1.5 pl-2.5 pr-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm font-medium text-xs truncate"
+                  >
+                    {platforms.map((platform) => <option key={platform} value={platform}>{platform}</option>)}
+                  </select>
+                  <ChevronDown size={12} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                </div>
+
+                {/* Date Range Picker */}
+                <div className="relative" ref={filteredDatePickerRef}>
+                  <button
+                    ref={filteredDatePickerButtonRef}
+                    onClick={() => {
+                      setActiveDateField('from');
+                      setFilteredDatePickerOpen((isOpen) => {
+                        const next = !isOpen;
+                        if (next) positionFilteredDatePicker();
+                        return next;
+                      });
+                    }}
+                    className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 shadow-sm hover:border-gray-300 transition-colors cursor-pointer font-medium"
+                    aria-label="Filter by date range"
+                  >
+                    <CalendarDays size={12} className="text-gray-500 shrink-0" />
+                    {dateRange.from || dateRange.to ? (
+                      <span className="text-gray-800 hidden sm:inline">
+                        {formatCompact(dateRange.from, calMode) || 'Start'}
+                        <span className="text-gray-400 mx-1">→</span>
+                        {formatCompact(dateRange.to, calMode) || 'End'}
+                      </span>
+                    ) : (
+                      <span className="text-gray-600 hidden sm:inline">Date Range</span>
+                    )}
+                    {(dateRange.from || dateRange.to) && (
+                      <span
+                        role="button" tabIndex={0}
+                        onClick={(e) => { e.stopPropagation(); setDateRange({ from: null, to: null }); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setDateRange({ from: null, to: null }); } }}
+                        className="ml-0.5 text-gray-400 hover:text-gray-600 leading-none cursor-pointer text-[10px]"
+                        aria-label="Clear date range"
+                      >✕</span>
+                    )}
+                  </button>
+
+                  {filteredDatePickerOpen && (
+                    <div
+                      ref={filteredDatePickerPanelRef}
+                      className="fixed bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden"
+                      style={{
+                        left: filteredDatePickerPosition.left,
+                        top: filteredDatePickerPosition.top,
+                        width: filteredDatePickerPosition.width,
+                      }}
+                    >
+
+                      {/* From / To pills */}
+                      <div className="flex border-b border-gray-100">
+                        <button onClick={() => setActiveDateField('from')}
+                          className={`flex-1 flex items-center gap-2 px-4 py-2.5 text-xs transition-colors cursor-pointer ${ activeDateField === 'from' ? 'bg-gray-50 font-semibold text-gray-800' : 'text-gray-500 hover:bg-gray-50' }`}>
+                          <CalendarDays size={12} className="text-gray-400 shrink-0" />
+                          <div>
+                            <div className="text-[9px] uppercase tracking-wide text-gray-400 leading-none mb-0.5">From</div>
+                            <div className="text-gray-700">{formatCompact(dateRange.from, calMode) || <span className="text-gray-300 font-normal">not set</span>}</div>
+                          </div>
+                        </button>
+                        <div className="w-px bg-gray-100" />
+                        <button onClick={() => setActiveDateField('to')}
+                          className={`flex-1 flex items-center gap-2 px-4 py-2.5 text-xs transition-colors cursor-pointer ${ activeDateField === 'to' ? 'bg-gray-50 font-semibold text-gray-800' : 'text-gray-500 hover:bg-gray-50' }`}>
+                          <CalendarDays size={12} className="text-gray-400 shrink-0" />
+                          <div>
+                            <div className="text-[9px] uppercase tracking-wide text-gray-400 leading-none mb-0.5">To</div>
+                            <div className="text-gray-700">{formatCompact(dateRange.to, calMode) || <span className="text-gray-300 font-normal">not set</span>}</div>
+                          </div>
+                        </button>
+                      </div>
+
+                      {/* Mode tabs: Day / Month / Year */}
+                      <div className="flex items-center gap-1 px-4 pt-3 pb-1">
+                        {(['day','month','year'] as const).map(m => (
+                          <button key={m} onClick={() => setCalMode(m)}
+                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors cursor-pointer capitalize ${
+                              calMode === m ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-100'
+                            }`}>{m}</button>
+                        ))}
+                      </div>
+
+                      {/* DAY VIEW */}
+                      {calMode === 'day' && (
+                        <div className="px-4 pt-2 pb-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-semibold text-gray-800">{MONTH_NAMES[calMonth]} {calYear}</span>
+                            <div className="flex items-center gap-0.5">
+                              <button onClick={() => setCalViewDate(new Date(calYear, calMonth - 1, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
+                              <button onClick={() => setCalViewDate(new Date(calYear, calMonth + 1, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-7 mb-1">
+                            {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
+                              <div key={d} className="text-center text-[10px] text-gray-400 font-medium">{d}</div>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-7 gap-y-0.5">
+                            {Array.from({ length: firstDayOfWeek }).map((_, i) => {
+                              const day = daysInPrevMonth - firstDayOfWeek + 1 + i;
+                              const d = new Date(calYear, calMonth - 1, day);
+                              return <button key={`fp${i}`} onClick={() => handleDayClick(day, 'prev')}
+                                className={`text-center text-[11px] py-1 rounded-full cursor-pointer ${ isInRange(d) ? 'bg-gray-100 text-gray-400' : 'text-gray-300 hover:text-gray-500' }`}>{day}</button>;
+                            })}
+                            {Array.from({ length: daysInMonth }).map((_, i) => {
+                              const day = i + 1;
+                              const d = new Date(calYear, calMonth, day);
+                              const sel = isSameDay(d, dateRange.from) || isSameDay(d, dateRange.to);
+                              const inR = isInRange(d);
+                              return <button key={`fc${day}`} onClick={() => handleDayClick(day, 'cur')}
+                                className={`text-center text-[11px] py-1 rounded-full cursor-pointer font-medium ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{day}</button>;
+                            })}
+                            {Array.from({ length: (7 - (firstDayOfWeek + daysInMonth) % 7) % 7 }).map((_, i) => {
+                              const day = i + 1;
+                              const d = new Date(calYear, calMonth + 1, day);
+                              return <button key={`fn${i}`} onClick={() => handleDayClick(day, 'next')}
+                                className={`text-center text-[11px] py-1 rounded-full cursor-pointer ${ isInRange(d) ? 'bg-gray-100 text-gray-400' : 'text-gray-300 hover:text-gray-500' }`}>{day}</button>;
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* MONTH VIEW */}
+                      {calMode === 'month' && (
+                        <div className="px-4 pt-2 pb-3">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-semibold text-gray-800">{calYear}</span>
+                            <div className="flex items-center gap-0.5">
+                              <button onClick={() => setCalViewDate(new Date(calYear - 1, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
+                              <button onClick={() => setCalViewDate(new Date(calYear + 1, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-4 gap-1.5">
+                            {MONTH_SHORT.map((m, idx) => {
+                              const sel = isMonthSelected(idx);
+                              const inR = isMonthInRange(idx);
+                              return (
+                                <button key={m} onClick={() => handleMonthClick(idx)}
+                                  className={`py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{m}</button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* YEAR VIEW */}
+                      {calMode === 'year' && (
+                        <div className="px-4 pt-2 pb-3">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-semibold text-gray-800">{decadeStart}–{decadeStart + 11}</span>
+                            <div className="flex items-center gap-0.5">
+                              <button onClick={() => setCalViewDate(new Date(calYear - 10, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronLeft size={13} /></button>
+                              <button onClick={() => setCalViewDate(new Date(calYear + 10, calMonth, 1))} className="p-1 rounded-md hover:bg-gray-100 text-gray-500 cursor-pointer"><ChevronRight size={13} /></button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-4 gap-1.5">
+                            {Array.from({ length: 12 }).map((_, i) => {
+                              const year = decadeStart + i;
+                              const sel = isYearSelected(year);
+                              const inR = isYearInRange(year);
+                              return (
+                                <button key={year} onClick={() => handleYearClick(year)}
+                                  className={`py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${ sel ? 'bg-gray-800 text-white' : inR ? 'bg-gray-100 text-gray-700' : 'text-gray-700 hover:bg-gray-100' }`}>{year}</button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+                  )}
+                </div>
+
+
+              </div>
+            </div>
+
+            {/* Data content wrapper — overflow-hidden here preserves rounded bottom corners */}
+            <div className="overflow-hidden rounded-b-xl sm:rounded-b-2xl">
 
             {/* Mobile Card View (visible below lg) */}
             <div className="block lg:hidden divide-y divide-gray-50">
@@ -1152,6 +1464,8 @@ export default function AnalyticsPage() {
             <div className="px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 border-t border-gray-100 text-[10px] sm:text-xs text-gray-500 font-medium">
               Showing <span className="font-bold text-gray-900">1-12</span> of <span className="font-bold text-gray-900">12</span> Entries
             </div>
+
+            </div>{/* end data content wrapper */}
           </div>
         </div>
       )}
