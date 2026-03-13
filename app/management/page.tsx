@@ -26,8 +26,8 @@ export default function ManagementPage() {
     { id: "1", name: "Admin 1",      email: "admin1.egetinzz@gmail.com", role: "Admin", status: "Active",   lastActive: "1 minute ago",  business: "eGetinnz PH"  },
     { id: "2", name: "User 1",       email: "user1.egetinzz@gmail.com",  role: "User",  status: "Active",   lastActive: "2 hours ago",   business: "Fibei Travel" },
     { id: "3", name: "User 2",       email: "user2.egetinzz@gmail.com",  role: "User",  status: "Inactive", lastActive: "30 days ago",   business: "eGetinnz USA" },
-    { id: "4", name: "Sarah Connor", email: "s.connor@gmail.com",         role: "Admin", status: "Inactive", lastActive: "5 days ago",    business: "Digitimmerse" },
-    { id: "5", name: "John Smith",   email: "john.smith@yahoo.com",       role: "User",  status: "Active",   lastActive: "10 mins ago",  business: "eGetinnz PH"  },
+    { id: "4", name: "Sarah Connor", email: "s.connor@gmail.com",        role: "Admin", status: "Inactive", lastActive: "5 days ago",    business: "Digitimmerse" },
+    { id: "5", name: "John Smith",   email: "john.smith@yahoo.com",      role: "User",  status: "Active",   lastActive: "10 mins ago",  business: "eGetinnz PH"  },
   ]);
 
   const businesses = ["eGetinnz PH", "eGetinnz USA", "Fibei Travel", "Digitimmerse"];
@@ -52,37 +52,38 @@ export default function ManagementPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Close actions dropdown when user scrolls
   useEffect(() => {
     const handleScroll = () => setActionMenuAnchor(null);
     window.addEventListener("scroll", handleScroll, true);
     return () => window.removeEventListener("scroll", handleScroll, true);
   }, []);
 
-  // --- NEW: Add User Modal State ---
+  // --- MODAL STATES ---
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newUser, setNewUser] = useState({ name: "", email: "", password: "", role: "User" });
 
-  // BACKEND NOTE: Delete handler. Implement the DELETE API call here.
+  const [isEditDetailsModalOpen, setIsEditDetailsModalOpen] = useState(false);
+  const [editUserDetails, setEditUserDetails] = useState({ id: "", name: "", email: "", business: "" });
+
+  const [isEditAccessModalOpen, setIsEditAccessModalOpen] = useState(false);
+  const [editUserAccess, setEditUserAccess] = useState({ id: "", role: "" });
+
+  // --- HANDLERS ---
   const handleDeleteUser = (id: string) => {
+    // BACKEND NOTE: Implement DELETE /api/users/:id
     setUsers(users.filter(user => user.id !== id));
-    setOpenActionMenu(null);
+    setActionMenuAnchor(null); 
   };
 
   const handleDisableUser = (id: string) => {
     // BACKEND NOTE: Implement PATCH /api/users/:id/disable
     setUsers(users.map(u => u.id === id ? { ...u, status: u.status === "Active" ? "Inactive" : "Active" } : u));
-    setOpenActionMenu(null);
+    setActionMenuAnchor(null); 
   };
 
-  // --- NEW: Add User Handler ---
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
-    
     // BACKEND NOTE: Implement POST request here to save the new user to the database.
-    // Ensure the password is encrypted (e.g., bcrypt) on the backend before saving!
-    
-    // Mocking a successful database save:
     const mockNewId = (users.length + 10).toString();
     const createdUser = {
       id: mockNewId,
@@ -93,13 +94,30 @@ export default function ManagementPage() {
       lastActive: "Just now",
       business: "eGetinnz PH",
     };
-
-    // Add to the top of the list
     setUsers([createdUser, ...users]);
-    
-    // Reset form and close modal
     setNewUser({ name: "", email: "", password: "", role: "User" });
     setIsAddModalOpen(false);
+  };
+
+  // NEW: Handle Edit Details Submit
+  const handleEditDetailsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // BACKEND NOTE: Implement PUT /api/users/:id payload: { name, email, business }
+    setUsers(users.map(u => u.id === editUserDetails.id ? { 
+      ...u, 
+      name: editUserDetails.name, 
+      email: editUserDetails.email, 
+      business: editUserDetails.business 
+    } : u));
+    setIsEditDetailsModalOpen(false);
+  };
+
+  // NEW: Handle Edit Access Submit
+  const handleEditAccessSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // BACKEND NOTE: Implement PUT /api/users/:id/role payload: { role }
+    setUsers(users.map(u => u.id === editUserAccess.id ? { ...u, role: editUserAccess.role } : u));
+    setIsEditAccessModalOpen(false);
   };
 
   const filteredUsers = users.filter((user) => {
@@ -238,7 +256,6 @@ export default function ManagementPage() {
           </div>
         </div>
 
-        {/* --- NEW: Trigger Modal Button --- */}
         <button 
           onClick={() => setIsAddModalOpen(true)}
           className="flex items-center justify-center gap-2 px-5 py-2.5 bg-accent text-primary text-sm rounded-lg font-bold hover:bg-[#8ebfe6] transition-colors shadow-sm shrink-0"
@@ -305,95 +322,103 @@ export default function ManagementPage() {
       </div>
 
       {/* ========================================= */}
-      {/* NEW: ADD USER MODAL                       */}
+      {/* MODALS AREA                               */}
       {/* ========================================= */}
+
+      {/* 1. ADD USER MODAL */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Dark Overlay */}
-          <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsAddModalOpen(false)}
-          ></div>
-
-          {/* Modal Container */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsAddModalOpen(false)}></div>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative z-10 overflow-hidden">
-            {/* Header */}
             <div className="bg-gray-50 border-b border-gray-100 px-6 py-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-primary">Add New User</h2>
-              <button 
-                onClick={() => setIsAddModalOpen(false)}
-                className="text-gray-400 hover:text-gray-900 transition-colors"
-              >
-                <X size={20} />
-              </button>
+              <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-gray-900 transition-colors"><X size={20} /></button>
             </div>
-
-            {/* Form */}
             <form onSubmit={handleAddUser} className="p-6 flex flex-col gap-4">
-              
               <div>
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 block">Full Name</label>
-                <input 
-                  type="text" 
-                  required
-                  placeholder="e.g. Jane Doe"
-                  value={newUser.name}
-                  onChange={(e) => setNewUser({...newUser, name: e.target.value})}
-                  className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-                />
+                <input type="text" required placeholder="e.g. Jane Doe" value={newUser.name} onChange={(e) => setNewUser({...newUser, name: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium" />
               </div>
-
               <div>
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 block">Email Address</label>
-                <input 
-                  type="email" 
-                  required
-                  placeholder="name@company.com"
-                  value={newUser.email}
-                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                  className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-                />
+                <input type="email" required placeholder="name@company.com" value={newUser.email} onChange={(e) => setNewUser({...newUser, email: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium" />
               </div>
-
               <div>
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 block">Temporary Password</label>
-                <input 
-                  type="password" 
-                  required
-                  placeholder="••••••••"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                  className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-                />
+                <input type="password" required placeholder="••••••••" value={newUser.password} onChange={(e) => setNewUser({...newUser, password: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium" />
               </div>
-
               <div>
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 block">Account Role</label>
-                <select 
-                  value={newUser.role}
-                  onChange={(e) => setNewUser({...newUser, role: e.target.value})}
-                  className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium cursor-pointer"
-                >
+                <select value={newUser.role} onChange={(e) => setNewUser({...newUser, role: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium cursor-pointer">
                   <option value="User">Standard User</option>
                   <option value="Admin">Administrator</option>
                 </select>
               </div>
-
-              {/* Action Buttons */}
               <div className="flex items-center justify-end gap-3 mt-4">
-                <button 
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="px-5 py-2.5 text-sm font-bold bg-primary text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm"
-                >
-                  Create User
-                </button>
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-2.5 text-sm font-bold bg-primary text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm">Create User</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. EDIT DETAILS MODAL */}
+      {isEditDetailsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsEditDetailsModalOpen(false)}></div>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative z-10 overflow-hidden">
+            <div className="bg-gray-50 border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-primary">Edit User Details</h2>
+              <button onClick={() => setIsEditDetailsModalOpen(false)} className="text-gray-400 hover:text-gray-900 transition-colors"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleEditDetailsSubmit} className="p-6 flex flex-col gap-4">
+              <div>
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 block">Full Name</label>
+                <input type="text" required value={editUserDetails.name} onChange={(e) => setEditUserDetails({...editUserDetails, name: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 block">Email Address</label>
+                <input type="email" required value={editUserDetails.email} onChange={(e) => setEditUserDetails({...editUserDetails, email: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 block">Business</label>
+                <select value={editUserDetails.business} onChange={(e) => setEditUserDetails({...editUserDetails, business: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium cursor-pointer">
+                  {businesses.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </div>
+              <div className="flex items-center justify-end gap-3 mt-4">
+                <button type="button" onClick={() => setIsEditDetailsModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-2.5 text-sm font-bold bg-primary text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3. EDIT ACCESS MODAL */}
+      {isEditAccessModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsEditAccessModalOpen(false)}></div>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative z-10 overflow-hidden">
+            <div className="bg-gray-50 border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-primary">Edit User Access</h2>
+              <button onClick={() => setIsEditAccessModalOpen(false)} className="text-gray-400 hover:text-gray-900 transition-colors"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleEditAccessSubmit} className="p-6 flex flex-col gap-4">
+              <div>
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 block">Account Role</label>
+                <select value={editUserAccess.role} onChange={(e) => setEditUserAccess({...editUserAccess, role: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium cursor-pointer">
+                  <option value="User">Standard User</option>
+                  <option value="Admin">Administrator</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-2">
+                  <span className="font-bold text-gray-700">Warning:</span> Granting Administrator access gives this user full control over all connected social accounts and billing features.
+                </p>
+              </div>
+              <div className="flex items-center justify-end gap-3 mt-4">
+                <button type="button" onClick={() => setIsEditAccessModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-2.5 text-sm font-bold bg-primary text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm">Update Access</button>
               </div>
             </form>
           </div>
@@ -405,9 +430,7 @@ export default function ManagementPage() {
       {/* ========================================= */}
       {actionMenuAnchor && typeof window !== "undefined" && createPortal(
         <>
-          {/* Backdrop */}
           <div className="fixed inset-0 z-100" onClick={() => setActionMenuAnchor(null)} />
-          {/* Dropdown */}
           <div
             style={{ position: "fixed", top: actionMenuAnchor.top, right: actionMenuAnchor.right, zIndex: 101, minHeight: 0 }}
             className="w-44 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden"
@@ -418,13 +441,21 @@ export default function ManagementPage() {
               return (
                 <>
                   <button
-                    onClick={() => { /* BACKEND NOTE: open edit details modal */ setActionMenuAnchor(null); }}
+                    onClick={() => {
+                      setEditUserDetails({ id: u.id, name: u.name, email: u.email, business: u.business });
+                      setIsEditDetailsModalOpen(true);
+                      setActionMenuAnchor(null);
+                    }}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
                   >
                     <Pencil size={15} className="text-gray-400" /> Edit Details
                   </button>
                   <button
-                    onClick={() => { /* BACKEND NOTE: open edit access/role modal */ setActionMenuAnchor(null); }}
+                    onClick={() => {
+                      setEditUserAccess({ id: u.id, role: u.role });
+                      setIsEditAccessModalOpen(true);
+                      setActionMenuAnchor(null);
+                    }}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
                   >
                     <KeyRound size={15} className="text-gray-400" /> Edit Access
