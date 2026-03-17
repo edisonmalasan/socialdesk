@@ -14,9 +14,9 @@ import {
   ShieldCheck,
   X,
   Pencil,
-  KeyRound,
   Ban,
-  Trash2
+  Trash2,
+  ExternalLink
 } from "lucide-react";
 
 export default function ManagementPage() {
@@ -63,10 +63,7 @@ export default function ManagementPage() {
   const [newUser, setNewUser] = useState({ name: "", email: "", password: "", role: "User" });
 
   const [isEditDetailsModalOpen, setIsEditDetailsModalOpen] = useState(false);
-  const [editUserDetails, setEditUserDetails] = useState({ id: "", name: "", email: "", business: "" });
-
-  const [isEditAccessModalOpen, setIsEditAccessModalOpen] = useState(false);
-  const [editUserAccess, setEditUserAccess] = useState({ id: "", role: "" });
+  const [editUserDetails, setEditUserDetails] = useState({ id: "", name: "", email: "", role: "" });
 
   // --- HANDLERS ---
   const handleDeleteUser = (id: string) => {
@@ -99,25 +96,27 @@ export default function ManagementPage() {
     setIsAddModalOpen(false);
   };
 
-  // NEW: Handle Edit Details Submit
   const handleEditDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // BACKEND NOTE: Implement PUT /api/users/:id payload: { name, email, business }
+    // BACKEND NOTE: Implement PUT /api/users/:id payload: { name, email, role }
     setUsers(users.map(u => u.id === editUserDetails.id ? { 
       ...u, 
       name: editUserDetails.name, 
       email: editUserDetails.email, 
-      business: editUserDetails.business 
+      role: editUserDetails.role 
     } : u));
     setIsEditDetailsModalOpen(false);
   };
 
-  // NEW: Handle Edit Access Submit
-  const handleEditAccessSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // BACKEND NOTE: Implement PUT /api/users/:id/role payload: { role }
-    setUsers(users.map(u => u.id === editUserAccess.id ? { ...u, role: editUserAccess.role } : u));
-    setIsEditAccessModalOpen(false);
+  // BACKEND NOTE: This mock function should be replaced by pulling the actual external platform URL for the user
+  const getPlatformUrl = (businessName: string) => {
+    switch (businessName) {
+      case "Fibei Travel": return "https://www.facebook.com/fibeitravel";
+      case "eGetinnz PH": return "https://www.facebook.com/eGetinnz";
+      case "eGetinnz USA": return "https://www.facebook.com/egetinnzusa";
+      case "Digitimmerse": return "https://www.facebook.com/profile.php?id=61576790072363";
+      default: return "https://www.facebook.com";
+    }
   };
 
   const filteredUsers = users.filter((user) => {
@@ -382,43 +381,15 @@ export default function ManagementPage() {
                 <input type="email" required value={editUserDetails.email} onChange={(e) => setEditUserDetails({...editUserDetails, email: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium" />
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 block">Business</label>
-                <select value={editUserDetails.business} onChange={(e) => setEditUserDetails({...editUserDetails, business: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium cursor-pointer">
-                  {businesses.map(b => <option key={b} value={b}>{b}</option>)}
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 block">Account Role</label>
+                <select value={editUserDetails.role} onChange={(e) => setEditUserDetails({...editUserDetails, role: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium cursor-pointer">
+                  <option value="User">Standard User</option>
+                  <option value="Admin">Administrator</option>
                 </select>
               </div>
               <div className="flex items-center justify-end gap-3 mt-4">
                 <button type="button" onClick={() => setIsEditDetailsModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
                 <button type="submit" className="px-5 py-2.5 text-sm font-bold bg-primary text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm">Save Changes</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 3. EDIT ACCESS MODAL */}
-      {isEditAccessModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsEditAccessModalOpen(false)}></div>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative z-10 overflow-hidden">
-            <div className="bg-gray-50 border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-primary">Edit User Access</h2>
-              <button onClick={() => setIsEditAccessModalOpen(false)} className="text-gray-400 hover:text-gray-900 transition-colors"><X size={20} /></button>
-            </div>
-            <form onSubmit={handleEditAccessSubmit} className="p-6 flex flex-col gap-4">
-              <div>
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 block">Account Role</label>
-                <select value={editUserAccess.role} onChange={(e) => setEditUserAccess({...editUserAccess, role: e.target.value})} className="w-full bg-white border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium cursor-pointer">
-                  <option value="User">Standard User</option>
-                  <option value="Admin">Administrator</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-2">
-                  <span className="font-bold text-gray-700">Warning:</span> Granting Administrator access gives this user full control over all connected social accounts and billing features.
-                </p>
-              </div>
-              <div className="flex items-center justify-end gap-3 mt-4">
-                <button type="button" onClick={() => setIsEditAccessModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 text-sm font-bold bg-primary text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm">Update Access</button>
               </div>
             </form>
           </div>
@@ -442,7 +413,7 @@ export default function ManagementPage() {
                 <>
                   <button
                     onClick={() => {
-                      setEditUserDetails({ id: u.id, name: u.name, email: u.email, business: u.business });
+                      setEditUserDetails({ id: u.id, name: u.name, email: u.email, role: u.role });
                       setIsEditDetailsModalOpen(true);
                       setActionMenuAnchor(null);
                     }}
@@ -450,16 +421,19 @@ export default function ManagementPage() {
                   >
                     <Pencil size={15} className="text-gray-400" /> Edit Details
                   </button>
+
+                  {/* NEW VIEW PLATFORM BUTTON */}
                   <button
                     onClick={() => {
-                      setEditUserAccess({ id: u.id, role: u.role });
-                      setIsEditAccessModalOpen(true);
+                      const url = getPlatformUrl(u.business);
+                      window.open(url, "_blank", "noopener,noreferrer");
                       setActionMenuAnchor(null);
                     }}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
                   >
-                    <KeyRound size={15} className="text-gray-400" /> Edit Access
+                    <ExternalLink size={15} className="text-gray-400" /> View Platform
                   </button>
+
                   <button
                     onClick={() => handleDisableUser(u.id)}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-700 transition-colors text-left"
