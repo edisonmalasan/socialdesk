@@ -604,56 +604,69 @@ export default function PostsPage() {
           </div>
           
           {filteredPosts.map((post) => (
-            <div key={post.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all relative overflow-hidden">
-              {/* Main container */}
-              <div className="p-4 sm:p-6">
-                {/* Light Grey Background for Date Line */}
-                <div className="absolute left-0 right-0 top-0 h-[52px] bg-gray-200 rounded-t-xl" />
+  <div key={post.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all relative">
+    {/* Removed overflow-hidden from the main card */}
+    <div className="p-4 sm:p-6 pb-16"> {/* Added more bottom padding (pb-16) to make room for dropdown */}
+      {/* Light Grey Background for Date Line */}
+      <div className="absolute left-0 right-0 top-0 h-[52px] bg-gray-200 rounded-t-xl" />
+      
+      {/* 3 Dots Menu - Positioned in top right */}
+      <div className="absolute top-4 right-4 z-50">
+        <div className="relative">
+          <button
+            onClick={() => setOpenDropdownId(openDropdownId === post.id ? null : post.id)}
+            className="text-gray-600 hover:text-black p-2 hover:bg-gray-300 rounded-full transition-colors"
+          >
+            <MoreHorizontal size={18} />
+          </button>
+          
+          {openDropdownId === post.id && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setOpenDropdownId(null)}
+              />
+              <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+                {/* Always show Edit option for all posts */}
+                <button
+                  onClick={() => openEditModal(post, "edit")}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <Edit3 size={14} /> Edit
+                </button>
                 
-                {/* 3 Dots Menu - Positioned in top right */}
-                <div className="absolute top-4 right-4 z-20">
-                  <div className="relative">
-                    <button
-                      onClick={() => setOpenDropdownId(openDropdownId === post.id ? null : post.id)}
-                      className="text-gray-600 hover:text-black p-2 hover:bg-gray-300 rounded-full transition-colors"
-                    >
-                      <MoreHorizontal size={18} />
-                    </button>
-                    
-                    {openDropdownId === post.id && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-10"
-                          onClick={() => setOpenDropdownId(null)}
-                        />
-                        <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
-                          {post.status === 'scheduled' && (
-                            <button
-                              onClick={() => openEditModal(post, "edit")}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                            >
-                              <Edit3 size={14} /> Edit
-                            </button>
-                          )}
-                          {post.status === 'published' && (
-                            <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                              <Eye size={14} /> Unpublish
-                            </button>
-                          )}
-                          <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                            <Copy size={14} /> Copy Link
-                          </button>
-                          <button
-                            onClick={() => deletePost(post.id)}
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                          >
-                            <Trash2 size={14} /> Delete
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
+                {/* Show Reschedule option only for scheduled posts */}
+                {post.status === 'scheduled' && (
+                  <button
+                    onClick={() => openEditModal(post, "reschedule")}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <CalendarClock size={14} /> Reschedule
+                  </button>
+                )}
+                
+                {/* Unpublish option for published posts */}
+                {post.status === 'published' && (
+                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                    <Eye size={14} /> Unpublish
+                  </button>
+                )}
+                
+                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                  <Copy size={14} /> Copy Link
+                </button>
+                
+                <button
+                  onClick={() => deletePost(post.id)}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100 mt-1 pt-2"
+                >
+                  <Trash2 size={14} /> Delete
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
                 {/* Layout: Content + Media Side-by-Side */}
                 <div className="flex flex-col md:flex-row gap-4 sm:gap-6 relative z-10">
