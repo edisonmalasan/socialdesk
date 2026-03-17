@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { JSX, useState } from "react";
 
 // ── SVG Icons ─────────────────────────────────────────────────────────────────
 const ICONS: Record<string, { bg: string; path: JSX.Element }> = {
