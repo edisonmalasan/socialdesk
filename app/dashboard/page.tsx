@@ -239,21 +239,24 @@ export default function Home() {
       {/* ── MODAL: Total Followers ── */}
       {modal === "followers" && (
         <Overlay onClose={() => setModal(null)}>
-          <div style={{ background: "#1e3a5f", borderRadius: 16, maxWidth: 300, width: "90vw", padding: "26px 22px 22px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-            <h2 style={{ color: "#fff", fontSize: 24, fontWeight: 700, margin: "0 0 6px" }}>Total Followers</h2>
-            <p style={{ color: "#a8c4e0", fontSize: 13, margin: "0 0 18px" }}>Overview for <strong style={{ color: "#fff" }}>Egetinnz</strong> total followers performance.</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {FOLLOWERS_DATA.map(r => (
-                <div key={r.plt} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 14px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Icon name={r.plt} size={28} /><span style={{ color: "#fff", fontWeight: 500, fontSize: 15 }}>{r.plt}</span></div>
-                  <span style={{ color: "#fff", fontWeight: 700, fontSize: 19 }}>{r.val}</span>
-                </div>
-              ))}
+          <div style={{ background: "#fff", borderRadius: 16, maxWidth: 300, width: "90vw", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ background: "#1e3a5f", height: 6 }} />
+            <div style={{ padding: "26px 22px 22px" }}>
+              <h2 style={{ color: "#1e3a5f", fontSize: 24, fontWeight: 700, margin: "0 0 6px" }}>Total Followers</h2>
+              <p style={{ color: "#64748b", fontSize: 13, margin: "0 0 18px" }}>Overview for <strong style={{ color: "#1a202c" }}>Egetinnz</strong> total followers performance.</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {FOLLOWERS_DATA.map(r => (
+                  <div key={r.plt} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc", borderRadius: 10, padding: "10px 14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Icon name={r.plt} size={28} /><span style={{ color: "#1a202c", fontWeight: 500, fontSize: 15 }}>{r.plt}</span></div>
+                    <span style={{ color: "#1a202c", fontWeight: 700, fontSize: 19 }}>{r.val}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ borderTop: "1px solid #e2e8f0", margin: "16px 0 14px", paddingTop: 12, textAlign: "center" }}>
+                <span style={{ color: "#1a202c", fontWeight: 700, fontSize: 16 }}>Total: 7,852 Followers</span>
+              </div>
+              <div style={{ textAlign: "center" }}><CloseBtn onClick={() => setModal(null)} /></div>
             </div>
-            <div style={{ borderTop: "1px solid rgba(255,255,255,0.2)", margin: "16px 0 14px", paddingTop: 12, textAlign: "center" }}>
-              <span style={{ color: "#fff", fontWeight: 700, fontSize: 16 }}>Total: 7,852 Followers</span>
-            </div>
-            <div style={{ textAlign: "center" }}><CloseBtn onClick={() => setModal(null)} /></div>
           </div>
         </Overlay>
       )}
