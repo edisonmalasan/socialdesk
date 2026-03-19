@@ -217,8 +217,8 @@ export default function AccountsPage() {
 
       {/* Centered selector modal */}
       {connectPlatformId === "selector" && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-3 sm:items-center sm:p-4">
-          <div className="w-full max-w-4xl rounded-2xl border border-gray-100 bg-white p-4 shadow-xl sm:max-h-[90dvh] sm:overflow-y-auto sm:p-6">
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-3 overflow-y-auto sm:items-center sm:p-4">
+          <div className="w-full max-w-4xl rounded-2xl border border-gray-100 bg-white p-4 shadow-xl max-h-[90dvh] overflow-y-auto sm:p-6">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h4 className="text-lg font-semibold">Add account</h4>
               <button onClick={closeAllModals} className="rounded-full p-2 text-gray-500 hover:bg-gray-100" aria-label="Close">
@@ -263,8 +263,8 @@ export default function AccountsPage() {
 
       {/* Platform login modal */}
       {connectPlatformId && connectPlatformId !== "selector" && (
-        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/50 p-3 sm:items-center sm:p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl sm:max-h-[90dvh] sm:overflow-y-auto sm:p-6 md:p-8">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl max-h-[90dvh] overflow-y-auto sm:p-6 md:p-8">
             <div className="mb-4 flex items-start gap-4">
               <div className={`rounded-lg p-3 ${findPlatform(connectPlatformId)?.color}`}>{findPlatform(connectPlatformId)?.icon}</div>
               <div className="min-w-0 flex-1">
@@ -319,8 +319,8 @@ export default function AccountsPage() {
 
       {/* Disconnect modal */}
       {disconnectId && (
-        <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-3 sm:items-center sm:p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-4 text-center shadow-xl sm:max-h-[90dvh] sm:overflow-y-auto sm:p-6">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-md rounded-2xl bg-white p-4 text-center shadow-xl max-h-[90dvh] overflow-y-auto sm:p-6">
             <div className="mb-4 flex items-center justify-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
                 <Trash2 className="text-red-600" />
