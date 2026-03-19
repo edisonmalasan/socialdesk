@@ -70,7 +70,7 @@ export default function PostsPage() {
       status: "published",
       platforms: ["facebook", "instagram"],
       date: "02/28/2026",
-      page: "eGetinnz",
+      page: "eGetinnz USA",
       mediaType: "image",
       mediaUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
       stats: { likes: 144, comments: 58, shares: 278 }
@@ -81,7 +81,7 @@ export default function PostsPage() {
       status: "scheduled",
       platforms: ["facebook"],
       date: "02/28/2026",
-      page: "eGetinnz",
+      page: "eGetinnz PH",
       mediaType: "video",
       mediaUrl: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80",
       stats: { likes: 144, comments: 58, shares: 278 }
@@ -92,7 +92,7 @@ export default function PostsPage() {
       status: "published",
       platforms: ["instagram"],
       date: "02/28/2026",
-      page: "eGetinnz",
+      page: "eGetinnz PH",
       mediaType: "none",
       stats: { likes: 144, comments: 58, shares: 278 }
     },
@@ -102,23 +102,37 @@ export default function PostsPage() {
       status: "published",
       platforms: ["tiktok"],
       date: "02/28/2026",
-      page: "eGetinnz",
+      page: "eGetinnz PH",
       mediaType: "image",
       mediaUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80",
       stats: { likes: 144, comments: 58, shares: 278 }
     },
     {
       id: "5",
-      content: "Excited to launch our new product! 🚀 #LaunchDay",
+      content: "Check out our new Facebook page!",
+      status: "published",
+      platforms: ["facebook", "instagram"],
+      date: "02/28/2026",
+      page: "eGetinnz USA",
+      mediaType: "image",
+      mediaUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
+      stats: { likes: 144, comments: 58, shares: 278 }
+    },
+    {
+      id: "6",
+      content: "Instagram exclusive content!",
       status: "published",
       platforms: ["instagram"],
       date: "02/28/2026",
-      page: "eGetinnz",
+      page: "eGetinnz PH",
       mediaType: "image",
       mediaUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
       stats: { likes: 144, comments: 58, shares: 278 }
     }
   ]);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Date filter states
   const [dateFilterOpen, setDateFilterOpen] = useState(false);
@@ -184,8 +198,43 @@ export default function PostsPage() {
     return new Date(year, month - 1, day);
   };
 
-  // Filter posts based on status, platform, and date range
+  // Enhanced search function that searches across multiple fields
+  const matchesSearch = (post: Post, query: string): boolean => {
+    if (!query) return true;
+    
+    const lowercaseQuery = query.toLowerCase();
+    
+    // Search in content
+    if (post.content.toLowerCase().includes(lowercaseQuery)) return true;
+    
+    // Search in page name
+    if (post.page.toLowerCase().includes(lowercaseQuery)) return true;
+    
+    // Search in platforms
+    if (post.platforms.some(platform => 
+      platform.toLowerCase().includes(lowercaseQuery)
+    )) return true;
+    
+    // Search for platform names even if they're partial matches
+    // This handles cases like "face" matching "facebook"
+    const platformKeywords = ["face", "insta", "tiktok", "you", "tube", "pint", "x", "twitter"];
+    if (platformKeywords.some(keyword => 
+      lowercaseQuery.includes(keyword) && 
+      post.platforms.some(platform => 
+        platform.toLowerCase().includes(keyword)
+      )
+    )) return true;
+    
+    return false;
+  };
+
+  // Filter posts based on search, status, platform, and date range
   const filteredPosts = posts.filter(post => {
+    // Search filter
+    if (!matchesSearch(post, searchQuery)) {
+      return false;
+    }
+    
     // Status filter
     if (statusFilter !== "all" && post.status !== statusFilter) {
       return false;
@@ -231,6 +280,26 @@ export default function PostsPage() {
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+            {/* Search Bar */}
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search by content, platform, or page..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
             {/* Sort by Post dropdown */}
             <select className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white min-w-full sm:min-w-[140px]">
               <option>Sort by Post</option>
@@ -463,6 +532,13 @@ export default function PostsPage() {
         </div>
       )}
 
+      {/* Search results summary */}
+      {searchQuery && (
+        <div className="text-sm text-gray-600">
+          Found {filteredPosts.length} {filteredPosts.length === 1 ? 'post' : 'posts'} matching "{searchQuery}"
+        </div>
+      )}
+
       {/* Table View */}
       {viewMode === "table" && (
         <>
@@ -480,74 +556,82 @@ export default function PostsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredPosts.map((post) => (
-                  <tr key={post.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 sm:px-6 py-4">
-                      <span className="text-xs sm:text-sm text-gray-500">{post.date}</span>
-                    </td>
-                    <td className="px-4 sm:px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <PlatformIcon platform={post.platforms[0]} />
-                        <span className="text-xs sm:text-sm font-medium text-gray-700 capitalize">
-                          {post.platforms[0]}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 sm:px-6 py-4">
-                      <span className="text-xs sm:text-sm font-medium text-gray-900">{post.page}</span>
-                    </td>
-                    <td className="px-4 sm:px-6 py-4">
-                      <div className="flex items-center gap-3 max-w-[200px] lg:max-w-xs">
-                        {post.mediaType !== 'none' && post.mediaUrl && (
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                            <img
-                              src={post.mediaUrl}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <span className="text-xs sm:text-sm text-gray-700 line-clamp-2">{post.content}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 sm:px-6 py-4">
-                      {post.stats && (
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-                          <span className="flex items-center gap-1 text-xs sm:text-sm">
-                            <Heart size={14} className="text-red-400" /> {post.stats.likes}
-                          </span>
-                          <span className="flex items-center gap-1 text-xs sm:text-sm">
-                            <MessageCircle size={14} className="text-blue-400" /> {post.stats.comments}
-                          </span>
-                          <span className="flex items-center gap-1 text-xs sm:text-sm">
-                            <Repeat2 size={14} className="text-green-400" /> {post.stats.shares}
+                {filteredPosts.length > 0 ? (
+                  filteredPosts.map((post) => (
+                    <tr key={post.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 sm:px-6 py-4">
+                        <span className="text-xs sm:text-sm text-gray-500">{post.date}</span>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <PlatformIcon platform={post.platforms[0]} />
+                          <span className="text-xs sm:text-sm font-medium text-gray-700 capitalize">
+                            {post.platforms[0]}
                           </span>
                         </div>
-                      )}
-                    </td>
-                    <td className="px-4 sm:px-6 py-4">
-                      <StatusBadge status={post.status} />
-                    </td>
-                    <td className="px-4 sm:px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => openEditModal(post, "edit")}
-                          className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Edit3 size={18} />
-                        </button>
-                        <button
-                          onClick={() => deletePost(post.id)}
-                          className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4">
+                        <span className="text-xs sm:text-sm font-medium text-gray-900">{post.page}</span>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4">
+                        <div className="flex items-center gap-3 max-w-[200px] lg:max-w-xs">
+                          {post.mediaType !== 'none' && post.mediaUrl && (
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                              <img
+                                src={post.mediaUrl}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <span className="text-xs sm:text-sm text-gray-700 line-clamp-2">{post.content}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4">
+                        {post.stats && (
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                            <span className="flex items-center gap-1 text-xs sm:text-sm">
+                              <Heart size={14} className="text-red-400" /> {post.stats.likes}
+                            </span>
+                            <span className="flex items-center gap-1 text-xs sm:text-sm">
+                              <MessageCircle size={14} className="text-blue-400" /> {post.stats.comments}
+                            </span>
+                            <span className="flex items-center gap-1 text-xs sm:text-sm">
+                              <Repeat2 size={14} className="text-green-400" /> {post.stats.shares}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 sm:px-6 py-4">
+                        <StatusBadge status={post.status} />
+                      </td>
+                      <td className="px-4 sm:px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openEditModal(post, "edit")}
+                            className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Edit3 size={18} />
+                          </button>
+                          <button
+                            onClick={() => deletePost(post.id)}
+                            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-4 sm:px-6 py-8 text-center text-gray-500">
+                      No posts found matching your search criteria
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -604,161 +688,166 @@ export default function PostsPage() {
             </button>
           </div>
           
-          {filteredPosts.map((post) => (
-  <div key={post.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all relative">
-    {/* Removed overflow-hidden from the main card */}
-    <div className="p-4 sm:p-6 pb-16"> {/* Added more bottom padding (pb-16) to make room for dropdown */}
-      {/* Light Grey Background for Date Line */}
-      <div className="absolute left-0 right-0 top-0 h-[52px] bg-gray-200 rounded-t-xl" />
-      
-      {/* 3 Dots Menu - Positioned in top right */}
-      <div className="absolute top-4 right-4 z-50">
-        <div className="relative">
-          <button
-            onClick={() => setOpenDropdownId(openDropdownId === post.id ? null : post.id)}
-            className="text-gray-600 hover:text-black p-2 hover:bg-gray-300 rounded-full transition-colors"
-          >
-            <MoreHorizontal size={18} />
-          </button>
-          
-          {openDropdownId === post.id && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setOpenDropdownId(null)}
-              />
-              <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
-                {/* Always show Edit option for all posts */}
-                <button
-                  onClick={() => openEditModal(post, "edit")}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <Edit3 size={14} /> Edit
-                </button>
-                
-                {/* Show Reschedule option only for scheduled posts */}
-                {post.status === 'scheduled' && (
-                  <button
-                    onClick={() => openEditModal(post, "reschedule")}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <CalendarClock size={14} /> Reschedule
-                  </button>
-                )}
-                
-                {/* Unpublish option for published posts */}
-                {post.status === 'published' && (
-                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                    <Eye size={14} /> Unpublish
-                  </button>
-                )}
-                
-                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                  <Copy size={14} /> Copy Link
-                </button>
-                
-                <button
-                  onClick={() => deletePost(post.id)}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100 mt-1 pt-2"
-                >
-                  <Trash2 size={14} /> Delete
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-                {/* Layout: Content + Media Side-by-Side */}
-                <div className="flex flex-col md:flex-row gap-4 sm:gap-6 relative z-10">
-                  {/* Media Preview Section */}
-                  {post.mediaType !== 'none' && post.mediaUrl && (
-                    <div className="w-full md:w-48 h-32 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200">
-                      <img
-                        src={post.mediaUrl}
-                        alt="Post media"
-                        className="w-full h-full object-cover"
-                      />
+          {filteredPosts.length > 0 ? (
+            filteredPosts.map((post) => (
+              <div key={post.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all relative">
+                <div className="p-4 sm:p-6 pb-16">
+                  {/* Light Grey Background for Date Line */}
+                  <div className="absolute left-0 right-0 top-0 h-[52px] bg-gray-200 rounded-t-xl" />
+                  
+                  {/* 3 Dots Menu - Positioned in top right */}
+<div className="absolute top-[-6px] sm:top-4 right-2 z-[100]">
+  <div className="relative">
+    <button
+      onClick={() => setOpenDropdownId(openDropdownId === post.id ? null : post.id)}
+      className="text-black-800 hover:text-black p-2 rounded-full transition-colors"
+    >
+                        <MoreHorizontal size={18} />
+                      </button>
                       
-                      {post.mediaType === 'video' && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/20 transition-all">
-                          <PlayCircle className="text-white w-10 h-10 opacity-90" />
-                        </div>
+                      {openDropdownId === post.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setOpenDropdownId(null)}
+                          />
+                          <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+                            {/* Always show Edit option for all posts */}
+                            <button
+                              onClick={() => openEditModal(post, "edit")}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Edit3 size={14} /> Edit
+                            </button>
+                            
+                            {/* Show Reschedule option only for scheduled posts */}
+                            {post.status === 'scheduled' && (
+                              <button
+                                onClick={() => openEditModal(post, "reschedule")}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                              >
+                                <CalendarClock size={14} /> Reschedule
+                              </button>
+                            )}
+                            
+                            {/* Unpublish option for published posts */}
+                            {post.status === 'published' && (
+                              <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                <Eye size={14} /> Unpublish
+                              </button>
+                            )}
+                            
+                            <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                              <Copy size={14} /> Copy Link
+                            </button>
+                            
+                            <button
+                              onClick={() => deletePost(post.id)}
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100 mt-1 pt-2"
+                            >
+                              <Trash2 size={14} /> Delete
+                            </button>
+                          </div>
+                        </>
                       )}
-
-                      <div className="absolute top-2 right-2 bg-black/50 p-1 rounded text-white backdrop-blur-sm">
-                        {post.mediaType === 'video' ? <Video size={12} /> : <ImageIcon size={12} />}
-                      </div>
                     </div>
-                  )}
+                  </div>
 
-                  {/* Text Content Section */}
-                  <div className="flex-1 min-w-0">
-                    {/* Date and Page Name with pipe separator */}
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
-                      <div className="flex items-center gap-1.5 text-xs sm:text-sm">
-                        <Calendar size={14} className="text-gray-600" />
-                        <span className="text-gray-700">{post.date}</span>
-                      </div>
-                      <span className="text-gray-400 text-sm hidden sm:inline">|</span>
-                      <span className="text-xs sm:text-sm font-medium text-gray-900">{post.page}</span>
-                    </div>
+                  {/* Layout: Content + Media Side-by-Side */}
+                  <div className="flex flex-col md:flex-row gap-4 sm:gap-6 relative z-10">
+                    {/* Media Preview Section */}
+                    {post.mediaType !== 'none' && post.mediaUrl && (
+                      <div className="w-full md:w-48 h-32 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200">
+                        <img
+                          src={post.mediaUrl}
+                          alt="Post media"
+                          className="w-full h-full object-cover"
+                        />
+                        
+                        {post.mediaType === 'video' && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/20 transition-all">
+                            <PlayCircle className="text-white w-10 h-10 opacity-90" />
+                          </div>
+                        )}
 
-                    {/* Description */}
-                    <p className="text-sm sm:text-base text-gray-800 leading-relaxed mb-4 break-words">
-                      {post.content}
-                    </p>
-
-                    {/* Platform and Engagement Stats */}
-                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                      {/* Platform Icon and Name */}
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center">
-                          <PlatformIcon platform={post.platforms[0]} />
+                        <div className="absolute top-2 right-2 bg-black/50 p-1 rounded text-white backdrop-blur-sm">
+                          {post.mediaType === 'video' ? <Video size={12} /> : <ImageIcon size={12} />}
                         </div>
-                        <span className="text-xs sm:text-sm font-medium text-gray-700 capitalize">
-                          {post.platforms[0]}
-                        </span>
+                      </div>
+                    )}
+
+                    {/* Text Content Section */}
+                    <div className="flex-1 min-w-0">
+                      {/* Date and Page Name with pipe separator */}
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm">
+                          <Calendar size={14} className="text-gray-600" />
+                          <span className="text-gray-700">{post.date}</span>
+                        </div>
+                        <span className="text-gray-400 text-sm hidden sm:inline">|</span>
+                        <span className="text-xs sm:text-sm font-medium text-gray-900">{post.page}</span>
                       </div>
 
-                      {/* Engagement Stats */}
-                      {post.stats && (
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                          <div className="flex items-center gap-1.5 text-gray-500">
-                            <Heart size={16} className="text-red-400" />
-                            <span className="text-xs sm:text-sm">{post.stats.likes}</span>
+                      {/* Description */}
+                      <p className="text-sm sm:text-base text-gray-800 leading-relaxed mb-4 break-words">
+                        {post.content}
+                      </p>
+
+                      {/* Platform and Engagement Stats */}
+                      <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                        {/* Platform Icon and Name */}
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center">
+                            <PlatformIcon platform={post.platforms[0]} />
                           </div>
-                          <div className="flex items-center gap-1.5 text-gray-500">
-                            <MessageCircle size={16} className="text-blue-400" />
-                            <span className="text-xs sm:text-sm">{post.stats.comments}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-gray-500">
-                            <Repeat2 size={16} className="text-green-400" />
-                            <span className="text-xs sm:text-sm">{post.stats.shares}</span>
-                          </div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-700 capitalize">
+                            {post.platforms[0]}
+                          </span>
                         </div>
-                      )}
+
+                        {/* Engagement Stats */}
+                        {post.stats && (
+                          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                            <div className="flex items-center gap-1.5 text-gray-500">
+                              <Heart size={16} className="text-red-400" />
+                              <span className="text-xs sm:text-sm">{post.stats.likes}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-gray-500">
+                              <MessageCircle size={16} className="text-blue-400" />
+                              <span className="text-xs sm:text-sm">{post.stats.comments}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-gray-500">
+                              <Repeat2 size={16} className="text-green-400" />
+                              <span className="text-xs sm:text-sm">{post.stats.shares}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Status Badge - Positioned at bottom right of the card */}
-              <div className="absolute bottom-4 right-4 z-20">
-                {post.status === 'published' ? (
-                  <div className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-100 rounded-full shadow-sm">
-                    <CheckCircle2 size={14} className="text-green-600" />
-                    <span className="text-xs font-semibold text-green-700">Published</span>
-                  </div>
-                ) : (
-                  <div className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-yellow-100 rounded-full shadow-sm">
-                    <Clock size={14} className="text-yellow-600" />
-                    <span className="text-xs font-semibold text-yellow-700">Scheduled</span>
-                  </div>
-                )}
+                {/* Status Badge - Positioned at bottom right of the card */}
+                <div className="absolute bottom-4 right-4 z-20">
+                  {post.status === 'published' ? (
+                    <div className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-100 rounded-full shadow-sm">
+                      <CheckCircle2 size={14} className="text-green-600" />
+                      <span className="text-xs font-semibold text-green-700">Published</span>
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-yellow-100 rounded-full shadow-sm">
+                      <Clock size={14} className="text-yellow-600" />
+                      <span className="text-xs font-semibold text-yellow-700">Scheduled</span>
+                    </div>
+                  )}
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center text-gray-500">
+              No posts found matching your search criteria
             </div>
-          ))}
+          )}
         </div>
       )}
 
