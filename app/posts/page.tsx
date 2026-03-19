@@ -219,6 +219,7 @@ export default function PostsPage() {
   const publishedCount = posts.filter(p => p.status === "published").length;
   const scheduledCount = posts.filter(p => p.status === "scheduled").length;
 
+  
   return (
     <div className="w-full space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6">
       {/* Header with Sort by Date - Only show in table view */}

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation"; // Add usePathname
 import Cookies from "js-cookie";
 import { createPortal } from "react-dom";
 import { Search, Bell, User, Menu, ChevronDown, LogOut, CheckCircle2, AlertCircle, MessageSquare } from "lucide-react";
 
 export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const router = useRouter();
+  const pathname = usePathname(); // Get current path
   
   // UI States
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -27,6 +28,9 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   // Search State
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Determine if search bar should be shown
+  const showSearchBar = pathname === '/posts' || pathname.startsWith('/posts/');
 
   // BACKEND NOTE: Fetch notifications via GET /api/notifications. 
   // Consider using WebSockets or Server-Sent Events (SSE) for real-time updates.
@@ -132,11 +136,11 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     };
   };
 
-  return (
+   return (
     <>
       <header className="bg-white/50 backdrop-blur-sm border-b border-gray-100 h-20 px-4 md:px-8 flex items-center justify-between sticky top-0 z-40">
         
-        {/* 1. Left Side: Hamburger (Mobile) + Search (Desktop) */}
+        {/* 1. Left Side: Hamburger (Mobile) + Search (conditionally) */}
         <div className="flex items-center gap-2 md:gap-4 flex-1">
           
           {/* The Hamburger Button */}
@@ -147,17 +151,19 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
             <Menu size={24} />
           </button>
 
-          <div className="relative w-full max-w-xs md:w-96 hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            {/* BACKEND NOTE: Add a debounced API call on search input change (e.g. GET /api/search?q=query) to provide global search results */}
-            <input 
-              type="text" 
-              placeholder="Search anything..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
-            />
-          </div>
+          {/* Conditionally render search bar */}
+          {showSearchBar && (
+            <div className="relative w-full max-w-xs md:w-96 hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input 
+                type="text" 
+                placeholder="Search" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
+              />
+            </div>
+          )}
         </div>
 
         {/* 2. Right Actions */}
