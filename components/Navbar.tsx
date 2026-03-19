@@ -151,19 +151,6 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
             <Menu size={24} />
           </button>
 
-          {/* Conditionally render search bar */}
-          {showSearchBar && (
-  <div className="relative w-full max-w-xs md:w-96">
-    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-    <input 
-      type="text" 
-      placeholder="Search" 
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
-    />
-  </div>
-)}
         </div>
 
         {/* 2. Right Actions */}
