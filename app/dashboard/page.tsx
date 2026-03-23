@@ -413,7 +413,11 @@ export default function Home() {
                   onMouseLeave={e => (e.currentTarget.style.color = "#94a3b8")}
                 >✕</button>
               </div>
-              <div style={{ borderTop: "1px solid #e8edf3", marginBottom: 22 }} />
+              <div style={{ borderTop: "1px solid #e8edf3", marginBottom: 16 }} />
+
+              <p style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Followers
+              </p>
               <div style={{ display: "flex", gap: 24 }}>
                 {accModal.pairs.map(p => (
                   <div key={p.plt} style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -739,7 +743,11 @@ function AccCard({ acc, onViewMore }: { acc: typeof ACC_PERF[0]; onViewMore: () 
         <Avatar name={acc.name} color={acc.color} size={42} />
         <span style={{ fontSize: 15, fontWeight: 700 }}>{acc.name}</span>
       </div>
-      <div style={{ borderTop: "1px solid #f1f5f9", marginBottom: 10 }} />
+      <div style={{ borderTop: "1px solid #f1f5f9", marginBottom: 8 }} />
+
+      {/* ← NEW: Followers label */}
+      <p style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Followers</p>
+
       <div style={{ display: "flex", gap: 8, marginBottom: 3 }}>
         {acc.pairs.slice(0, 2).map(p => (
           <div key={p.plt} style={{ flex: 1, display: "flex", alignItems: "center", gap: 5 }}>
