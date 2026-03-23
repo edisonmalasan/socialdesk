@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { JSX, useState } from "react";
 
 // ── SVG Icons ─────────────────────────────────────────────────────────────────
@@ -233,6 +235,13 @@ export default function Home() {
   const [summaryModal, setSummaryModal] = useState<typeof SUMMARY_PAGES[0] | null>(null);
   const [viewAllSummary, setViewAllSummary] = useState(false);
 
+  const router = useRouter();
+
+  const handleViewSchedule = () => {
+    setModal(null);
+    router.push("/schedule?highlight=scheduled-posts");
+  };
+
   return (
     <div style={{ fontFamily: "'DM Sans','Inter',sans-serif", color: "#1a202c", fontSize: 15 }}>
 
@@ -310,7 +319,18 @@ export default function Home() {
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon name={p.plt} size={22} /><span style={{ fontSize: 13 }}>{p.plt}</span></div>
                       </td>
                       <td style={{ padding: "12px 14px" }}><span style={{ color: "#16a34a", fontWeight: 600, fontSize: 14 }}>Scheduled</span></td>
-                      <td style={{ padding: "12px 14px" }}><button style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 600, fontSize: 14, cursor: "pointer", padding: 0, fontFamily: "inherit" }}>View Schedule</button></td>
+                      <td style={{ padding: "12px 14px" }}>
+                        <button
+                          onClick={handleViewSchedule}
+                          style={{
+                            background: "none", border: "none", color: "#2563eb",
+                            fontWeight: 600, fontSize: 14, cursor: "pointer",
+                            padding: 0, fontFamily: "inherit",
+                            textDecoration: "underline", textUnderlineOffset: 2,
+                          }}>
+                          View Schedule
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
