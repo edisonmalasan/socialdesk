@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
 import {
   Search, Filter, Edit2, Trash2,
   FileText, Check, AlertTriangle,
@@ -362,6 +363,18 @@ export default function SchedulePage() {
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const searchParams = useSearchParams();
+  const [highlightTable, setHighlightTable] = useState(false);
+  const scheduledTableRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (searchParams.get("highlight") === "scheduled-posts") {
+      scheduledTableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setHighlightTable(true);
+      setTimeout(() => setHighlightTable(false), 2200);
+    }
+  }, [searchParams]);
+
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
@@ -389,6 +402,8 @@ export default function SchedulePage() {
     const matchPlatform = filterPlatform === "All Platform" || p.platforms.includes(filterPlatform.toLowerCase());
     return matchTab && matchSearch && matchAccount && matchPlatform;
   });
+
+  
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
@@ -518,7 +533,16 @@ export default function SchedulePage() {
           </div>
 
           {/* Scheduled Posts Table */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 flex-1 overflow-hidden">
+          <div
+            ref={scheduledTableRef}
+            className="bg-white rounded-2xl border shadow-sm p-4 sm:p-5 flex-1 overflow-hidden transition-all duration-300"
+            style={{
+              borderColor: highlightTable ? "#ef4444" : "#f3f4f6",
+              boxShadow: highlightTable
+                ? "0 0 0 3px rgba(239,68,68,0.35), 0 4px 24px rgba(239,68,68,0.15)"
+                : undefined,
+            }}
+          >
             {/* Tabs + Controls */}
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <div className="flex items-center gap-1">
