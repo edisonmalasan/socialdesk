@@ -73,3 +73,10 @@ if (!result.ok) {
 | `config/supabaseClient.js` | Loads `.env`, creates `createClient`, exports `supabase` |
 | `database/supadb.js` | `checkSupabaseConnection()` — health check via Auth API |
 | `scripts/checkSupabase.js` | CLI used by `npm run check:supabase` |
+
+
+
+### 4. Apply the database schema
+
+1. In the Supabase dashboard, open *SQL Editor*.
+2. Paste the contents of database/schema.sql and run it.
