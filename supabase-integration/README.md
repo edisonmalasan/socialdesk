@@ -79,4 +79,4 @@ if (!result.ok) {
 ### 4. Apply the database schema
 
 1. In the Supabase dashboard, open *SQL Editor*.
-2. Paste the contents of database/schema.sql and run it.
+2. Paste the contents of sql/schema.sql and run it.
