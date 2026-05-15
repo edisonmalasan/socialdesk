@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Facebook,
   Instagram,
@@ -61,75 +61,52 @@ type FilterStatus = "all" | "published" | "scheduled";
 type FilterPlatform = "all" | "facebook" | "instagram" | "tiktok" | "x" | "youtube" | "pinterest";
 type ViewMode = "table" | "card";
 
+function formatDate(isoString: string): string {
+  if (!isoString) return '—';
+  return new Date(isoString).toLocaleDateString('en-US', {
+    month: '2-digit', day: '2-digit', year: 'numeric'
+  });
+}
+
+function transformPost(raw: any): Post {
+  const platforms = (raw.post_targets ?? [])
+    .map((t: any) => t.social_accounts?.platforms?.code)
+    .filter(Boolean);
+
+  const hasMedia = raw.media_urls?.length > 0;
+  const isVideo = ['video', 'reel'].includes(raw.content_types?.code);
+
+  return {
+    id: raw.id,
+    content: raw.body_text ?? '',
+    status: raw.status as Post['status'],
+    platforms,
+    date: formatDate(raw.published_at ?? raw.scheduled_at ?? raw.created_at),
+    page: raw.post_targets?.[0]?.social_accounts?.display_name
+      ?? raw.post_targets?.[0]?.social_accounts?.username
+      ?? '—',
+    mediaType: hasMedia ? (isVideo ? 'video' : 'image') : 'none',
+    mediaUrl: raw.media_urls?.[0],
+  };
+}
+
 export default function PostsPage() {
-  // 2. Mock Data with Images and Videos
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: "1",
-      content: "Exited to launch our new product! 🚀 #LaunchDay",
-      status: "published",
-      platforms: ["facebook", "instagram"],
-      date: "02/28/2026",
-      page: "eGetinnz USA",
-      mediaType: "image",
-      mediaUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
-      stats: { likes: 144, comments: 58, shares: 278 }
-    },
-    {
-      id: "2",
-      content: "Behind the scenes at our annual team retreat. Check out the vibes! 🌴",
-      status: "scheduled",
-      platforms: ["facebook"],
-      date: "02/28/2026",
-      page: "eGetinnz PH",
-      mediaType: "video",
-      mediaUrl: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80",
-      stats: { likes: 144, comments: 58, shares: 278 }
-    },
-    {
-      id: "3",
-      content: "Just a quick text update about our holiday hours.",
-      status: "published",
-      platforms: ["instagram"],
-      date: "02/28/2026",
-      page: "eGetinnz PH",
-      mediaType: "none",
-      stats: { likes: 144, comments: 58, shares: 278 }
-    },
-    {
-      id: "4",
-      content: "Summer sale starts next week! Get ready for amazing discounts on all products ☀️ #SummerSale",
-      status: "published",
-      platforms: ["tiktok"],
-      date: "02/28/2026",
-      page: "eGetinnz PH",
-      mediaType: "image",
-      mediaUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80",
-      stats: { likes: 144, comments: 58, shares: 278 }
-    },
-    {
-      id: "5",
-      content: "Check out our new Facebook page!",
-      status: "published",
-      platforms: ["facebook", "instagram"],
-      date: "02/28/2026",
-      page: "eGetinnz USA",
-      mediaType: "image",
-      mediaUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
-      stats: { likes: 144, comments: 58, shares: 278 }
-    },
-    {
-      id: "6",
-      content: "Instagram exclusive content!",
-      status: "published",
-      platforms: ["instagram"],
-      date: "02/28/2026",
-      page: "eGetinnz PH",
-      mediaType: "image",
-      mediaUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
-      stats: { likes: 144, comments: 58, shares: 278 }
-    }
-  ]);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/posts')
+      .then(res => res.json())
+      .then(data => {
+        setPosts(data.map(transformPost));
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Failed to load posts.');
+        setLoading(false);
+      });
+  }, []);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -154,9 +131,10 @@ export default function PostsPage() {
   // Dropdown state for each post
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
-  const deletePost = (id: string) => {
+  const deletePost = async (id: string) => {
     if (confirm("Are you sure you want to delete this post?")) {
-      setPosts(posts.filter(post => post.id !== id));
+      const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+      if (res.ok) setPosts(posts.filter(post => post.id !== id));
     }
     setOpenDropdownId(null);
   };
@@ -271,6 +249,8 @@ export default function PostsPage() {
   
   return (
     <div className="w-full space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6">
+      {loading && <p className="text-gray-500 text-sm">Loading posts...</p>}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
       {/* Header with Sort by Date - Only show in table view */}
       {viewMode === "table" && (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
@@ -857,7 +837,17 @@ export default function PostsPage() {
           post={editingPost}
           mode={modalMode}
           onClose={closeModal}
-          onSave={(updatedPost: Post) => {
+          onSave={async (updatedPost: Post) => {
+            const payload: Record<string, unknown> = { body_text: updatedPost.content };
+            if (updatedPost.date !== editingPost?.date) {
+              const [month, day, year] = updatedPost.date.split('/');
+              payload.scheduled_at = new Date(`${year}-${month}-${day}`).toISOString();
+            }
+            await fetch(`/api/posts/${updatedPost.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
             setPosts(posts.map(p => p.id === updatedPost.id ? updatedPost : p));
             closeModal();
           }}
