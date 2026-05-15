@@ -42,6 +42,15 @@ const platforms: Platform[] = [
 
 const formatLongDate = (d = new Date()) => d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
+function transformAccount(raw: any): Connected {
+  return {
+    id: raw.id,
+    platformId: raw.platforms?.code ?? '',
+    username: raw.username ?? raw.display_name ?? '—',
+    connectedDate: formatLongDate(new Date(raw.connected_at)),
+  };
+}
+
 export default function AccountsPage() {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -52,20 +61,13 @@ export default function AccountsPage() {
     else setIsAuthorized(true);
   }, [router]);
 
-  const [connectedAccounts, setConnectedAccounts] = useState<Connected[]>([
-    {
-      id: uid("conn_"),
-      platformId: "facebook",
-      username: "@john_doe123",
-      connectedDate: "February 14, 2026",
-    },
-    {
-      id: uid("conn_"),
-      platformId: "instagram",
-      username: "@instagram_user_143",
-      connectedDate: "February 16, 2026",
-    },
-  ]);
+  const [connectedAccounts, setConnectedAccounts] = useState<Connected[]>([]);
+
+  useEffect(() => {
+    fetch('/api/accounts')
+      .then(res => res.json())
+      .then(data => setConnectedAccounts(data.map(transformAccount)));
+  }, []);
 
   const [connectPlatformId, setConnectPlatformId] = useState<string | null>(null); // null | "selector" | platformId
   const [connectEmail, setConnectEmail] = useState("");
@@ -115,9 +117,14 @@ export default function AccountsPage() {
     setConfirmChecked(false);
   };
 
-  const handleConfirmDisconnect = () => {
+  const handleConfirmDisconnect = async () => {
     if (!disconnectId || !confirmChecked) return;
-    setConnectedAccounts((prev) => prev.filter((c) => c.id !== disconnectId));
+    const res = await fetch('/api/accounts', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: disconnectId }),
+    });
+    if (res.ok) setConnectedAccounts((prev) => prev.filter((c) => c.id !== disconnectId));
     setDisconnectId(null);
     setConfirmChecked(false);
   };
