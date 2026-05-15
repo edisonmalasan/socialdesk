@@ -20,7 +20,6 @@ type Connected = {
   connectedDate: string;
 };
 
-const uid = (prefix = "") => `${prefix}${Math.random().toString(36).slice(2, 9)}`;
 
 const platforms: Platform[] = [
   { id: "facebook", name: "Facebook", color: "text-blue-600 bg-blue-50", icon: <Facebook size={20} /> },
@@ -82,33 +81,48 @@ export default function AccountsPage() {
     setConnectPlatformId(platformId);
   };
 
-  const handleConnectSubmit = (e?: React.FormEvent) => {
+  const handleConnectSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!connectPlatformId || connectPlatformId === "selector") return;
 
     const platformId = connectPlatformId;
     const username = connectEmail ? `@${connectEmail.split("@")[0]}` : `@${platformId}_user_${Math.floor(Math.random() * 1000)}`;
 
-    const newConn: Connected = {
-      id: uid("conn_"),
-      platformId,
-      username,
-      connectedDate: formatLongDate(new Date()),
-    };
+    const res = await fetch('/api/accounts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        platformCode: platformId,
+        username,
+        display_name: username,
+        external_id: `mock_${platformId}_${Date.now()}`,
+      }),
+    });
 
-    setConnectedAccounts((prev) => [newConn, ...prev]);
+    if (res.ok) {
+      const newAccount = await res.json();
+      setConnectedAccounts((prev) => [transformAccount(newAccount), ...prev]);
+    }
     setConnectPlatformId(null);
     setConnectEmail("");
   };
 
-  const quickConnect = (platformId: string) => {
-    const newConn: Connected = {
-      id: uid("conn_"),
-      platformId,
-      username: `@${platformId}_official`,
-      connectedDate: formatLongDate(new Date()),
-    };
-    setConnectedAccounts((prev) => [newConn, ...prev]);
+  const quickConnect = async (platformId: string) => {
+    const res = await fetch('/api/accounts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        platformCode: platformId,
+        username: `@${platformId}_official`,
+        display_name: `${platformId} Official`,
+        external_id: `mock_${platformId}_${Date.now()}`,
+      }),
+    });
+
+    if (res.ok) {
+      const newAccount = await res.json();
+      setConnectedAccounts((prev) => [transformAccount(newAccount), ...prev]);
+    }
     setConnectPlatformId(null);
   };
 
