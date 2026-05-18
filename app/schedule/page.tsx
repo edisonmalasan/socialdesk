@@ -11,7 +11,7 @@ import {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Platform { id: string; name: string; connected: boolean; account: string; }
-interface ScheduledPost { id: number; title: string; account: string; date: string; time: string; platforms: string[]; status: "scheduled" | "draft"; }
+interface ScheduledPost { id: string; title: string; account: string; date: string; time: string; platforms: string[]; status: "scheduled" | "draft"; }
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -42,12 +42,21 @@ const INIT_PLATFORMS: Platform[] = [
   { id: "x",         name: "X",         connected: false, account: "" },
 ];
 
-const INIT_POSTS: ScheduledPost[] = [
-  { id: 1, title: "Post 1",           account: "FiBei Travel PH",  date: "02/18/2026", time: "11:00 AM", platforms: ["facebook","instagram","pinterest"], status: "scheduled" },
-  { id: 2, title: "Post 2",           account: "FiBei Travel USA", date: "02/20/2026", time: "09:00 AM", platforms: ["facebook"],                         status: "scheduled" },
-  { id: 3, title: "Spring Sale",      account: "FiBei Travel USA", date: "02/22/2026", time: "02:00 PM", platforms: ["instagram"],                        status: "draft" },
-  { id: 4, title: "Product Launch",   account: "Digitimmerse E-card USA", date: "02/25/2026", time: "10:00 AM", platforms: ["facebook","instagram"],     status: "draft" },
-];
+function transformToScheduledPost(raw: any): ScheduledPost {
+  const timestamp = raw.scheduled_at ?? raw.created_at;
+  const d = timestamp ? new Date(timestamp) : null;
+  return {
+    id: raw.id,
+    title: raw.title ?? raw.body_text?.slice(0, 30) ?? 'Untitled',
+    account: raw.post_targets?.[0]?.social_accounts?.display_name
+      ?? raw.post_targets?.[0]?.social_accounts?.username
+      ?? '—',
+    date: d ? d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '—',
+    time: d ? d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—',
+    platforms: (raw.post_targets ?? []).map((t: any) => t.social_accounts?.platforms?.code).filter(Boolean),
+    status: raw.status as 'scheduled' | 'draft',
+  };
+}
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -121,10 +130,10 @@ function MiniCalendar({ selectedDate, onSelect }: { selectedDate: Date | null; o
       <div className="grid grid-cols-7 gap-0.5">
         {cells.map((day, i) => day === null ? <div key={i} /> : (
           <button key={i} onClick={() => !isPast(day) && onSelect(new Date(year, month, day))}
-            style={{ border: "none", cursor: isPast(day) ? "not-allowed" : "pointer", borderRadius: 6, padding: "3px 0", fontSize: 11, fontWeight: 500,
+            style={{ cursor: isPast(day) ? "not-allowed" : "pointer", borderRadius: 6, padding: "3px 0", fontSize: 11,
+              fontWeight: isToday(day) ? "bold" : 500,
               background: isSel(day) ? "#1e3a5f" : "transparent",
               color: isPast(day) ? "#d1d5db" : isSel(day) ? "white" : isToday(day) ? "#1e3a5f" : "#374151",
-              fontWeight: isToday(day) ? "bold" : 500,
               border: isToday(day) && !isSel(day) ? "1.5px solid #1e3a5f" : "none",
               opacity: isPast(day) ? 0.4 : 1 }}>
             {day}
@@ -490,7 +499,7 @@ export default function SchedulePage() {
   const [platforms, setPlatforms] = useState<Platform[]>(INIT_PLATFORMS);
   const [selectedAccount, setSelectedAccount] = useState("");
   const [aiLoading, setAiLoading] = useState<string | null>(null);
-  const [posts, setPosts] = useState<ScheduledPost[]>(INIT_POSTS);
+  const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [activeTab, setActiveTab] = useState<"scheduled" | "draft">("scheduled");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAccount, setFilterAccount] = useState("All Account");
@@ -513,6 +522,15 @@ export default function SchedulePage() {
       setTimeout(() => setHighlightTable(false), 2200);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    fetch('/api/posts')
+      .then(res => res.json())
+      .then(data => {
+        const schedulable = (data as any[]).filter(p => p.status === 'scheduled' || p.status === 'draft');
+        setPosts(schedulable.map(transformToScheduledPost));
+      });
+  }, []);
 
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type });
@@ -678,17 +696,34 @@ export default function SchedulePage() {
               return (
                 <>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (!hasContent) { showToast("Write content first.", "error"); return; }
-                      setPosts(prev => [{ id: Date.now(), title: getTitle() || "Untitled", account: platforms.find(p => p.connected)?.account || "eGetinnz PH", date: "-", time: "-", platforms: platforms.filter(p => p.connected).map(p => p.id), status: "draft" }, ...prev]);
-                      clearAll(); showToast("Saved as draft.");
+                      const res = await fetch('/api/posts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: getTitle() || 'Untitled', body_text: caption, status: 'draft' }),
+                      });
+                      if (res.ok) {
+                        const newPost = await res.json();
+                        setPosts(prev => [transformToScheduledPost(newPost), ...prev]);
+                        clearAll(); showToast("Saved as draft.");
+                      } else { showToast("Failed to save draft.", "error"); }
                     }}
                     className="flex items-center gap-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 bg-white hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap">
                     <FileText size={12} /> Save as Draft
                   </button>
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => { if (!hasContent) { showToast("Write content first.", "error"); return; } showToast("Post published! 🚀"); clearAll(); }}
+                      onClick={async () => {
+                        if (!hasContent) { showToast("Write content first.", "error"); return; }
+                        const res = await fetch('/api/posts', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ title: getTitle() || 'Untitled', body_text: caption, status: 'published' }),
+                        });
+                        if (res.ok) { clearAll(); showToast("Post published! 🚀"); }
+                        else { showToast("Failed to publish post.", "error"); }
+                      }}
                       className="flex items-center gap-1 px-2 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-blue-900 transition-colors cursor-pointer whitespace-nowrap" style={{ border: "none" }}>
                       Post Now
                     </button>
@@ -866,21 +901,43 @@ export default function SchedulePage() {
       {/* Modals */}
       {showSchedulePopup && (
         <SchedulePostPopup onClose={() => setShowSchedulePopup(false)}
-          onDone={(date, time, title) => {
-            const active = platforms.filter(p => p.connected).map(p => p.id);
-            setPosts(prev => [{ id: Date.now(), title, account: platforms.find(p => p.connected)?.account || "FiBei Travel PH", date, time, platforms: active.length ? active : ["facebook"], status: "scheduled" }, ...prev]);
-            setCaption(""); setImagePreview(null); showToast("Post scheduled! 🎉");
+          onDone={async (date, time, title) => {
+            const dateObj = new Date(`${date} ${time}`);
+            const scheduled_at = isNaN(dateObj.getTime()) ? undefined : dateObj.toISOString();
+            const res = await fetch('/api/posts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title, body_text: caption, status: 'scheduled', scheduled_at }),
+            });
+            if (res.ok) {
+              const newPost = await res.json();
+              setPosts(prev => [transformToScheduledPost(newPost), ...prev]);
+              setCaption(''); setImagePreview(null); showToast("Post scheduled! 🎉");
+            } else { showToast("Failed to schedule post.", "error"); }
           }} />
       )}
 
       {editPost && (
         <EditPostModal post={editPost} platforms={platforms} onClose={() => setEditPost(null)}
-          onSave={updated => { setPosts(prev => prev.map(p => p.id === updated.id ? updated : p)); showToast("Post updated!"); }} />
+          onSave={async updated => {
+            const res = await fetch(`/api/posts/${updated.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title: updated.title }),
+            });
+            if (res.ok) { setPosts(prev => prev.map(p => p.id === updated.id ? updated : p)); showToast("Post updated!"); }
+            else { showToast("Failed to update post.", "error"); }
+          }} />
       )}
 
       {deletePost && (
         <DeleteModal onClose={() => setDeletePost(null)}
-          onConfirm={() => { setPosts(prev => prev.filter(p => p.id !== deletePost.id)); setDeletePost(null); showToast("Post deleted."); }} />
+          onConfirm={async () => {
+            const res = await fetch(`/api/posts/${deletePost.id}`, { method: 'DELETE' });
+            if (res.ok) { setPosts(prev => prev.filter(p => p.id !== deletePost.id)); showToast("Post deleted."); }
+            else { showToast("Failed to delete post.", "error"); }
+            setDeletePost(null);
+          }} />
       )}
 
     </div>
