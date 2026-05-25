@@ -6,7 +6,7 @@ const cloudinaryupload = require("../middleware/cloudinaryUpload");
 const upload = multer({ storage: multer.memoryStorage() });
 const facebookController = require("../controllers/meta.controller");
 
-router.get("/", facebookController.redirectToFacebook);
+router.get("/redirect", facebookController.redirectToFacebook);
 router.get("/callback", facebookController.handleFacebookCallback);
 router.post("/post", facebookController.postMessage);
 router.post("/post-photo", upload.single("source"), facebookController.postPhoto);
