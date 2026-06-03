@@ -71,17 +71,13 @@ export default function LoginPage() {
 
 			if (!response.ok) {
 				setEmailError("An error occured logging in.");
+				return;
 			}
 
 			const expires = rememberMe ? 7 : 1;
-			Cookies.set("auth-token", "valid-token", { expires });
-	
-			if (email === "admin" && password === "admin") {
-				Cookies.set("user-role", "admin", { expires });
-			} else {
-				Cookies.set("user-role", "user", { expires });
-			}
-	
+			Cookies.set("auth-token", data.token, { expires });
+			Cookies.set("user-role", data.role, { expires });
+
 			router.push("/dashboard");
 		} catch (error) {
 			setEmailError("Server error occured.")
