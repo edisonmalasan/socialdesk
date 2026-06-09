@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { Eye, EyeOff, User, Lock, Mail, AlertCircle } from "lucide-react";
@@ -13,17 +13,13 @@ export default function LoginPage() {
 	const [password, setPassword] = useState("");
 	const [rememberMe, setRememberMe] = useState(false);
 	const [showForgotModal, setShowForgotModal] = useState(false);
-	const [showResetModal, setShowResetModal] = useState(false);
 	const [forgotEmail, setForgotEmail] = useState("");
-	const [newPassword, setNewPassword] = useState("");
-	const [confirmPassword, setConfirmPassword] = useState("");
+	const [forgotSubmitted, setForgotSubmitted] = useState(false);
 	
 	// Focus states for floating labels
 	const [emailFocused, setEmailFocused] = useState(false);
 	const [passwordFocused, setPasswordFocused] = useState(false);
 	const [forgotEmailFocused, setForgotEmailFocused] = useState(false);
-	const [newPasswordFocused, setNewPasswordFocused] = useState(false);
-	const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
 
 	// Error states
 	const [emailError, setEmailError] = useState("");
@@ -43,7 +39,7 @@ export default function LoginPage() {
 			return;
 		}
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (email !== "admin" && !emailRegex.test(email)) {
+		if (!emailRegex.test(email)) {
 			setEmailError("Please enter a valid email address");
 			return;
 		}
@@ -85,13 +81,10 @@ export default function LoginPage() {
 
 	};
 
-	const handleSendResetLink = (e: React.SubmitEvent) => {
+	const handleForgotSubmit = (e: React.SubmitEvent) => {
 		e.preventDefault();
-		
-		// Reset error
 		setForgotEmailError("");
 
-		// Validate email
 		if (!forgotEmail.trim()) {
 			setForgotEmailError("Email address is required");
 			return;
@@ -102,13 +95,7 @@ export default function LoginPage() {
 			return;
 		}
 
-		setShowForgotModal(false);
-		setShowResetModal(true);
-	};
-
-	const handleSaveNewPassword = (e: React.SubmitEvent) => {
-		e.preventDefault();
-		setShowResetModal(false);
+		setForgotSubmitted(true);
 	};
 
 	return (
@@ -303,7 +290,7 @@ export default function LoginPage() {
 			{showForgotModal && (
 				<div
 					className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-					onClick={() => setShowForgotModal(false)}
+					onClick={() => { setShowForgotModal(false); setForgotSubmitted(false); setForgotEmail(""); }}
 				>
 					<div
 						className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4 relative"
@@ -311,154 +298,86 @@ export default function LoginPage() {
 					>
 						<button
 							type="button"
-							onClick={() => setShowForgotModal(false)}
+							onClick={() => { setShowForgotModal(false); setForgotSubmitted(false); setForgotEmail(""); }}
 							className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold text-lg leading-none cursor-pointer"
 						>
 							✕
 						</button>
 						<h3 className="text-xl font-bold text-[#1B2F5B] text-center mb-6">Forgot Password</h3>
-						<form onSubmit={handleSendResetLink} className="flex flex-col gap-5">
-							{/* Email - Floating Label */}
-							<div className="mt-3">
-								<div className="relative">
-									<div className={`flex items-center gap-3 rounded-lg px-4 py-3.5 border-2 transition-all ${
-										forgotEmailError
-											? "border-red-500 bg-red-50"
-											: forgotEmailFocused
-											? "border-[#1B2F5B] bg-white"
-											: forgotEmail
-											? "border-gray-300 bg-white"
-											: "border-transparent bg-gray-100 hover:bg-gray-200"
-									}`}>
-										<Mail size={18} className={`shrink-0 transition-colors ${forgotEmailError ? "text-red-500" : forgotEmailFocused ? "text-[#1B2F5B]" : "text-gray-400"}`} />
-										<input
-											type="text"
-											value={forgotEmail}
-											onChange={(e) => {
-												setForgotEmail(e.target.value);
-												if (forgotEmailError) setForgotEmailError("");
-											}}
-											onFocus={() => setForgotEmailFocused(true)}
-											onBlur={() => setForgotEmailFocused(false)}
-											className="w-full bg-transparent text-sm text-gray-700 focus:outline-none leading-tight"
-											placeholder=" "
-										/>
-									</div>
-									<label
-										className={`absolute transition-all duration-200 pointer-events-none ${
-											forgotEmailFocused || forgotEmail
-												? "text-xs top-0 -translate-y-1/2 left-3 px-1 bg-white font-medium"
-												: "text-sm top-1/2 -translate-y-1/2 left-11 text-gray-400"
-										} ${ forgotEmailError ? "text-red-500" : forgotEmailFocused ? "text-[#1B2F5B]" : "text-gray-500" }`}
-									>
-										Email Address
-									</label>
+
+						{forgotSubmitted ? (
+							<div className="flex flex-col items-center gap-4 py-4 text-center">
+								<div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+									<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
 								</div>
-								{forgotEmailError && (
-									<div className="flex items-center gap-2 mt-2 text-red-500 text-xs font-medium">
-										<AlertCircle size={14} />
-										{forgotEmailError}
-									</div>
-								)}
+								<p className="text-sm font-semibold text-gray-800">Request received</p>
+								<p className="text-sm text-gray-500">Please contact your administrator to reset the password for <span className="font-medium text-gray-700">{forgotEmail}</span>.</p>
+								<button
+									type="button"
+									onClick={() => { setShowForgotModal(false); setForgotSubmitted(false); setForgotEmail(""); }}
+									className="mt-2 w-full bg-[#1B2F5B] text-white py-3 rounded-lg font-semibold hover:bg-[#162548] transition-colors cursor-pointer"
+								>
+									Done
+								</button>
 							</div>
-							<button
-								type="submit"
-								className="w-full bg-[#1B2F5B] text-white py-3.5 rounded-lg font-semibold hover:bg-[#162548] transition-colors cursor-pointer"
-							>
-								Send Reset Link
-							</button>
-						</form>
+						) : (
+							<form onSubmit={handleForgotSubmit} className="flex flex-col gap-5">
+								<div className="mt-3">
+									<div className="relative">
+										<div className={`flex items-center gap-3 rounded-lg px-4 py-3.5 border-2 transition-all ${
+											forgotEmailError
+												? "border-red-500 bg-red-50"
+												: forgotEmailFocused
+												? "border-[#1B2F5B] bg-white"
+												: forgotEmail
+												? "border-gray-300 bg-white"
+												: "border-transparent bg-gray-100 hover:bg-gray-200"
+										}`}>
+											<Mail size={18} className={`shrink-0 transition-colors ${forgotEmailError ? "text-red-500" : forgotEmailFocused ? "text-[#1B2F5B]" : "text-gray-400"}`} />
+											<input
+												type="text"
+												value={forgotEmail}
+												onChange={(e) => {
+													setForgotEmail(e.target.value);
+													if (forgotEmailError) setForgotEmailError("");
+												}}
+												onFocus={() => setForgotEmailFocused(true)}
+												onBlur={() => setForgotEmailFocused(false)}
+												className="w-full bg-transparent text-sm text-gray-700 focus:outline-none leading-tight"
+												placeholder=" "
+											/>
+										</div>
+										<label
+											className={`absolute transition-all duration-200 pointer-events-none ${
+												forgotEmailFocused || forgotEmail
+													? "text-xs top-0 -translate-y-1/2 left-3 px-1 bg-white font-medium"
+													: "text-sm top-1/2 -translate-y-1/2 left-11 text-gray-400"
+											} ${ forgotEmailError ? "text-red-500" : forgotEmailFocused ? "text-[#1B2F5B]" : "text-gray-500" }`}
+										>
+											Email Address
+										</label>
+									</div>
+									{forgotEmailError && (
+										<div className="flex items-center gap-2 mt-2 text-red-500 text-xs font-medium">
+											<AlertCircle size={14} />
+											{forgotEmailError}
+										</div>
+									)}
+								</div>
+								<button
+									type="submit"
+									className="w-full bg-[#1B2F5B] text-white py-3.5 rounded-lg font-semibold hover:bg-[#162548] transition-colors cursor-pointer"
+								>
+									Submit
+								</button>
+							</form>
+						)}
 					</div>
 				</div>
 			)}
 
-			{/* Enter New Password Modal */}
-			{showResetModal && (
-				<div
-					className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-					onClick={() => setShowResetModal(false)}
-				>
-					<div
-						className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4 relative"
-						onClick={(e) => e.stopPropagation()}
-					>
-						<button
-							type="button"
-							onClick={() => setShowResetModal(false)}
-							className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold text-lg leading-none cursor-pointer"
-						>
-							✕
-						</button>
-						<h3 className="text-xl font-bold text-[#1B2F5B] text-center mb-6">Enter New Password</h3>
-						<form onSubmit={handleSaveNewPassword} className="flex flex-col gap-5">
-							{/* New Password - Floating Label */}
-							<div className="relative mt-3">
-								<div className={`flex items-center gap-3 rounded-lg px-4 py-3.5 border-2 transition-all ${
-									newPasswordFocused
-										? "border-[#1B2F5B] bg-white"
-										: newPassword
-										? "border-gray-300 bg-white"
-										: "border-transparent bg-gray-100 hover:bg-gray-200"
-								}`}>
-									<input
-										type="password"
-										value={newPassword}
-										onChange={(e) => setNewPassword(e.target.value)}
-										onFocus={() => setNewPasswordFocused(true)}
-										onBlur={() => setNewPasswordFocused(false)}
-										className="w-full bg-transparent text-sm text-gray-700 focus:outline-none"
-										required
-									/>
-								</div>
-								<label
-									className={`absolute transition-all duration-200 pointer-events-none ${
-										newPasswordFocused || newPassword
-											? "text-xs top-0 -translate-y-1/2 left-3 px-1 bg-white font-medium"
-											: "text-sm top-1/2 -translate-y-1/2 left-4 text-gray-400"
-									} ${ newPasswordFocused ? "text-[#1B2F5B]" : "text-gray-500" }`}
-								>
-									Enter New Password
-								</label>
-							</div>
-							{/* Confirm Password - Floating Label */}
-							<div className="relative mt-3">
-								<div className={`flex items-center gap-3 rounded-lg px-4 py-3.5 border-2 transition-all ${
-									confirmPasswordFocused
-										? "border-[#1B2F5B] bg-white"
-										: confirmPassword
-										? "border-gray-300 bg-white"
-										: "border-transparent bg-gray-100 hover:bg-gray-200"
-								}`}>
-									<input
-										type="password"
-										value={confirmPassword}
-										onChange={(e) => setConfirmPassword(e.target.value)}
-										onFocus={() => setConfirmPasswordFocused(true)}
-										onBlur={() => setConfirmPasswordFocused(false)}
-										className="w-full bg-transparent text-sm text-gray-700 focus:outline-none"
-										required
-									/>
-								</div>
-								<label
-									className={`absolute transition-all duration-200 pointer-events-none ${
-										confirmPasswordFocused || confirmPassword
-											? "text-xs top-0 -translate-y-1/2 left-3 px-1 bg-white font-medium"
-											: "text-sm top-1/2 -translate-y-1/2 left-4 text-gray-400"
-									} ${ confirmPasswordFocused ? "text-[#1B2F5B]" : "text-gray-500" }`}
-								>
-									Confirm New Password
-								</label>
-							</div>
-							<button
-								type="submit"
-								className="w-full bg-[#1B2F5B] text-white py-3.5 rounded-lg font-semibold hover:bg-[#162548] transition-colors cursor-pointer"
-							>
-								Save
-							</button>
-						</form>
-					</div>
-				</div>
-			)}
 		</div>
 	);
 }
