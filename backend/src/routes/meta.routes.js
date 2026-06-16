@@ -13,4 +13,6 @@ router.post("/post-photo", upload.single("source"), facebookController.postPhoto
 router.post("/schedule-photo", cloudinaryupload.single("source"),facebookController.schedulePhotoPost);
 router.post("/instagram/post", cloudinaryupload.single("source"), facebookController.createInstagramPost);
 router.post("/instagram/postreels", cloudinaryupload.single("source"), facebookController.createInstagramReelPost);
+router.post("/refresh", facebookController.refreshToken);
+
 module.exports = router;

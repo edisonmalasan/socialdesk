@@ -9,5 +9,6 @@ const instagramController = require("../controllers/instagram.controller");
 
 router.get("/redirect", instagramController.redirectToInstagram);
 router.get("/callback", instagramController.handleInstagramCallback);
+router.post("/refresh", instagramController.refreshToken);
 
 module.exports = router;
