@@ -8,25 +8,26 @@ const fs = require("fs");
 const FB_BASE = "https://graph.facebook.com/v25.0";
 
 const cloudinary = require("../config/cloudinary");
+const dbService = require("./db.service");
 
 /**
  * Generates Facebook OAuth URL
  * for Facebook page authentication.
  */
-exports.getAuthUrl = () => {
-  return `https://www.facebook.com/v25.0/dialog/oauth?client_id=${process.env.FB_APP_ID}&redirect_uri=${process.env.FB_REDIRECT_URI}&scope=pages_show_list,pages_manage_posts,pages_read_engagement,business_management,instagram_basic,instagram_content_publish`;
+exports.getAuthUrl = (userId) => {
+  return `https://www.facebook.com/v25.0/dialog/oauth?client_id=${process.env.FB_APP_ID}&redirect_uri=${process.env.FB_REDIRECT_URI}&state=${userId}&scope=pages_show_list,pages_manage_posts,pages_read_engagement,business_management,instagram_basic,instagram_content_publish`;
 };
 
 /**
  * Generates Instagram OAuth URL
  * for Instagram Business account authentication.
  */
-exports.getInstagramAuthUrl = () => {
+exports.getInstagramAuthUrl = (userId) => {
   return `https://www.facebook.com/v25.0/dialog/oauth?client_id=${
     process.env.FB_APP_ID
   }&redirect_uri=${encodeURIComponent(
     process.env.INSTAGRAM_REDIRECT_URI
-  )}&response_type=code&scope=pages_show_list,instagram_basic,instagram_content_publish`;
+  )}&state=${userId}&response_type=code&scope=pages_show_list,instagram_basic,instagram_content_publish`;
 };
 
 /**
@@ -64,6 +65,46 @@ exports.handleOAuth = async (code, redirectUri) => {
     user_access_token: userAccessToken,
     pages: pagesRes.data.data,
   };
+};
+
+/**
+ * Exchanges a short-lived user token for a long-lived one (60 days).
+ */
+exports.getLongLivedToken = async (shortLivedToken) => {
+  const res = await axios.get(`${FB_BASE}/oauth/access_token`, {
+    params: {
+      grant_type: "fb_exchange_token",
+      client_id: process.env.FB_APP_ID,
+      client_secret: process.env.FB_APP_SECRET,
+      fb_exchange_token: shortLivedToken,
+    },
+  });
+
+  return res.data.access_token;
+};
+
+/**
+ * Refreshes an OAuth token for a given social account.
+ */
+exports.refreshOAuthToken = async (socialAccountId) => {
+  // 1. Get the account and current token from DB
+  const account = await dbService.getSocialAccountWithToken(socialAccountId);
+  const currentToken = account.oauth_tokens?.access_token;
+
+  if (!currentToken) {
+    throw new Error("No token found to refresh");
+  }
+
+  // 2. Exchange current token for a new long-lived token
+  const newAccessToken = await exports.getLongLivedToken(currentToken);
+
+  // 3. Update the token in the database
+  const updatedToken = await dbService.upsertOAuthToken({
+    socialAccountId,
+    accessToken: newAccessToken,
+  });
+
+  return updatedToken;
 };
 
 /**
