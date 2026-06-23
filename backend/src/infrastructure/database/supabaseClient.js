@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const { fileURLToPath } = require('url');
 
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 const supabaseUrl = process.env.SUPABASE_URL?.trim();
 const supabaseKey = process.env.SUPABASE_KEY?.trim();

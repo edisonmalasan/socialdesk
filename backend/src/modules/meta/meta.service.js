@@ -7,8 +7,8 @@ const fs = require("fs");
  */
 const FB_BASE = "https://graph.facebook.com/v25.0";
 
-const cloudinary = require("../config/cloudinary");
-const dbService = require("./db.service");
+const cloudinary = require("../media/cloudinary.client");
+const dbService = require("../social-connections/social-connections.service");
 
 /**
  * Generates Facebook OAuth URL

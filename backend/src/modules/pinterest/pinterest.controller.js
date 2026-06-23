@@ -1,5 +1,5 @@
-const pinterestService = require("../services/pinterest.service");
-const dbService = require("../services/db.service");
+const pinterestService = require("./pinterest.service");
+const dbService = require("../social-connections/social-connections.service");
 
 /**
  * Redirects the user to Pinterest OAuth login page

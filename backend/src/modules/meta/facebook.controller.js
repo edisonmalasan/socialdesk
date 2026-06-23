@@ -1,5 +1,5 @@
-const facebookService = require("../services/meta.service");
-const cloudinary = require("../config/cloudinary");
+const facebookService = require("./meta.service");
+const cloudinary = require("../media/cloudinary.client");
 const axios = require("axios");
 
 /**
@@ -74,7 +74,7 @@ exports.handleFacebookCallback = async (req, res) => {
     // Check if page has Instagram Business account
     if (page) {
       // Save social account and token to the database
-      const dbService = require("../services/db.service");
+      const dbService = require("../social-connections/social-connections.service");
       const platformId = await dbService.getPlatformId("facebook");
       
       const savedAccount = await dbService.upsertSocialAccount({

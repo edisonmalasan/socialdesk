@@ -1,4 +1,4 @@
-import supabase from './config/supabaseClient.js';
+import supabase from '../src/infrastructure/database/supabaseClient.js';
 
 export async function checkSupabaseConnection() {
   try {

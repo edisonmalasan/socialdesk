@@ -46,10 +46,10 @@ npm run check:supabase
 
 ## Using the client in your code
 
-Import the shared client (loads `.env` when this module is first imported):
+Import the runtime client (loads `.env` when this module is first imported):
 
 ```js
-import supabase from './config/supabaseClient.js';
+const supabase = require('../src/infrastructure/database/supabaseClient');
 
 // Example: query a table (adjust name and columns to match your schema)
 const { data, error } = await supabase.from('your_table').select('*').limit(5);
@@ -70,7 +70,7 @@ if (!result.ok) {
 
 | Path | Role |
 |------|------|
-| `config/supabaseClient.js` | Loads `.env`, creates `createClient`, exports `supabase` |
+| `../src/infrastructure/database/supabaseClient.js` | Loads `.env`, creates `createClient`, exports `supabase` |
 | `database/supadb.js` | `checkSupabaseConnection()` — health check via Auth API |
 | `scripts/checkSupabase.js` | CLI used by `npm run check:supabase` |
 

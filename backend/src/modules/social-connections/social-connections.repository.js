@@ -1,4 +1,4 @@
-const supabase = require("../../database/config/supabaseClient");
+const supabase = require("../../infrastructure/database/supabaseClient");
 
 /**
  * Retrieves the platform ID by its code (e.g., 'facebook', 'instagram').

@@ -8,7 +8,7 @@ const fs = require("fs");
  */
 const PINTEREST_BASE = "https://api-sandbox.pinterest.com/v5";
 
-const cloudinary = require("../config/cloudinary");
+const cloudinary = require("../media/cloudinary.client");
 
 /**
  * Uploads image to Cloudinary.

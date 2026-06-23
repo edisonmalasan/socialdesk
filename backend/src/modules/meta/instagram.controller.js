@@ -1,5 +1,5 @@
-const facebookService = require("../services/meta.service");
-const cloudinary = require("../config/cloudinary");
+const facebookService = require("./meta.service");
+const cloudinary = require("../media/cloudinary.client");
 const axios = require("axios");
 
 /**
@@ -102,7 +102,7 @@ exports.handleInstagramCallback = async (req, res) => {
         instagramName = igRes.data.username || page.name;
 
         // Save to database
-        const dbService = require("../services/db.service");
+        const dbService = require("../social-connections/social-connections.service");
         const platformId = await dbService.getPlatformId("instagram");
 
         const savedAccount = await dbService.upsertSocialAccount({

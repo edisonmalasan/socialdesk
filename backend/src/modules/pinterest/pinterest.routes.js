@@ -3,8 +3,8 @@ const router = express.Router();
 const multer = require("multer");
 
 const upload = multer({ storage: multer.memoryStorage() });
-const pinterestController = require("../controllers/pinterest.controller");
-const cloudinaryupload = require("../middleware/cloudinaryUpload");
+const pinterestController = require("./pinterest.controller");
+const cloudinaryupload = require("../media/upload.middleware");
 
 router.get("/oauth", pinterestController.redirectToPinterest);
 router.get("/callback", pinterestController.handlePinterestCallback);

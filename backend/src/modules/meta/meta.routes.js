@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 
-const cloudinaryupload = require("../middleware/cloudinaryUpload");
+const cloudinaryupload = require("../media/upload.middleware");
 const upload = multer({ storage: multer.memoryStorage() });
-const facebookController = require("../controllers/meta.controller");
+const facebookController = require("./facebook.controller");
 
 router.get("/redirect", facebookController.redirectToFacebook);
 router.get("/callback", facebookController.handleFacebookCallback);
