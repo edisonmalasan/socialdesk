@@ -1,6 +1,7 @@
 const express = require("express");
 const facebookRoutes = require("./modules/meta/meta.routes");
 const pinterestRoutes = require("./modules/pinterest/pinterest.routes");
+const youtubeRoutes = require("./modules/youtube/youtube.routes");
 const authRoutes = require("./modules/auth/auth.routes");
 const cors = require("cors");
 
@@ -21,5 +22,6 @@ app.get("/api/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/auth/facebook", facebookRoutes);
 app.use("/api/auth/pinterest", pinterestRoutes);
+app.use("/api/auth/youtube", youtubeRoutes);
 
 module.exports = app;
