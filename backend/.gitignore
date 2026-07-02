@@ -1,6 +1,10 @@
 # dependencies
 /node_modules
 
+
 # others
 /test
 /docs
+
+# environment files
+.env
