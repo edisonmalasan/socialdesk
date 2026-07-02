@@ -14,3 +14,7 @@ process.env.INSTAGRAM_REDIRECT_URI ||= "http://localhost:5000/api/auth/instagram
 process.env.PINTEREST_APP_ID ||= "test-pinterest-app-id";
 process.env.PINTEREST_APP_SECRET ||= "test-pinterest-app-secret";
 process.env.PINTEREST_REDIRECT_URI ||= "http://localhost:5000/api/auth/pinterest/callback";
+
+process.env.GOOGLE_CLIENT_ID ||= "test-google-client-id";
+process.env.GOOGLE_CLIENT_SECRET ||= "test-google-client-secret";
+process.env.YOUTUBE_REDIRECT_URI ||= "http://localhost:5000/api/auth/youtube/callback";
