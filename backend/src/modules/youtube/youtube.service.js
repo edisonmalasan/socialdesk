@@ -1,5 +1,6 @@
 const { google } = require("googleapis");
 const { Readable } = require("stream");
+const dbService = require("../social-connections/social-connections.service");
 
 const getOAuth2Client = () =>
   new google.auth.OAuth2(
@@ -81,4 +82,42 @@ exports.uploadVideo = async ({ tokens, file, title, description, tags, privacySt
   });
 
   return res.data;
+};
+
+/**
+ * Exchanges a refresh token for a new access token.
+ */
+exports.mintNewAccessToken = async (refreshToken) => {
+  const oauth2Client = getOAuth2Client();
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+  const { credentials } = await oauth2Client.refreshAccessToken();
+  return credentials;
+};
+
+/**
+ * Refreshes and persists the OAuth token for a given social account.
+ */
+exports.refreshOAuthToken = async (socialAccountId) => {
+  const account = await dbService.getSocialAccountWithToken(socialAccountId);
+  const refreshToken = account.oauth_tokens?.refresh_token;
+
+  if (!refreshToken) {
+    throw new Error("No refresh token available for this account");
+  }
+
+  const credentials = await exports.mintNewAccessToken(refreshToken);
+
+  const updatedToken = await dbService.upsertOAuthToken({
+    socialAccountId,
+    accessToken: credentials.access_token,
+    refreshToken: credentials.refresh_token || refreshToken,
+    tokenType: credentials.token_type || "Bearer",
+    expiresAt: credentials.expiry_date
+      ? new Date(credentials.expiry_date).toISOString()
+      : null,
+    scope: credentials.scope,
+  });
+
+  return updatedToken;
 };

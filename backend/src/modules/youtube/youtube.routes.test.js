@@ -145,3 +145,42 @@ test("POST /api/auth/youtube/upload returns 500 when the upload fails", async (t
   assert.equal(response.status, 500);
   assert.equal(response.body.error, "quota exceeded");
 });
+
+// --- Token refresh ---
+
+test("POST /api/auth/youtube/refresh requires a socialAccountId", async () => {
+  const response = await supertest(app).post("/api/auth/youtube/refresh").send({});
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(response.body, { error: "socialAccountId is required" });
+});
+
+test("POST /api/auth/youtube/refresh refreshes the token on success", async (t) => {
+  t.mock.method(youtubeService, "refreshOAuthToken", async () => ({
+    access_token: "new-access-token",
+  }));
+
+  const response = await supertest(app)
+    .post("/api/auth/youtube/refresh")
+    .send({ socialAccountId: "account-1" });
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(response.body, {
+    success: true,
+    message: "Token refreshed successfully",
+    token: { access_token: "new-access-token" },
+  });
+});
+
+test("POST /api/auth/youtube/refresh returns 500 when no refresh token is available", async (t) => {
+  t.mock.method(youtubeService, "refreshOAuthToken", async () => {
+    throw new Error("No refresh token available for this account");
+  });
+
+  const response = await supertest(app)
+    .post("/api/auth/youtube/refresh")
+    .send({ socialAccountId: "account-1" });
+
+  assert.equal(response.status, 500);
+  assert.equal(response.body.error, "No refresh token available for this account");
+});

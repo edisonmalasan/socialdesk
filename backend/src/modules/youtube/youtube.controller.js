@@ -93,3 +93,23 @@ exports.uploadVideo = async (req, res) => {
     res.status(500).json({ error: err.response?.data || err.message });
   }
 };
+
+exports.refreshToken = async (req, res) => {
+  try {
+    const { socialAccountId } = req.body;
+
+    if (!socialAccountId) {
+      return res.status(400).json({ error: "socialAccountId is required" });
+    }
+
+    const updatedToken = await youtubeService.refreshOAuthToken(socialAccountId);
+
+    res.json({
+      success: true,
+      message: "Token refreshed successfully",
+      token: updatedToken,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.response?.data || err.message });
+  }
+};
