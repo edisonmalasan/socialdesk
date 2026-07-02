@@ -143,6 +143,42 @@ exports.postToPage = async ({
 };
 
 /**
+ * Publishes a stored scheduled post to a Facebook page.
+ *
+ * Used by the scheduled-posts cron worker.
+ */
+exports.publishFacebookScheduledPost = async ({
+  pageId,
+  pageAccessToken,
+  message,
+  linkUrl,
+  mediaUrl,
+}) => {
+  if (!pageId || !pageAccessToken) {
+    throw new Error("pageId and pageAccessToken are required");
+  }
+
+  const data = {
+    message: message || "",
+    published: true,
+  };
+
+  const link = mediaUrl || linkUrl;
+  if (link) data.link = link;
+
+  const res = await axios.post(`${FB_BASE}/${pageId}/feed`, data, {
+    params: {
+      access_token: pageAccessToken,
+    },
+  });
+
+  return {
+    externalPostId: res.data.id,
+    platformPostUrl: res.data.id ? `https://facebook.com/${res.data.id}` : null,
+  };
+};
+
+/**
  * Uploads a photo directly to Facebook page.
  *
  * Uses multipart/form-data upload.
@@ -277,6 +313,58 @@ exports.createInstagramPost = async ({
 };
 
 /**
+ * Publishes a scheduled Instagram image post from a public image URL.
+ */
+exports.publishInstagramScheduledImage = async ({
+  igUserId,
+  pageAccessToken,
+  caption,
+  imageUrl,
+}) => {
+  if (!igUserId || !pageAccessToken) {
+    throw new Error("igUserId and pageAccessToken are required");
+  }
+
+  if (!imageUrl) {
+    throw new Error("imageUrl is required");
+  }
+
+  const createRes = await axios.post(
+    `${FB_BASE}/${igUserId}/media`,
+    null,
+    {
+      params: {
+        image_url: imageUrl,
+        caption: caption || "",
+        access_token: pageAccessToken,
+      },
+    }
+  );
+
+  const creationId = createRes.data.id;
+
+  await sleep(3000);
+
+  const publishRes = await axios.post(
+    `${FB_BASE}/${igUserId}/media_publish`,
+    null,
+    {
+      params: {
+        creation_id: creationId,
+        access_token: pageAccessToken,
+      },
+    }
+  );
+
+  return {
+    externalPostId: publishRes.data.id,
+    platformPostUrl: publishRes.data.id
+      ? `https://www.instagram.com/p/${publishRes.data.id}`
+      : null,
+  };
+};
+
+/**
  * Creates and publishes an Instagram Reel.
  *
  * Flow:
@@ -361,5 +449,77 @@ exports.createInstagramReelPost = async ({
   return {
     mediaId: publishRes.data.id,
     videoUrl,
+  };
+};
+
+/**
+ * Publishes a scheduled Instagram Reel from a public video URL.
+ */
+exports.publishInstagramScheduledReel = async ({
+  igUserId,
+  pageAccessToken,
+  caption,
+  videoUrl,
+}) => {
+  if (!igUserId || !pageAccessToken) {
+    throw new Error("igUserId and pageAccessToken are required");
+  }
+
+  if (!videoUrl) {
+    throw new Error("videoUrl is required");
+  }
+
+  const createRes = await axios.post(
+    `${FB_BASE}/${igUserId}/media`,
+    null,
+    {
+      params: {
+        video_url: videoUrl,
+        caption: caption || "",
+        media_type: "REELS",
+        access_token: pageAccessToken,
+      },
+    }
+  );
+
+  const creationId = createRes.data.id;
+  let status = "IN_PROGRESS";
+
+  for (let i = 0; i < 10; i++) {
+    const statusRes = await axios.get(
+      `${FB_BASE}/${creationId}`,
+      {
+        params: {
+          fields: "status_code",
+          access_token: pageAccessToken,
+        },
+      }
+    );
+
+    status = statusRes.data.status_code;
+    if (status === "FINISHED") break;
+    await sleep(3000);
+  }
+
+  if (status !== "FINISHED") {
+    throw new Error("Reel not ready for publishing after waiting");
+  }
+
+  const publishRes = await axios.post(
+    `${FB_BASE}/${igUserId}/media_publish`,
+    null,
+    {
+      params: {
+        creation_id: creationId,
+        access_token: pageAccessToken,
+      },
+    }
+  );
+
+  return {
+    externalPostId: publishRes.data.id,
+    platformPostUrl: publishRes.data.id
+      ? `https://www.instagram.com/reel/${publishRes.data.id}`
+      : null,
   };
 };

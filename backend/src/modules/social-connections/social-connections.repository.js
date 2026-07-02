@@ -145,3 +145,52 @@ exports.getSocialAccountWithToken = async (socialAccountId) => {
   }
   return data;
 };
+
+/**
+ * Retrieves the platform and OAuth token data needed for publishing.
+ */
+exports.getPublishingConnection = async (socialAccountId) => {
+  const { data, error } = await supabase
+    .from("social_accounts")
+    .select(`
+      id,
+      external_id,
+      username,
+      display_name,
+      platforms (
+        code
+      ),
+      oauth_tokens (
+        access_token,
+        refresh_token,
+        token_type,
+        expires_at
+      )
+    `)
+    .eq("id", socialAccountId)
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Social account not found: ${socialAccountId}`);
+  }
+
+  const token = Array.isArray(data.oauth_tokens)
+    ? data.oauth_tokens[0]
+    : data.oauth_tokens;
+
+  if (!token?.access_token) {
+    throw new Error(`OAuth token not found for social account: ${socialAccountId}`);
+  }
+
+  return {
+    socialAccountId: data.id,
+    platformCode: data.platforms?.code,
+    externalId: data.external_id,
+    username: data.username,
+    displayName: data.display_name,
+    accessToken: token.access_token,
+    refreshToken: token.refresh_token,
+    tokenType: token.token_type,
+    expiresAt: token.expires_at,
+  };
+};

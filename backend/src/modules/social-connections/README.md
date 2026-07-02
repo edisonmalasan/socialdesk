@@ -12,6 +12,7 @@ The Social Connections module owns persisted social platform identity and OAuth 
 - `upsertSocialAccount(accountData)`
 - `upsertOAuthToken(tokenData)`
 - `getSocialAccountWithToken(socialAccountId)`
+- `getPublishingConnection(socialAccountId)`
 
 Provider modules should use these functions instead of importing the Supabase client directly.
 
@@ -35,6 +36,7 @@ The current upsert behavior is preserved: the repository first checks for an exi
 - Facebook and Instagram callbacks save linked accounts and page access tokens through this module.
 - Pinterest callbacks save linked accounts and Pinterest OAuth token data through this module.
 - Meta token refresh retrieves the current token through `getSocialAccountWithToken` and writes the replacement through `upsertOAuthToken`.
+- Scheduled post execution loads platform and token data through `getPublishingConnection`.
 
 ## Known Limits
 

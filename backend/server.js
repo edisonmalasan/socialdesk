@@ -4,7 +4,9 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const app = require("./src/app");
+const scheduledPostsCron = require("./src/modules/scheduled-posts/scheduled-posts.cron");
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  scheduledPostsCron.start();
 });

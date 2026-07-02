@@ -212,3 +212,46 @@ exports.createPinterestPin = async ({
     imageUrl,
   };
 };
+
+/**
+ * Publishes a scheduled Pinterest pin from a public image URL.
+ */
+exports.publishScheduledPin = async ({
+  accessToken,
+  boardId,
+  title,
+  description,
+  link,
+  imageUrl,
+}) => {
+  if (!accessToken || !boardId) {
+    throw new Error("accessToken and boardId are required");
+  }
+
+  if (!imageUrl) {
+    throw new Error("imageUrl is required");
+  }
+
+  const payload = {
+    board_id: boardId,
+    title: title || "",
+    description: description || "",
+    link: link || "",
+    media_source: {
+      source_type: "image_url",
+      url: imageUrl,
+    },
+  };
+
+  const res = await axios.post(`${PINTEREST_BASE}/pins`, payload, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  return {
+    externalPostId: res.data.id,
+    platformPostUrl: res.data.link || res.data.url || null,
+  };
+};
