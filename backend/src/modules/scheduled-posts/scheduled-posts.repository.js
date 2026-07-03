@@ -83,6 +83,35 @@ exports.getScheduledTargetById = async ({ postTargetId }) => {
 };
 
 /**
+ * Retrieves pending targets for a scheduled parent post.
+ */
+exports.getSchedulableTargetsByPostId = async ({ postId }) => {
+  const { data, error } = await supabase
+    .from("post_targets")
+    .select(`
+      id,
+      post_id,
+      social_account_id,
+      status,
+      posts!inner (
+        id,
+        scheduled_at,
+        status
+      )
+    `)
+    .eq("post_id", postId)
+    .eq("status", TARGET_STATUS.PENDING)
+    .eq("posts.status", "scheduled")
+    .not("posts.scheduled_at", "is", null);
+
+  if (error) {
+    throw new Error(`Failed to load scheduled targets for post ${postId}: ${error.message}`);
+  }
+
+  return data || [];
+};
+
+/**
  * Claims a target before publishing so a later loop does not process it again.
  */
 exports.claimPostTarget = async ({ postTargetId }) => {

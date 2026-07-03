@@ -113,6 +113,18 @@ const getPostTargetJobId = (target) => {
   return `scheduled-post-target:${target.id}`;
 };
 
+const getScheduledAt = (target) => {
+  const post = getPost(target);
+  return post?.scheduled_at;
+};
+
+const getScheduleDelay = (target) => {
+  const scheduledAt = new Date(getScheduledAt(target)).getTime();
+  const delay = scheduledAt - Date.now();
+
+  return Number.isFinite(delay) && delay > 0 ? delay : 0;
+};
+
 const claimTargetForPublishing = async (target) => {
   if (target.status === scheduledPostsRepository.TARGET_STATUS.PUBLISHING) {
     return target;
@@ -200,6 +212,39 @@ exports.enqueueDueScheduledPosts = async ({ publishingQueue, jobName }) => {
   return { enqueued: targets.length };
 };
 
+exports.schedulePostTargets = async ({ publishingQueue, jobName, postId }) => {
+  const targets = await scheduledPostsRepository.getSchedulableTargetsByPostId({ postId });
+
+  for (const target of targets) {
+    const jobId = getPostTargetJobId(target);
+    await publishingQueue.remove(jobId);
+    await publishingQueue.add(
+      jobName,
+      {
+        postTargetId: target.id,
+        postId: target.post_id,
+      },
+      {
+        delay: getScheduleDelay(target),
+        jobId,
+      },
+    );
+  }
+
+  return { scheduled: targets.length };
+};
+
+exports.cancelPostTargets = async ({ publishingQueue, postId }) => {
+  const targets = await scheduledPostsRepository.getSchedulableTargetsByPostId({ postId });
+  let cancelled = 0;
+
+  for (const target of targets) {
+    cancelled += await publishingQueue.remove(getPostTargetJobId(target));
+  }
+
+  return { cancelled };
+};
+
 exports.processQueuedTarget = async ({ postTargetId, markFailedOnError = true }) => {
   const target = await scheduledPostsRepository.getScheduledTargetById({ postTargetId });
 
@@ -235,5 +280,6 @@ exports._private = {
   getContentTypeCode,
   getFirstMediaUrl,
   getPostTargetJobId,
+  getScheduleDelay,
   publishTarget,
 };

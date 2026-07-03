@@ -2,7 +2,7 @@ const { Queue, Worker } = require("bullmq");
 
 const scheduledPostsService = require("./scheduled-posts.service");
 
-const DEFAULT_SCHEDULER_PATTERN = "* * * * *";
+const DEFAULT_RECOVERY_PATTERN = "*/15 * * * *";
 const DEFAULT_PUBLISH_ATTEMPTS = 3;
 const DEFAULT_BACKOFF_DELAY_MS = 30000;
 const DEFAULT_WORKER_CONCURRENCY = 5;
@@ -10,7 +10,7 @@ const DEFAULT_QUEUE_NAME = "scheduled-posts";
 const SCHEDULER_ID = "scheduled-posts-due-targets";
 
 const JOB_NAMES = {
-  SCHEDULE_DUE_TARGETS: "schedule-due-targets",
+  RECOVER_DUE_TARGETS: "recover-due-targets",
   PUBLISH_TARGET: "publish-target",
 };
 
@@ -33,9 +33,14 @@ const isEnabled = () => {
 };
 
 const getSchedulerPattern = () => {
-  return process.env.SCHEDULED_POSTS_SCHEDULER_PATTERN
+  return process.env.SCHEDULED_POSTS_RECOVERY_PATTERN
+    || process.env.SCHEDULED_POSTS_SCHEDULER_PATTERN
     || process.env.SCHEDULED_POSTS_CRON_EXPRESSION
-    || DEFAULT_SCHEDULER_PATTERN;
+    || DEFAULT_RECOVERY_PATTERN;
+};
+
+const isRecoveryEnabled = () => {
+  return process.env.SCHEDULED_POSTS_RECOVERY_ENABLED !== "false";
 };
 
 const getQueueName = () => {
@@ -114,6 +119,14 @@ const createPublishingQueue = () => {
   });
 };
 
+const getPublishingQueue = () => {
+  if (!publishingQueue) {
+    publishingQueue = createPublishingQueue();
+  }
+
+  return publishingQueue;
+};
+
 const logQueueError = (label) => (error) => {
   console.error(`${label} error:`, error.message || error);
 };
@@ -124,11 +137,15 @@ const attachQueueListeners = () => {
 };
 
 const startScheduler = async () => {
+  if (!isRecoveryEnabled()) {
+    return;
+  }
+
   await schedulerQueue.upsertJobScheduler(
     SCHEDULER_ID,
     { pattern: getSchedulerPattern() },
     {
-      name: JOB_NAMES.SCHEDULE_DUE_TARGETS,
+      name: JOB_NAMES.RECOVER_DUE_TARGETS,
       data: {},
       opts: {
         removeOnComplete: true,
@@ -192,7 +209,7 @@ exports.start = async () => {
   }
 
   schedulerQueue = createSchedulerQueue();
-  publishingQueue = createPublishingQueue();
+  publishingQueue = getPublishingQueue();
   attachQueueListeners();
 
   try {
@@ -203,8 +220,26 @@ exports.start = async () => {
     throw error;
   }
 
-  console.log(`Scheduled posts queue started with pattern: ${getSchedulerPattern()}`);
+  const recoveryStatus = isRecoveryEnabled()
+    ? `recovery pattern: ${getSchedulerPattern()}`
+    : "recovery disabled";
+  console.log(`Scheduled posts queue started with ${recoveryStatus}`);
   return { schedulerQueue, publishingQueue };
+};
+
+exports.schedulePostTargets = async ({ postId }) => {
+  return scheduledPostsService.schedulePostTargets({
+    publishingQueue: getPublishingQueue(),
+    jobName: JOB_NAMES.PUBLISH_TARGET,
+    postId,
+  });
+};
+
+exports.cancelPostTargets = async ({ postId }) => {
+  return scheduledPostsService.cancelPostTargets({
+    publishingQueue: getPublishingQueue(),
+    postId,
+  });
 };
 
 exports.stop = async () => {
@@ -230,6 +265,7 @@ exports._private = {
   getQueueName,
   getSchedulerPattern,
   getWorkerConcurrency,
+  isRecoveryEnabled,
   isEnabled,
   JOB_NAMES,
 };
