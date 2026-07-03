@@ -4,6 +4,10 @@ const metaService = require("../meta/meta.service");
 const pinterestService = require("../pinterest/pinterest.service");
 
 const DEFAULT_BATCH_SIZE = 10;
+const TERMINAL_TARGET_STATUSES = [
+  scheduledPostsRepository.TARGET_STATUS.PUBLISHED,
+  scheduledPostsRepository.TARGET_STATUS.FAILED,
+];
 
 const getBatchSize = () => {
   const parsed = Number.parseInt(process.env.SCHEDULED_POSTS_BATCH_SIZE, 10);
@@ -105,13 +109,36 @@ const publishTarget = async ({ post, connection }) => {
   }
 };
 
-const processTarget = async (target) => {
-  const claimedTarget = await scheduledPostsRepository.claimPostTarget({
+const getPostTargetJobId = (target) => {
+  return `scheduled-post-target:${target.id}`;
+};
+
+const claimTargetForPublishing = async (target) => {
+  if (target.status === scheduledPostsRepository.TARGET_STATUS.PUBLISHING) {
+    return target;
+  }
+
+  if (target.status !== scheduledPostsRepository.TARGET_STATUS.PENDING) {
+    return null;
+  }
+
+  return scheduledPostsRepository.claimPostTarget({
     postTargetId: target.id,
   });
+};
+
+const updateParentPostStatus = async (target, post) => {
+  const postId = target.post_id || post?.id;
+  if (postId) {
+    await scheduledPostsRepository.updateParentPostStatus({ postId });
+  }
+};
+
+const processTarget = async ({ target, markFailedOnError = true }) => {
+  const claimedTarget = await claimTargetForPublishing(target);
 
   if (!claimedTarget) {
-    return;
+    return { skipped: true };
   }
 
   const post = getPost(target);
@@ -120,7 +147,8 @@ const processTarget = async (target) => {
       postTargetId: target.id,
       errorMessage: "Scheduled post target is missing post data",
     });
-    return;
+    await updateParentPostStatus(target, post);
+    return { failed: true };
   }
 
   try {
@@ -135,17 +163,55 @@ const processTarget = async (target) => {
       externalPostId: result.externalPostId,
       platformPostUrl: result.platformPostUrl,
     });
+
+    return { published: true };
   } catch (error) {
-    await scheduledPostsRepository.markTargetFailed({
-      postTargetId: target.id,
-      errorMessage: getProviderErrorMessage(error),
-    });
-  } finally {
-    const postId = target.post_id || post.id;
-    if (postId) {
-      await scheduledPostsRepository.updateParentPostStatus({ postId });
+    if (markFailedOnError) {
+      await scheduledPostsRepository.markTargetFailed({
+        postTargetId: target.id,
+        errorMessage: getProviderErrorMessage(error),
+      });
     }
+
+    throw error;
+  } finally {
+    await updateParentPostStatus(target, post);
   }
+};
+
+exports.enqueueDueScheduledPosts = async ({ publishingQueue, jobName }) => {
+  const targets = await scheduledPostsRepository.getDueScheduledTargets({
+    limit: getBatchSize(),
+  });
+
+  for (const target of targets) {
+    await publishingQueue.add(
+      jobName,
+      {
+        postTargetId: target.id,
+        postId: target.post_id,
+      },
+      {
+        jobId: getPostTargetJobId(target),
+      },
+    );
+  }
+
+  return { enqueued: targets.length };
+};
+
+exports.processQueuedTarget = async ({ postTargetId, markFailedOnError = true }) => {
+  const target = await scheduledPostsRepository.getScheduledTargetById({ postTargetId });
+
+  if (!target) {
+    throw new Error(`Scheduled post target ${postTargetId} was not found`);
+  }
+
+  if (TERMINAL_TARGET_STATUSES.includes(target.status)) {
+    return { skipped: true };
+  }
+
+  return processTarget({ target, markFailedOnError });
 };
 
 exports.executeDueScheduledPosts = async () => {
@@ -155,7 +221,7 @@ exports.executeDueScheduledPosts = async () => {
 
   for (const target of targets) {
     try {
-      await processTarget(target);
+      await processTarget({ target });
     } catch (error) {
       console.error("Scheduled post target failed:", getProviderErrorMessage(error));
     }
@@ -168,5 +234,6 @@ exports._private = {
   getBatchSize,
   getContentTypeCode,
   getFirstMediaUrl,
+  getPostTargetJobId,
   publishTarget,
 };

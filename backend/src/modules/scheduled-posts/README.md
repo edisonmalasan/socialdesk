@@ -2,30 +2,37 @@
 
 ## Purpose
 
-The Scheduled Posts module publishes due scheduled posts from the database. It runs from an in-process cron worker and uses provider modules for the actual platform API calls.
+The Scheduled Posts module publishes due scheduled posts from the database. It uses BullMQ backed by Redis so multiple backend instances can safely share scheduling and publishing work.
 
 ## Runtime Flow
 
-The cron worker runs on `SCHEDULED_POSTS_CRON_EXPRESSION`, which defaults to every minute.
+A BullMQ scheduler runs on `SCHEDULED_POSTS_SCHEDULER_PATTERN`, which defaults to every minute.
 
 Each tick:
 
 1. Loads due scheduled targets.
-2. Claims each pending target by changing it to `publishing`.
-3. Loads the target social account and OAuth token through Social Connections.
-4. Dispatches publishing by platform code.
-5. Marks the target as `published` or `failed`.
-6. Updates the parent post status when all targets are finished.
+2. Enqueues one publish job per due `post_targets.id` with a stable job id.
+3. The publish worker claims each pending target by changing it to `publishing`.
+4. Loads the target social account and OAuth token through Social Connections.
+5. Dispatches publishing by platform code.
+6. Marks the target as `published` or, after the final BullMQ retry, `failed`.
+7. Updates the parent post status when all targets are finished.
 
-The cron starts from `server.js`. Importing `src/app.js` does not start background work.
+The queue runtime starts from `server.js`. Importing `src/app.js` does not start background work.
 
 ## Environment Variables
 
 | Name | Default | Purpose |
 | --- | --- | --- |
-| `SCHEDULED_POSTS_CRON_ENABLED` | `true` | Set to `false` to disable the worker. |
-| `SCHEDULED_POSTS_CRON_EXPRESSION` | `* * * * *` | Cron expression for scheduled execution. |
-| `SCHEDULED_POSTS_BATCH_SIZE` | `10` | Maximum due targets processed per tick. |
+| `REDIS_URL` | `redis://127.0.0.1:6379` | Redis connection string used by BullMQ. |
+| `SCHEDULED_POSTS_QUEUE_ENABLED` | `true` | Set to `false` to disable the queue runtime. |
+| `SCHEDULED_POSTS_SCHEDULER_PATTERN` | `* * * * *` | Cron pattern for scheduled enqueueing. |
+| `SCHEDULED_POSTS_BATCH_SIZE` | `10` | Maximum due targets enqueued per scheduler run. |
+| `SCHEDULED_POSTS_QUEUE_ATTEMPTS` | `3` | Publish job attempts before final failure. |
+| `SCHEDULED_POSTS_QUEUE_BACKOFF_DELAY_MS` | `30000` | Initial exponential backoff delay. |
+| `SCHEDULED_POSTS_QUEUE_CONCURRENCY` | `5` | Number of publish jobs processed concurrently. |
+
+The legacy `SCHEDULED_POSTS_CRON_ENABLED` and `SCHEDULED_POSTS_CRON_EXPRESSION` names are still accepted as fallbacks.
 
 ## Database Statuses
 
@@ -80,12 +87,10 @@ Missing required provider data fails only that target and stores the reason in `
 
 ## Module Files
 
-- `scheduled-posts.cron.js` owns cron startup, shutdown, and overlap prevention.
-- `scheduled-posts.service.js` owns execution flow and provider dispatch.
+- `scheduled-posts.queue.js` owns BullMQ startup, shutdown, scheduler setup, and worker creation.
+- `scheduled-posts.service.js` owns due target enqueueing, execution flow, retry-aware failure handling, and provider dispatch.
 - `scheduled-posts.repository.js` owns `posts` and `post_targets` reads/writes.
 
 ## Limitations
 
-This worker is designed for a single backend process. The target claim step prevents most duplicate work inside one process, but it is not a full distributed lock. Add a stronger locking strategy before running multiple scheduler workers in production.
-
-Retries, backoff, analytics, notifications, and automatic token refresh before publish are intentionally out of scope for the first version.
+Redis must be available before starting the backend with scheduled publishing enabled. Analytics, notifications, and automatic token refresh before publish are intentionally out of scope for this version.
