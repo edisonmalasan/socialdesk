@@ -1,9 +1,17 @@
 import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
+import {
+  cancelScheduledPostJobs,
+  scheduleScheduledPostJobs,
+} from '../scheduled-post-jobs';
 
 const DEV_USER_ID = '070f1c3d-ddd5-48d8-8e1c-6af1cce33164';
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+type PostRouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(_request: Request, { params }: PostRouteContext) {
+  const { id } = await params;
+
   const { data, error } = await supabase
     .from('posts')
     .select(`
@@ -38,7 +46,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
         )
       )
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('user_id', DEV_USER_ID)
     .single();
 
@@ -47,7 +55,8 @@ export async function GET(_request: Request, { params }: { params: { id: string 
   return NextResponse.json(data);
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: PostRouteContext) {
+  const { id } = await params;
   const body = await request.json();
   const {
     title,
@@ -79,21 +88,31 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       ...(scheduled_at !== undefined && { scheduled_at }),
       ...(content_type_id !== undefined && { content_type_id }),
     })
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('user_id', DEV_USER_ID)
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  if (data.status === 'scheduled' && data.scheduled_at) {
+    await scheduleScheduledPostJobs(data.id);
+  } else {
+    await cancelScheduledPostJobs(data.id);
+  }
+
   return NextResponse.json(data);
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_request: Request, { params }: PostRouteContext) {
+  const { id } = await params;
+
+  await cancelScheduledPostJobs(id);
+
   const { error } = await supabase
     .from('posts')
     .delete()
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('user_id', DEV_USER_ID);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

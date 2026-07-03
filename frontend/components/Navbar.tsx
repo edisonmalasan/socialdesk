@@ -29,6 +29,11 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   // Search State
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Determine if search bar should be shown
   const showSearchBar = pathname === '/posts' || pathname.startsWith('/posts/');
 
@@ -229,7 +234,7 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         </div>
       </header>
 
-      {notificationsOpen && notificationsMenuStyle && typeof window !== "undefined" && createPortal(
+      {isMounted && notificationsOpen && notificationsMenuStyle && createPortal(
         <>
           <div className="fixed inset-0 z-40" onClick={closeNotificationsMenu} />
           <div

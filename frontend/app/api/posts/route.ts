@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
+import { scheduleScheduledPostJobs } from './scheduled-post-jobs';
 
 const DEV_USER_ID = '070f1c3d-ddd5-48d8-8e1c-6af1cce33164';
 
@@ -120,6 +121,10 @@ export async function POST(request: Request) {
 
     const { error: targetError } = await supabase.from('post_targets').insert(targets);
     if (targetError) return NextResponse.json({ error: targetError.message }, { status: 500 });
+  }
+
+  if (status === 'scheduled') {
+    await scheduleScheduledPostJobs(post.id);
   }
 
   return NextResponse.json(post, { status: 201 });

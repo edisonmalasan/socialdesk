@@ -4,6 +4,10 @@ const metaService = require("../meta/meta.service");
 const pinterestService = require("../pinterest/pinterest.service");
 
 const DEFAULT_BATCH_SIZE = 10;
+const TERMINAL_TARGET_STATUSES = [
+  scheduledPostsRepository.TARGET_STATUS.PUBLISHED,
+  scheduledPostsRepository.TARGET_STATUS.FAILED,
+];
 
 const getBatchSize = () => {
   const parsed = Number.parseInt(process.env.SCHEDULED_POSTS_BATCH_SIZE, 10);
@@ -105,13 +109,53 @@ const publishTarget = async ({ post, connection }) => {
   }
 };
 
-const processTarget = async (target) => {
-  const claimedTarget = await scheduledPostsRepository.claimPostTarget({
+const getPostTargetJobId = (target) => {
+  return `scheduled-post-target:${target.id}`;
+};
+
+const getScheduledAt = (target) => {
+  const post = getPost(target);
+  return post?.scheduled_at;
+};
+
+const getScheduleDelay = (target) => {
+  const scheduledAt = new Date(getScheduledAt(target)).getTime();
+  const delay = scheduledAt - Date.now();
+
+  return Number.isFinite(delay) && delay > 0 ? delay : 0;
+};
+
+const claimTargetForPublishing = async (target) => {
+  if (target.status === scheduledPostsRepository.TARGET_STATUS.PUBLISHING) {
+    return target;
+  }
+
+  if (target.status !== scheduledPostsRepository.TARGET_STATUS.PENDING) {
+    return null;
+  }
+
+  return scheduledPostsRepository.claimPostTarget({
     postTargetId: target.id,
   });
+};
+
+const updateParentPostStatus = async (target, post) => {
+  const postId = target.post_id || post?.id;
+  if (postId) {
+    await scheduledPostsRepository.updateParentPostStatus({ postId });
+  }
+};
+
+const isTargetReadyToPublish = (target) => {
+  const post = getPost(target);
+  return post?.status === "scheduled" && Boolean(post.scheduled_at);
+};
+
+const processTarget = async ({ target, markFailedOnError = true }) => {
+  const claimedTarget = await claimTargetForPublishing(target);
 
   if (!claimedTarget) {
-    return;
+    return { skipped: true };
   }
 
   const post = getPost(target);
@@ -120,7 +164,12 @@ const processTarget = async (target) => {
       postTargetId: target.id,
       errorMessage: "Scheduled post target is missing post data",
     });
-    return;
+    await updateParentPostStatus(target, post);
+    return { failed: true };
+  }
+
+  if (!isTargetReadyToPublish(target)) {
+    return { skipped: true };
   }
 
   try {
@@ -135,17 +184,88 @@ const processTarget = async (target) => {
       externalPostId: result.externalPostId,
       platformPostUrl: result.platformPostUrl,
     });
+
+    return { published: true };
   } catch (error) {
-    await scheduledPostsRepository.markTargetFailed({
-      postTargetId: target.id,
-      errorMessage: getProviderErrorMessage(error),
-    });
-  } finally {
-    const postId = target.post_id || post.id;
-    if (postId) {
-      await scheduledPostsRepository.updateParentPostStatus({ postId });
+    if (markFailedOnError) {
+      await scheduledPostsRepository.markTargetFailed({
+        postTargetId: target.id,
+        errorMessage: getProviderErrorMessage(error),
+      });
     }
+
+    throw error;
+  } finally {
+    await updateParentPostStatus(target, post);
   }
+};
+
+exports.enqueueDueScheduledPosts = async ({ publishingQueue, jobName }) => {
+  const targets = await scheduledPostsRepository.getDueScheduledTargets({
+    limit: getBatchSize(),
+  });
+
+  for (const target of targets) {
+    await publishingQueue.add(
+      jobName,
+      {
+        postTargetId: target.id,
+        postId: target.post_id,
+      },
+      {
+        jobId: getPostTargetJobId(target),
+      },
+    );
+  }
+
+  return { enqueued: targets.length };
+};
+
+exports.schedulePostTargets = async ({ publishingQueue, jobName, postId }) => {
+  const targets = await scheduledPostsRepository.getSchedulableTargetsByPostId({ postId });
+
+  for (const target of targets) {
+    const jobId = getPostTargetJobId(target);
+    await publishingQueue.remove(jobId);
+    await publishingQueue.add(
+      jobName,
+      {
+        postTargetId: target.id,
+        postId: target.post_id,
+      },
+      {
+        delay: getScheduleDelay(target),
+        jobId,
+      },
+    );
+  }
+
+  return { scheduled: targets.length };
+};
+
+exports.cancelPostTargets = async ({ publishingQueue, postId }) => {
+  const targets = await scheduledPostsRepository.getPendingTargetsByPostId({ postId });
+  let cancelled = 0;
+
+  for (const target of targets) {
+    cancelled += await publishingQueue.remove(getPostTargetJobId(target));
+  }
+
+  return { cancelled };
+};
+
+exports.processQueuedTarget = async ({ postTargetId, markFailedOnError = true }) => {
+  const target = await scheduledPostsRepository.getScheduledTargetById({ postTargetId });
+
+  if (!target) {
+    return { skipped: true };
+  }
+
+  if (TERMINAL_TARGET_STATUSES.includes(target.status)) {
+    return { skipped: true };
+  }
+
+  return processTarget({ target, markFailedOnError });
 };
 
 exports.executeDueScheduledPosts = async () => {
@@ -155,7 +275,7 @@ exports.executeDueScheduledPosts = async () => {
 
   for (const target of targets) {
     try {
-      await processTarget(target);
+      await processTarget({ target });
     } catch (error) {
       console.error("Scheduled post target failed:", getProviderErrorMessage(error));
     }
@@ -168,5 +288,7 @@ exports._private = {
   getBatchSize,
   getContentTypeCode,
   getFirstMediaUrl,
+  getPostTargetJobId,
+  getScheduleDelay,
   publishTarget,
 };

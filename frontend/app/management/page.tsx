@@ -39,6 +39,11 @@ export default function ManagementPage() {
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [filterAlign, setFilterAlign] = useState<"left" | "right">("right");
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{ id: string; top: number; right: number } | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -399,7 +404,7 @@ export default function ManagementPage() {
       {/* ========================================= */}
       {/* ACTIONS PORTAL — renders outside table    */}
       {/* ========================================= */}
-      {actionMenuAnchor && typeof window !== "undefined" && createPortal(
+      {isMounted && actionMenuAnchor && createPortal(
         <>
           <div className="fixed inset-0 z-100" onClick={() => setActionMenuAnchor(null)} />
           <div

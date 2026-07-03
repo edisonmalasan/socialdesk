@@ -4,9 +4,11 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const app = require("./src/app");
-const scheduledPostsCron = require("./src/modules/scheduled-posts/scheduled-posts.cron");
+const scheduledPostsQueue = require("./src/modules/scheduled-posts/scheduled-posts.queue");
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  scheduledPostsCron.start();
+  scheduledPostsQueue.start().catch((error) => {
+    console.error("Failed to start scheduled posts queue:", error.message || error);
+  });
 });
