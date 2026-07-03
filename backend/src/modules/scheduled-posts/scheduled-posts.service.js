@@ -146,6 +146,11 @@ const updateParentPostStatus = async (target, post) => {
   }
 };
 
+const isTargetReadyToPublish = (target) => {
+  const post = getPost(target);
+  return post?.status === "scheduled" && Boolean(post.scheduled_at);
+};
+
 const processTarget = async ({ target, markFailedOnError = true }) => {
   const claimedTarget = await claimTargetForPublishing(target);
 
@@ -161,6 +166,10 @@ const processTarget = async ({ target, markFailedOnError = true }) => {
     });
     await updateParentPostStatus(target, post);
     return { failed: true };
+  }
+
+  if (!isTargetReadyToPublish(target)) {
+    return { skipped: true };
   }
 
   try {
@@ -235,7 +244,7 @@ exports.schedulePostTargets = async ({ publishingQueue, jobName, postId }) => {
 };
 
 exports.cancelPostTargets = async ({ publishingQueue, postId }) => {
-  const targets = await scheduledPostsRepository.getSchedulableTargetsByPostId({ postId });
+  const targets = await scheduledPostsRepository.getPendingTargetsByPostId({ postId });
   let cancelled = 0;
 
   for (const target of targets) {

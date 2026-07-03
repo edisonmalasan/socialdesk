@@ -112,6 +112,23 @@ exports.getSchedulableTargetsByPostId = async ({ postId }) => {
 };
 
 /**
+ * Retrieves pending targets for a parent post regardless of the parent post status.
+ */
+exports.getPendingTargetsByPostId = async ({ postId }) => {
+  const { data, error } = await supabase
+    .from("post_targets")
+    .select("id, post_id, status")
+    .eq("post_id", postId)
+    .eq("status", TARGET_STATUS.PENDING);
+
+  if (error) {
+    throw new Error(`Failed to load pending targets for post ${postId}: ${error.message}`);
+  }
+
+  return data || [];
+};
+
+/**
  * Claims a target before publishing so a later loop does not process it again.
  */
 exports.claimPostTarget = async ({ postTargetId }) => {
