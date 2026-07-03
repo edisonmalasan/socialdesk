@@ -258,7 +258,7 @@ exports.processQueuedTarget = async ({ postTargetId, markFailedOnError = true })
   const target = await scheduledPostsRepository.getScheduledTargetById({ postTargetId });
 
   if (!target) {
-    throw new Error(`Scheduled post target ${postTargetId} was not found`);
+    return { skipped: true };
   }
 
   if (TERMINAL_TARGET_STATUSES.includes(target.status)) {
