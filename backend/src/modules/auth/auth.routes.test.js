@@ -20,10 +20,11 @@ test("POST /api/auth/login succeeds with valid credentials", async (t) => {
     .send({ email: "user@example.com", password: "correct-password" });
 
   assert.equal(response.status, 200);
-  assert.equal(response.body.role, "admin");
-  assert.ok(response.body.token);
-  assert.equal(response.body.user.email, "user@example.com");
-  assert.equal(response.body.user.password_hash, undefined);
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.data.role, "admin");
+  assert.ok(response.body.data.token);
+  assert.equal(response.body.data.user.email, "user@example.com");
+  assert.equal(response.body.data.user.password_hash, undefined);
 });
 
 test("POST /api/auth/login rejects an unknown email", async (t) => {
@@ -34,7 +35,7 @@ test("POST /api/auth/login rejects an unknown email", async (t) => {
     .send({ email: "nobody@example.com", password: "whatever" });
 
   assert.equal(response.status, 401);
-  assert.deepEqual(response.body, { message: "Invalid email or password" });
+  assert.deepEqual(response.body, { success: false, error: "Invalid email or password" });
 });
 
 test("POST /api/auth/login rejects a wrong password", async (t) => {
@@ -67,7 +68,7 @@ test("POST /api/auth/logout clears auth cookies and returns success", async () =
   const response = await supertest(app).post("/api/auth/logout");
 
   assert.equal(response.status, 200);
-  assert.deepEqual(response.body, { message: "Logged out successfully" });
+  assert.deepEqual(response.body, { success: true, data: { message: "Logged out successfully" } });
 
   const clearedCookies = response.headers["set-cookie"] || [];
   assert.ok(clearedCookies.some((cookie) => cookie.startsWith("auth-token=;")));

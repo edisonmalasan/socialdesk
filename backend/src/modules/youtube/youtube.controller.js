@@ -1,11 +1,12 @@
 const youtubeService = require("./youtube.service");
 const dbService = require("../social-connections/social-connections.service");
+const { successResponse, errorResponse } = require("../../shared/utils/response.util");
 
 exports.redirectToYouTube = (req, res) => {
   const { userId } = req.query;
 
   if (!userId) {
-    return res.status(400).json({ error: "userId is required" });
+    return errorResponse(res, "userId is required", 400);
   }
 
   const url = youtubeService.getYouTubeAuthUrl(userId);
@@ -17,10 +18,10 @@ exports.handleYouTubeCallback = async (req, res) => {
     const { code, state: userId } = req.query;
 
     if (!code) {
-      return res.status(400).json({ error: "Authorization code missing" });
+      return errorResponse(res, "Authorization code missing", 400);
     }
     if (!userId) {
-      return res.status(400).json({ error: "userId (state) missing" });
+      return errorResponse(res, "userId (state) missing", 400);
     }
 
     const tokens = await youtubeService.handleYouTubeOAuth(code);
@@ -49,13 +50,12 @@ exports.handleYouTubeCallback = async (req, res) => {
       scope: tokens.scope,
     });
 
-    res.json({
-      success: true,
+    return successResponse(res, {
       message: "YouTube channel linked successfully",
       account,
     });
   } catch (err) {
-    res.status(500).json({ error: err.response?.data || err.message });
+    return errorResponse(res, err.response?.data || err.message, 500);
   }
 };
 
@@ -65,11 +65,9 @@ exports.uploadVideo = async (req, res) => {
     const { accessToken, refreshToken, title, description, tags, privacyStatus } =
       req.body || {};
 
-    if (!accessToken || !title) {
-      return res.status(400).json({ error: "accessToken and title are required" });
-    }
+    // Validation for text fields is handled by validate(uploadVideoSchema)
     if (!file) {
-      return res.status(400).json({ error: "Video file is required" });
+      return errorResponse(res, "Video file is required", 400);
     }
 
     const tokens = {
@@ -88,9 +86,9 @@ exports.uploadVideo = async (req, res) => {
       privacyStatus,
     });
 
-    res.json({ success: true, video });
+    return successResponse(res, { video });
   } catch (err) {
-    res.status(500).json({ error: err.response?.data || err.message });
+    return errorResponse(res, err.response?.data || err.message, 500);
   }
 };
 
@@ -98,18 +96,14 @@ exports.refreshToken = async (req, res) => {
   try {
     const { socialAccountId } = req.body;
 
-    if (!socialAccountId) {
-      return res.status(400).json({ error: "socialAccountId is required" });
-    }
-
+    // socialAccountId validation is handled by validate(refreshTokenSchema)
     const updatedToken = await youtubeService.refreshOAuthToken(socialAccountId);
 
-    res.json({
-      success: true,
+    return successResponse(res, {
       message: "Token refreshed successfully",
       token: updatedToken,
     });
   } catch (err) {
-    res.status(500).json({ error: err.response?.data || err.message });
+    return errorResponse(res, err.response?.data || err.message, 500);
   }
 };
