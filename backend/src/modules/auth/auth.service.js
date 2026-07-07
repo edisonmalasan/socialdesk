@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 const authRepository = require("./auth.repository");
 
 exports.login = async ({ email, password }) => {
-  console.log(email, password);
   const { user, error } = await authRepository.findUserByEmail(email);
 
   if (error || !user) {
