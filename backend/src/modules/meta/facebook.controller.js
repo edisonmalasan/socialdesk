@@ -42,14 +42,12 @@ exports.handleFacebookCallback = async (req, res) => {
     // Exchange code for access token and user data
     const data = await facebookService.handleOAuth(code, process.env.FB_REDIRECT_URI);
 
-    console.log("Facebook OAuth data:", code);
-    console.log("Facebook OAuth data:", data);
-    console.log("Facebook redirect:");
+
 
     // User access token
     const shortLivedToken = data.user_access_token;
 
-    console.log("User access token:", shortLivedToken);
+
 
     // Exchange for long lived token
     const longLivedToken = await facebookService.getLongLivedToken(shortLivedToken);
@@ -106,7 +104,7 @@ exports.handleFacebookCallback = async (req, res) => {
       instagramId =
         pageDetails.data.instagram_business_account?.id || null;
 
-      console.log("Instagram ID:", instagramId);
+
     }
 
     // Fallback page name
@@ -209,8 +207,7 @@ exports.postPhoto = async (req, res) => {
     // Uploaded file from multer middleware
     const file = req.file;
 
-    console.log("req.body:", req.body);
-    console.log("this is the page id:", pageId);
+
 
     // Validate required data
     if (!pageId || !pageAccessToken || !file) {
@@ -282,7 +279,7 @@ exports.schedulePhotoPost = async (req, res) => {
       });
     }
 
-    console.log("Cloudinary config:", cloudinary.config());
+
 
     // Upload image to Cloudinary
     const uploadResult = await new Promise((resolve, reject) => {
