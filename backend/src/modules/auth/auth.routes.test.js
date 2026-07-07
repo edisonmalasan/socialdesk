@@ -62,3 +62,14 @@ test("POST /api/auth/login returns 500 when the repository fails", async (t) => 
 
   assert.equal(response.status, 500);
 });
+
+test("POST /api/auth/logout clears auth cookies and returns success", async () => {
+  const response = await supertest(app).post("/api/auth/logout");
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(response.body, { message: "Logged out successfully" });
+
+  const clearedCookies = response.headers["set-cookie"] || [];
+  assert.ok(clearedCookies.some((cookie) => cookie.startsWith("auth-token=;")));
+  assert.ok(clearedCookies.some((cookie) => cookie.startsWith("user-role=;")));
+});

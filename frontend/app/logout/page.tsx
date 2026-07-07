@@ -9,12 +9,16 @@ export default function LogoutPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // 1. Remove the "session" cookie
+    // 1. Best-effort notify the backend (no server session to invalidate today,
+    // but keeps a single contract if cookies ever become httpOnly/server-set).
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+
+    // 2. Remove the "session" cookie
     // This tells the Middleware "I am no longer allowed in"
     Cookies.remove("auth-token");
     Cookies.remove("user-role");
 
-    // 2. Wait 1.5 seconds for visual effect, then redirect to Login
+    // 3. Wait 1.5 seconds for visual effect, then redirect to Login
     const timer = setTimeout(() => {
       router.push("/login");
     }, 1500);

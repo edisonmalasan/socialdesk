@@ -11,6 +11,7 @@ Mounted from `src/app.js` at `/api/auth`.
 | Method | Path | Behavior |
 | --- | --- | --- |
 | `POST` | `/login` | Validates `email` and `password`, then returns the existing login payload. |
+| `POST` | `/logout` | Clears the `auth-token`/`user-role` cookies (if set server-side) and returns `{ "message": "Logged out successfully" }`. Sessions are stateless JWTs, so there is no server-side session to invalidate. |
 
 Successful response shape is unchanged:
 
