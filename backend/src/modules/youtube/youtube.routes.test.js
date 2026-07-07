@@ -14,7 +14,7 @@ test("GET /api/auth/youtube/oauth requires a userId", async () => {
   const response = await supertest(app).get("/api/auth/youtube/oauth");
 
   assert.equal(response.status, 400);
-  assert.deepEqual(response.body, { error: "userId is required" });
+  assert.deepEqual(response.body, { success: false, error: "userId is required" });
 });
 
 test("GET /api/auth/youtube/oauth redirects to the Google OAuth screen", async () => {
@@ -32,14 +32,14 @@ test("GET /api/auth/youtube/callback requires an authorization code", async () =
   const response = await supertest(app).get("/api/auth/youtube/callback?state=7");
 
   assert.equal(response.status, 400);
-  assert.deepEqual(response.body, { error: "Authorization code missing" });
+  assert.deepEqual(response.body, { success: false, error: "Authorization code missing" });
 });
 
 test("GET /api/auth/youtube/callback requires userId (state)", async () => {
   const response = await supertest(app).get("/api/auth/youtube/callback?code=abc");
 
   assert.equal(response.status, 400);
-  assert.deepEqual(response.body, { error: "userId (state) missing" });
+  assert.deepEqual(response.body, { success: false, error: "userId (state) missing" });
 });
 
 test("GET /api/auth/youtube/callback links the channel on success", async (t) => {
@@ -70,8 +70,10 @@ test("GET /api/auth/youtube/callback links the channel on success", async (t) =>
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, {
     success: true,
-    message: "YouTube channel linked successfully",
-    account: { id: "account-id", username: "@testchannel" },
+    data: {
+      message: "YouTube channel linked successfully",
+      account: { id: "account-id", username: "@testchannel" },
+    },
   });
 });
 
@@ -86,6 +88,7 @@ test("GET /api/auth/youtube/callback returns 500 when token exchange fails", asy
 
   assert.equal(response.status, 500);
   assert.equal(response.body.error, "invalid_grant");
+  assert.equal(response.body.success, false);
 });
 
 // --- Video upload ---
@@ -94,7 +97,8 @@ test("POST /api/auth/youtube/upload rejects a request missing accessToken and ti
   const response = await supertest(app).post("/api/auth/youtube/upload").send({});
 
   assert.equal(response.status, 400);
-  assert.deepEqual(response.body, { error: "accessToken and title are required" });
+  assert.equal(response.body.success, false);
+  assert.equal(response.body.error, "Validation Error");
 });
 
 test("POST /api/auth/youtube/upload rejects a request missing a video file", async () => {
@@ -104,7 +108,7 @@ test("POST /api/auth/youtube/upload rejects a request missing a video file", asy
     .field("title", "My Video");
 
   assert.equal(response.status, 400);
-  assert.deepEqual(response.body, { error: "Video file is required" });
+  assert.deepEqual(response.body, { success: false, error: "Video file is required" });
 });
 
 test("POST /api/auth/youtube/upload uploads a video on success", async (t) => {
@@ -125,7 +129,7 @@ test("POST /api/auth/youtube/upload uploads a video on success", async (t) => {
 
   assert.equal(response.status, 200);
   assert.equal(response.body.success, true);
-  assert.equal(response.body.video.id, "video-id-123");
+  assert.equal(response.body.data.video.id, "video-id-123");
 });
 
 test("POST /api/auth/youtube/upload returns 500 when the upload fails", async (t) => {
@@ -144,6 +148,7 @@ test("POST /api/auth/youtube/upload returns 500 when the upload fails", async (t
 
   assert.equal(response.status, 500);
   assert.equal(response.body.error, "quota exceeded");
+  assert.equal(response.body.success, false);
 });
 
 // --- Token refresh ---
@@ -152,7 +157,8 @@ test("POST /api/auth/youtube/refresh requires a socialAccountId", async () => {
   const response = await supertest(app).post("/api/auth/youtube/refresh").send({});
 
   assert.equal(response.status, 400);
-  assert.deepEqual(response.body, { error: "socialAccountId is required" });
+  assert.equal(response.body.success, false);
+  assert.equal(response.body.error, "Validation Error");
 });
 
 test("POST /api/auth/youtube/refresh refreshes the token on success", async (t) => {
@@ -167,8 +173,10 @@ test("POST /api/auth/youtube/refresh refreshes the token on success", async (t) 
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, {
     success: true,
-    message: "Token refreshed successfully",
-    token: { access_token: "new-access-token" },
+    data: {
+      message: "Token refreshed successfully",
+      token: { access_token: "new-access-token" },
+    },
   });
 });
 
@@ -183,4 +191,5 @@ test("POST /api/auth/youtube/refresh returns 500 when no refresh token is availa
 
   assert.equal(response.status, 500);
   assert.equal(response.body.error, "No refresh token available for this account");
+  assert.equal(response.body.success, false);
 });
