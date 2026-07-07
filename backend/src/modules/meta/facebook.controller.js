@@ -394,8 +394,7 @@ exports.createInstagramPost = async (req, res) => {
  */
 exports.createInstagramReelPost = async (req, res) => {
 
-  // Debug log to confirm controller execution
-  console.log("🔥 REEL CONTROLLER HIT");
+
 
   try {
 
@@ -405,8 +404,7 @@ exports.createInstagramReelPost = async (req, res) => {
     // Uploaded video file
     const file = req.file;
 
-    console.log("MIME TYPE:", req.file.mimetype);
-    console.log("FILE:", req.file);
+
 
     // Validate uploaded video
     if (!file) {
