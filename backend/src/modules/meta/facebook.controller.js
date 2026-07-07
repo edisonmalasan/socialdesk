@@ -1,6 +1,7 @@
 const facebookService = require("./meta.service");
 const cloudinary = require("../media/cloudinary.client");
 const axios = require("axios");
+const { successResponse, errorResponse } = require("../../shared/utils/response.util");
 
 /**
  * Base Facebook Graph API URL
@@ -14,7 +15,7 @@ const GRAPH_URL = "https://graph.facebook.com/v25.0";
 exports.redirectToFacebook = (req, res) => {
   const userId = req.query.userId;
   if (!userId) {
-    return res.status(400).json({ error: "Missing userId" });
+    return errorResponse(res, "Missing userId", 400);
   }
 
   const url = facebookService.getAuthUrl(userId);
@@ -163,13 +164,6 @@ exports.postMessage = async (req, res) => {
     // Extract request body data
     const { pageId, pageAccessToken, message, scheduledTime } = req.body;
 
-    // Validate required parameters
-    if (!pageId || !pageAccessToken || !message)
-      return res.status(400).json({
-        success: false,
-        message: "Missing parameters"
-      });
-
     // Create Facebook page post
     const result = await facebookService.postToPage({
       pageId,
@@ -179,17 +173,14 @@ exports.postMessage = async (req, res) => {
     });
 
     // Return successful response
-    res.json({ success: true, data: result });
+    return successResponse(res, result);
 
   } catch (error) {
 
     // Log posting errors
     console.error("POST ERROR:", error.response?.data || error.message);
 
-    res.status(500).json({
-      success: false,
-      error: error.response?.data || error.message
-    });
+    return errorResponse(res, error.response?.data || error.message, 500);
   }
 };
 
@@ -207,14 +198,9 @@ exports.postPhoto = async (req, res) => {
     // Uploaded file from multer middleware
     const file = req.file;
 
-
-
     // Validate required data
-    if (!pageId || !pageAccessToken || !file) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing pageId, token, or file"
-      });
+    if (!file) {
+      return errorResponse(res, "Missing file", 400);
     }
 
     // Prepare multipart form data
@@ -238,20 +224,14 @@ exports.postPhoto = async (req, res) => {
     );
 
     // Return Facebook response
-    res.json({
-      success: true,
-      data: response.data
-    });
+    return successResponse(res, response.data);
 
   } catch (error) {
 
     // Log upload errors
     console.error("POST PHOTO ERROR:", error.response?.data || error.message);
 
-    res.status(500).json({
-      success: false,
-      error: error.response?.data || error.message
-    });
+    return errorResponse(res, error.response?.data || error.message, 500);
   }
 };
 
@@ -272,11 +252,8 @@ exports.schedulePhotoPost = async (req, res) => {
     const file = req.file;
 
     // Validate required fields
-    if (!file || !pageId || !pageAccessToken || !scheduledTime) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields",
-      });
+    if (!file) {
+      return errorResponse(res, "Missing image file", 400);
     }
 
 
@@ -312,8 +289,7 @@ exports.schedulePhotoPost = async (req, res) => {
     );
 
     // Return success response
-    res.json({
-      success: true,
+    return successResponse(res, {
       imageUrl,
       facebook: fbResponse.data,
     });
@@ -323,10 +299,7 @@ exports.schedulePhotoPost = async (req, res) => {
     // Log scheduling errors
     console.error(error.response?.data || error.message);
 
-    res.status(500).json({
-      success: false,
-      error: error.response?.data || error.message,
-    });
+    return errorResponse(res, error.response?.data || error.message, 500);
   }
 };
 
@@ -349,16 +322,7 @@ exports.createInstagramPost = async (req, res) => {
 
     // Validate image file
     if (!file) {
-      return res.status(400).json({
-        error: "Image file is required"
-      });
-    }
-
-    // Validate Instagram credentials
-    if (!igUserId || !pageAccessToken) {
-      return res.status(400).json({
-        error: "igUserId and pageAccessToken are required",
-      });
+      return errorResponse(res, "Image file is required", 400);
     }
 
     // Create Instagram image post
@@ -370,17 +334,12 @@ exports.createInstagramPost = async (req, res) => {
     });
 
     // Return successful response
-    res.json({
-      success: true,
-      ...result,
-    });
+    return successResponse(res, result);
 
   } catch (error) {
 
     // Handle Instagram posting errors
-    res.status(500).json({
-      error: error.response?.data || error.message,
-    });
+    return errorResponse(res, error.response?.data || error.message, 500);
   }
 };
 
@@ -404,20 +363,9 @@ exports.createInstagramReelPost = async (req, res) => {
     // Uploaded video file
     const file = req.file;
 
-
-
     // Validate uploaded video
     if (!file) {
-      return res.status(400).json({
-        error: "Video file is required",
-      });
-    }
-
-    // Validate Instagram account credentials
-    if (!igUserId || !pageAccessToken) {
-      return res.status(400).json({
-        error: "igUserId and pageAccessToken are required",
-      });
+      return errorResponse(res, "Video file is required", 400);
     }
 
     // Create Instagram Reel
@@ -429,17 +377,12 @@ exports.createInstagramReelPost = async (req, res) => {
     });
 
     // Return successful response
-    return res.json({
-      success: true,
-      ...result,
-    });
+    return successResponse(res, result);
 
   } catch (error) {
 
     // Handle reel upload/publish errors
-    return res.status(500).json({
-      error: error.response?.data || error.message,
-    });
+    return errorResponse(res, error.response?.data || error.message, 500);
   }
 };
 
@@ -456,15 +399,12 @@ exports.refreshToken = async (req, res) => {
 
     const updatedToken = await facebookService.refreshOAuthToken(socialAccountId);
 
-    return res.json({
-      success: true,
+    return successResponse(res, {
       message: "Token refreshed successfully",
       token: updatedToken
     });
   } catch (error) {
     console.error("Refresh Token Error:", error);
-    return res.status(500).json({
-      error: error.message || "Failed to refresh token",
-    });
+    return errorResponse(res, error.message || "Failed to refresh token", 500);
   }
 };
