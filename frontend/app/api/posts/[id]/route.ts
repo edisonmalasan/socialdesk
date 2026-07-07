@@ -4,12 +4,14 @@ import {
   cancelScheduledPostJobs,
   scheduleScheduledPostJobs,
 } from '../scheduled-post-jobs';
-
-const DEV_USER_ID = '070f1c3d-ddd5-48d8-8e1c-6af1cce33164';
+import { getUserIdFromToken } from '@/lib/auth';
 
 type PostRouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: PostRouteContext) {
+  const userId = await getUserIdFromToken();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const { id } = await params;
 
   const { data, error } = await supabase
@@ -47,7 +49,7 @@ export async function GET(_request: Request, { params }: PostRouteContext) {
       )
     `)
     .eq('id', id)
-    .eq('user_id', DEV_USER_ID)
+    .eq('user_id', userId)
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 404 });
@@ -56,6 +58,9 @@ export async function GET(_request: Request, { params }: PostRouteContext) {
 }
 
 export async function PUT(request: Request, { params }: PostRouteContext) {
+  const userId = await getUserIdFromToken();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const { id } = await params;
   const body = await request.json();
   const {
@@ -89,7 +94,7 @@ export async function PUT(request: Request, { params }: PostRouteContext) {
       ...(content_type_id !== undefined && { content_type_id }),
     })
     .eq('id', id)
-    .eq('user_id', DEV_USER_ID)
+    .eq('user_id', userId)
     .select()
     .single();
 
@@ -105,6 +110,9 @@ export async function PUT(request: Request, { params }: PostRouteContext) {
 }
 
 export async function DELETE(_request: Request, { params }: PostRouteContext) {
+  const userId = await getUserIdFromToken();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const { id } = await params;
 
   await cancelScheduledPostJobs(id);
@@ -113,7 +121,7 @@ export async function DELETE(_request: Request, { params }: PostRouteContext) {
     .from('posts')
     .delete()
     .eq('id', id)
-    .eq('user_id', DEV_USER_ID);
+    .eq('user_id', userId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

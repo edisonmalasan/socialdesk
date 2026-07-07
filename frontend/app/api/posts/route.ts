@@ -1,10 +1,11 @@
 import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 import { scheduleScheduledPostJobs } from './scheduled-post-jobs';
-
-const DEV_USER_ID = '070f1c3d-ddd5-48d8-8e1c-6af1cce33164';
+import { getUserIdFromToken } from '@/lib/auth';
 
 export async function GET(request: Request) {
+  const userId = await getUserIdFromToken();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
   const platform = searchParams.get('platform');
@@ -43,7 +44,7 @@ export async function GET(request: Request) {
         )
       )
     `)
-    .eq('user_id', DEV_USER_ID)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (status && status !== 'all') query = query.eq('status', status);
@@ -66,6 +67,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const userId = await getUserIdFromToken();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const body = await request.json();
   const {
     title,
@@ -96,7 +100,7 @@ export async function POST(request: Request) {
   const { data: post, error: postError } = await supabase
     .from('posts')
     .insert({
-      user_id: DEV_USER_ID,
+      user_id: userId,
       content_type_id,
       title,
       body_text,
