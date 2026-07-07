@@ -1,11 +1,13 @@
 import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
-
-const DEV_USER_ID = '070f1c3d-ddd5-48d8-8e1c-6af1cce33164';
+import { getUserIdFromToken } from '@/lib/auth';
 
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export async function GET(request: Request) {
+  const userId = await getUserIdFromToken();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const { searchParams } = new URL(request.url);
   const account_id = searchParams.get('account_id');
   const from = searchParams.get('from');
@@ -16,7 +18,7 @@ export async function GET(request: Request) {
   const { data: accounts, error: accountsError } = await supabase
     .from('social_accounts')
     .select('id')
-    .eq('user_id', DEV_USER_ID)
+    .eq('user_id', userId)
     .eq('is_active', true);
 
   if (accountsError) return NextResponse.json({ error: accountsError.message }, { status: 500 });

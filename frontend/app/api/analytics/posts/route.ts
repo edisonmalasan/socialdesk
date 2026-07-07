@@ -1,7 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
-
-const DEV_USER_ID = '070f1c3d-ddd5-48d8-8e1c-6af1cce33164';
+import { getUserIdFromToken } from '@/lib/auth';
 
 function formatCount(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
@@ -9,6 +8,9 @@ function formatCount(n: number): string {
 }
 
 export async function GET(request: Request) {
+  const userId = await getUserIdFromToken();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const { searchParams } = new URL(request.url);
   const account_id = searchParams.get('account_id');
   const platform   = searchParams.get('platform');
@@ -57,7 +59,7 @@ export async function GET(request: Request) {
       )
     `)
     .eq('social_account_id', account_id)
-    .eq('posts.user_id', DEV_USER_ID);
+    .eq('posts.user_id', userId);
 
   if (platform && platform !== 'all') {
     targetsQuery = targetsQuery.eq('social_accounts.platforms.code', platform);
