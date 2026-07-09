@@ -6,6 +6,7 @@
  */
 exports.getSaasAnalytics = async (req, res) => {
   res.status(501).json({
-    message: "saas-analytics is not implemented yet (admin access enforced)",
+    success: false,
+    error: "saas-analytics is not implemented yet (admin access enforced)",
   });
 };
