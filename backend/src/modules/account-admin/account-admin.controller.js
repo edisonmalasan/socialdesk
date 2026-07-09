@@ -6,6 +6,7 @@
  */
 exports.getAccountAdmin = async (req, res) => {
   res.status(501).json({
-    message: "account-admin is not implemented yet (admin access enforced)",
+    success: false,
+    error: "account-admin is not implemented yet (admin access enforced)",
   });
 };
