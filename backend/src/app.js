@@ -4,6 +4,10 @@ const pinterestRoutes = require("./modules/pinterest/pinterest.routes");
 const youtubeRoutes = require("./modules/youtube/youtube.routes");
 const authRoutes = require("./modules/auth/auth.routes");
 const scheduledPostsRoutes = require("./modules/scheduled-posts/scheduled-posts.routes");
+const usersRoutes = require("./modules/users/users.routes");
+const platformHealthRoutes = require("./modules/platform-health/platform-health.routes");
+const accountAdminRoutes = require("./modules/account-admin/account-admin.routes");
+const saasAnalyticsRoutes = require("./modules/saas-analytics/saas-analytics.routes");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
@@ -28,5 +32,9 @@ app.use("/api/auth/facebook", facebookRoutes);
 app.use("/api/auth/pinterest", pinterestRoutes);
 app.use("/api/auth/youtube", youtubeRoutes);
 app.use("/api/scheduled-posts", scheduledPostsRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/platform-health", platformHealthRoutes);
+app.use("/api/account-admin", accountAdminRoutes);
+app.use("/api/saas-analytics", saasAnalyticsRoutes);
 
 module.exports = app;
