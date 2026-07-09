@@ -64,11 +64,7 @@ test("POST /api/users successfully provisions a new user", async (t) => {
 });
 
 test("PUT /api/users/:id successfully updates user details", async (t) => {
-  t.mock.method(usersRepository, "findById", async () => ({
-    user: { id: "2", email: "old@example.com" },
-    error: null,
-  }));
-  t.mock.method(usersRepository, "update", async (id, data) => ({
+  t.mock.method(usersRepository, "updateById", async (id, data) => ({
     user: { id, email: data.email, role: data.role },
     error: null,
   }));
