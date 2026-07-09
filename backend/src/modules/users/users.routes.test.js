@@ -130,7 +130,7 @@ test("PATCH /api/users/:id/disable returns 404 if user does not exist", async (t
 });
 
 test("DELETE /api/users/:id successfully removes a user", async (t) => {
-  t.mock.method(usersRepository, "delete", async () => ({
+  t.mock.method(usersRepository, "deleteById", async () => ({
     error: null,
   }));
 
