@@ -46,6 +46,8 @@ exports.upsertSocialAccount = async ({
     profile_url: profileUrl,
     avatar_url: avatarUrl,
     metadata,
+    // Reconnecting via OAuth reactivates a previously soft-disconnected account.
+    is_active: true,
     last_synced_at: new Date().toISOString(),
   };
 
