@@ -1,57 +1,39 @@
 const supabase = require("../../infrastructure/database/supabaseClient");
 
 /**
- * Returns all active social accounts for a user.
+ * Columns returned to the client. Mirrors the shape the frontend expects —
+ * a nested `platforms` object — so GET/POST responses stay compatible with the
+ * accounts and analytics pages.
  */
-exports.findAllByUser = async (userId) => {
+const ACCOUNT_SELECT = `
+  id,
+  username,
+  display_name,
+  profile_url,
+  avatar_url,
+  is_active,
+  connected_at,
+  platforms (
+    id,
+    code,
+    name
+  )
+`;
+
+/** Lists a user's active (connected) accounts, newest first. */
+exports.findActiveByUser = async (userId) => {
   const { data, error } = await supabase
     .from("social_accounts")
-    .select(`
-      id,
-      username,
-      display_name,
-      profile_url,
-      avatar_url,
-      is_active,
-      connected_at,
-      platforms (
-        id,
-        code,
-        name
-      )
-    `)
+    .select(ACCOUNT_SELECT)
     .eq("user_id", userId)
     .eq("is_active", true)
     .order("connected_at", { ascending: false });
 
-  if (error) {
-    throw new Error(`Failed to fetch accounts: ${error.message}`);
-  }
-
-  return data;
+  return { accounts: data, error };
 };
 
-/**
- * Finds a platform by its code.
- */
-exports.findPlatformByCode = async (platformCode) => {
-  const { data, error } = await supabase
-    .from("platforms")
-    .select("id")
-    .eq("code", platformCode)
-    .single();
-
-  if (error) {
-    throw new Error(`Platform not found: ${platformCode}`);
-  }
-
-  return data;
-};
-
-/**
- * Inserts a new social account and returns it.
- */
-exports.createAccount = async ({
+/** Inserts a manually-created account (active by default). */
+exports.insertAccount = async ({
   userId,
   platformId,
   externalId,
@@ -68,40 +50,25 @@ exports.createAccount = async ({
       display_name: displayName,
       is_active: true,
     })
-    .select(`
-      id,
-      username,
-      display_name,
-      profile_url,
-      avatar_url,
-      is_active,
-      connected_at,
-      platforms (
-        id,
-        code,
-        name
-      )
-    `)
+    .select(ACCOUNT_SELECT)
     .single();
 
-  if (error) {
-    throw new Error(`Failed to create account: ${error.message}`);
-  }
-
-  return data;
+  return { account: data, error };
 };
 
 /**
- * Soft deletes an account by setting is_active to false.
+ * Updates mutable fields on an account, scoped to its owner. The user_id filter
+ * is the ownership guard: a mismatched id/owner matches no row and returns
+ * account === null, which the controller maps to 404.
  */
-exports.deactivateAccount = async (accountId, userId) => {
-  const { error } = await supabase
+exports.updateForUser = async (id, userId, fields) => {
+  const { data, error } = await supabase
     .from("social_accounts")
-    .update({ is_active: false })
-    .eq("id", accountId)
-    .eq("user_id", userId);
+    .update(fields)
+    .eq("id", id)
+    .eq("user_id", userId)
+    .select(ACCOUNT_SELECT)
+    .maybeSingle();
 
-  if (error) {
-    throw new Error(`Failed to deactivate account: ${error.message}`);
-  }
+  return { account: data, error };
 };
