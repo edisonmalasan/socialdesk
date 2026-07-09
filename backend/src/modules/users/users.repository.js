@@ -20,7 +20,7 @@ exports.findById = async (id) => {
     .from("users")
     .select(PUBLIC_COLUMNS)
     .eq("id", id)
-    .single();
+    .maybeSingle();
 
   return { user: data, error };
 };
