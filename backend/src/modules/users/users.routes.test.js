@@ -80,7 +80,7 @@ test("PUT /api/users/:id successfully updates user details", async (t) => {
 });
 
 test("PUT /api/users/:id returns 404 if user does not exist", async (t) => {
-  t.mock.method(usersRepository, "findById", async () => ({
+  t.mock.method(usersRepository, "updateById", async () => ({
     user: null,
     error: null,
   }));
