@@ -52,7 +52,7 @@ exports.setStatus = async (id, status) => {
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id)
     .select(PUBLIC_COLUMNS)
-    .single();
+    .maybeSingle();
 
   return { user: data, error };
 };
