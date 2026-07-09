@@ -1,11 +1,15 @@
 const usersService = require("./users.service");
+const {
+  successResponse,
+  errorResponse,
+} = require("../../../shared/utils/response.util");
 
 exports.listUsers = async (req, res) => {
   try {
     const users = await usersService.listUsers();
-    res.json(users);
+    return successResponse(res, users);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, error.message || "Internal server error", 500);
   }
 };
 
@@ -18,14 +22,17 @@ exports.createUser = async (req, res) => {
   const { email, password, full_name, role } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ message: "email and password are required" });
+    return errorResponse(res, "email and password are required", 400);
   }
 
   try {
-    const user = await usersService.createUser({ email, password, full_name, role }, req.user.id);
-    res.status(201).json(user);
+    const user = await usersService.createUser(
+      { email, password, full_name, role },
+      req.user.id,
+    );
+    return successResponse(res, user, 201);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, error.message || "Internal server error", 500);
   }
 };
 
@@ -35,10 +42,12 @@ exports.updateUser = async (req, res) => {
 
   try {
     const user = await usersService.updateUser(id, { email, full_name, role });
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
+    if (!user) {
+      return errorResponse(res, "User not found", 404);
+    }
+    return successResponse(res, user);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, error.message || "Internal server error", 500);
   }
 };
 
@@ -47,10 +56,12 @@ exports.disableUser = async (req, res) => {
 
   try {
     const user = await usersService.toggleUserStatus(id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
+    if (!user) {
+      return errorResponse(res, "User not found", 404);
+    }
+    return successResponse(res, user);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, error.message || "Internal server error", 500);
   }
 };
 
@@ -59,8 +70,8 @@ exports.deleteUser = async (req, res) => {
 
   try {
     await usersService.deleteUser(id);
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, error.message || "Internal server error", 500);
   }
 };
