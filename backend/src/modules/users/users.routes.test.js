@@ -27,7 +27,9 @@ test("GET /api/users rejects a non-admin session", async () => {
 
 test("GET /api/users returns the user directory for an admin session", async (t) => {
   t.mock.method(usersRepository, "findAll", async () => ({
-    users: [{ id: "1", email: "admin@example.com", role: "admin", status: "active" }],
+    users: [
+      { id: "1", email: "admin@example.com", role: "admin", status: "active" },
+    ],
     error: null,
   }));
 
@@ -36,8 +38,65 @@ test("GET /api/users returns the user directory for an admin session", async (t)
     .set("Cookie", `auth-token=${tokenFor("admin")}`);
 
   assert.equal(response.status, 200);
-  assert.equal(response.body.length, 1);
-  assert.equal(response.body[0].email, "admin@example.com");
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.data.length, 1);
+  assert.equal(response.body.data[0].email, "admin@example.com");
+});
+
+test("POST /api/users successfully provisions a new user", async (t) => {
+  t.mock.method(usersRepository, "create", async (data) => ({
+    user: { id: "3", email: data.email, role: data.role, status: "active" },
+    error: null,
+  }));
+
+  const response = await supertest(app)
+    .post("/api/users")
+    .set("Cookie", `auth-token=${tokenFor("admin")}`)
+    .send({
+      email: "newuser@example.com",
+      password: "password123",
+      role: "user",
+    });
+
+  assert.equal(response.status, 201);
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.data.email, "newuser@example.com");
+});
+
+test("PUT /api/users/:id successfully updates user details", async (t) => {
+  t.mock.method(usersRepository, "findById", async () => ({
+    user: { id: "2", email: "old@example.com" },
+    error: null,
+  }));
+  t.mock.method(usersRepository, "update", async (id, data) => ({
+    user: { id, email: data.email, role: data.role },
+    error: null,
+  }));
+
+  const response = await supertest(app)
+    .put("/api/users/2")
+    .set("Cookie", `auth-token=${tokenFor("admin")}`)
+    .send({ email: "updated@example.com", role: "user" });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.data.email, "updated@example.com");
+});
+
+test("PUT /api/users/:id returns 404 if user does not exist", async (t) => {
+  t.mock.method(usersRepository, "findById", async () => ({
+    user: null,
+    error: null,
+  }));
+
+  const response = await supertest(app)
+    .put("/api/users/999")
+    .set("Cookie", `auth-token=${tokenFor("admin")}`)
+    .send({ email: "missing@example.com", role: "user" });
+
+  assert.equal(response.status, 404);
+  assert.equal(response.body.success, false);
+  assert.equal(response.body.error, "User not found");
 });
 
 test("PATCH /api/users/:id/disable toggles status for an admin session", async (t) => {
@@ -46,7 +105,7 @@ test("PATCH /api/users/:id/disable toggles status for an admin session", async (
     error: null,
   }));
   t.mock.method(usersRepository, "setStatus", async (id, status) => ({
-    user: { id, status },
+    user: { id, status: "inactive" },
     error: null,
   }));
 
@@ -55,7 +114,35 @@ test("PATCH /api/users/:id/disable toggles status for an admin session", async (
     .set("Cookie", `auth-token=${tokenFor("admin")}`);
 
   assert.equal(response.status, 200);
-  assert.equal(response.body.status, "inactive");
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.data.status, "inactive");
+});
+
+test("PATCH /api/users/:id/disable returns 404 if user does not exist", async (t) => {
+  t.mock.method(usersRepository, "findById", async () => ({
+    user: null,
+    error: null,
+  }));
+
+  const response = await supertest(app)
+    .patch("/api/users/999/disable")
+    .set("Cookie", `auth-token=${tokenFor("admin")}`);
+
+  assert.equal(response.status, 404);
+  assert.equal(response.body.success, false);
+  assert.equal(response.body.error, "User not found");
+});
+
+test("DELETE /api/users/:id successfully removes a user", async (t) => {
+  t.mock.method(usersRepository, "delete", async () => ({
+    error: null,
+  }));
+
+  const response = await supertest(app)
+    .delete("/api/users/2")
+    .set("Cookie", `auth-token=${tokenFor("admin")}`);
+
+  assert.equal(response.status, 204);
 });
 
 test("DELETE /api/users/:id rejects a tampered token", async () => {
