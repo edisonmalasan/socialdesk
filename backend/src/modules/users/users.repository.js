@@ -41,7 +41,7 @@ exports.updateById = async (id, { email, full_name, role }) => {
     .update({ email, full_name, role, updated_at: new Date().toISOString() })
     .eq("id", id)
     .select(PUBLIC_COLUMNS)
-    .single();
+    .maybeSingle();
 
   return { user: data, error };
 };
