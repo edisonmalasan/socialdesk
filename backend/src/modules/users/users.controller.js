@@ -2,7 +2,7 @@ const usersService = require("./users.service");
 const {
   successResponse,
   errorResponse,
-} = require("../../../shared/utils/response.util");
+} = require("../../shared/utils/response.util");
 
 exports.listUsers = async (req, res) => {
   try {
