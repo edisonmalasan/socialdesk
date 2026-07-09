@@ -6,6 +6,7 @@
  */
 exports.getPlatformHealth = async (req, res) => {
   res.status(501).json({
-    message: "platform-health is not implemented yet (admin access enforced)",
+    success: false,
+    error: "platform-health is not implemented yet (admin access enforced)",
   });
 };
