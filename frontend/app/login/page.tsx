@@ -63,7 +63,8 @@ export default function LoginPage() {
 				}),
 			});
 
-			const data = await response.json();
+			const json = await response.json();
+			const data = json.data || json; // Handle { success, data } envelope
 
 			if (!response.ok) {
 				setEmailError("An error occured logging in.");
@@ -73,6 +74,9 @@ export default function LoginPage() {
 			const expires = rememberMe ? 7 : 1;
 			Cookies.set("auth-token", data.token, { expires });
 			Cookies.set("user-role", data.role, { expires });
+			if (data.user?.id) {
+				Cookies.set("user-id", data.user.id.toString(), { expires });
+			}
 
 			router.push("/dashboard");
 		} catch (error) {
