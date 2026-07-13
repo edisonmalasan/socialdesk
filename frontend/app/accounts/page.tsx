@@ -63,9 +63,12 @@ export default function AccountsPage() {
   const [connectedAccounts, setConnectedAccounts] = useState<Connected[]>([]);
 
   useEffect(() => {
-    fetch('/api/accounts')
+    fetch('/api/accounts', { credentials: 'include' })
       .then(res => res.json())
-      .then(data => setConnectedAccounts(data.map(transformAccount)));
+      .then(envelope => {
+        const list = envelope?.data ?? envelope;
+        setConnectedAccounts((Array.isArray(list) ? list : []).map(transformAccount));
+      });
   }, []);
 
   const [connectPlatformId, setConnectPlatformId] = useState<string | null>(null); // null | "selector" | platformId
