@@ -9,6 +9,7 @@ exports.listAccounts = async (req, res) => {
     const accounts = await accountsService.listAccounts(req.user.id);
     return successResponse(res, accounts);
   } catch (error) {
+    console.error("listAccounts error:", error);
     return errorResponse(res, error.message || "Internal server error", 500);
   }
 };
@@ -25,6 +26,7 @@ exports.createAccount = async (req, res) => {
     });
     return successResponse(res, account, 201);
   } catch (error) {
+    console.error("createAccount error:", error);
     // getPlatformId throws "Platform not found for code: ..." for unknown codes.
     if (/platform not found/i.test(error.message || "")) {
       return errorResponse(res, error.message, 400);
@@ -53,6 +55,7 @@ exports.updateAccount = async (req, res) => {
     }
     return successResponse(res, account);
   } catch (error) {
+    console.error("updateAccount error:", error);
     return errorResponse(res, error.message || "Internal server error", 500);
   }
 };
@@ -68,6 +71,7 @@ exports.disconnectAccount = async (req, res) => {
     }
     return successResponse(res, { id: account.id, is_active: account.is_active });
   } catch (error) {
+    console.error("disconnectAccount error:", error);
     return errorResponse(res, error.message || "Internal server error", 500);
   }
 };
