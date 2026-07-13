@@ -10,7 +10,7 @@ exports.listAccounts = async (req, res) => {
     return successResponse(res, accounts);
   } catch (error) {
     console.error("listAccounts error:", error);
-    return errorResponse(res, error.message || "Internal server error", 500);
+    return errorResponse(res, error.message || "Failed to fetch accounts", 500);
   }
 };
 
@@ -31,7 +31,7 @@ exports.createAccount = async (req, res) => {
     if (/platform not found/i.test(error.message || "")) {
       return errorResponse(res, error.message, 400);
     }
-    return errorResponse(res, error.message || "Internal server error", 500);
+    return errorResponse(res, error.message || "Failed to create account", 500);
   }
 };
 
@@ -56,7 +56,7 @@ exports.updateAccount = async (req, res) => {
     return successResponse(res, account);
   } catch (error) {
     console.error("updateAccount error:", error);
-    return errorResponse(res, error.message || "Internal server error", 500);
+    return errorResponse(res, error.message || "Failed to update account", 500);
   }
 };
 
@@ -72,6 +72,6 @@ exports.disconnectAccount = async (req, res) => {
     return successResponse(res, { id: account.id, is_active: account.is_active });
   } catch (error) {
     console.error("disconnectAccount error:", error);
-    return errorResponse(res, error.message || "Internal server error", 500);
+    return errorResponse(res, error.message || "Failed to disconnect account", 500);
   }
 };
