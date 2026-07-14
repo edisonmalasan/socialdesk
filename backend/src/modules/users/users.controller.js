@@ -13,6 +13,19 @@ exports.listUsers = async (req, res) => {
   }
 };
 
+exports.getUserById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await usersService.getUserById(id);
+    if (!user) {
+      return errorResponse(res, "User not found", 404);
+    }
+    return successResponse(res, user);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal server error", 500);
+  }
+};
+
 /**
  * POST /api/users — create a user. req.user is populated by the authenticate
  * middleware; its id is passed to the service and stored as created_by (which

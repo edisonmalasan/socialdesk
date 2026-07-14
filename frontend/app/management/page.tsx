@@ -21,14 +21,42 @@ import {
 
 export default function ManagementPage() {
   
-  // BACKEND NOTE: This mock data should be fetched from the database via a GET request.
-  const [users, setUsers] = useState([
-    { id: "1", name: "Admin 1",      email: "admin1.egetinzz@gmail.com", role: "Admin", status: "Active",   lastActive: "1 minute ago",  business: "eGetinnz PH"  },
-    { id: "2", name: "User 1",       email: "user1.egetinzz@gmail.com",  role: "User",  status: "Active",   lastActive: "2 hours ago",   business: "Fibei Travel" },
-    { id: "3", name: "User 2",       email: "user2.egetinzz@gmail.com",  role: "User",  status: "Inactive", lastActive: "30 days ago",   business: "eGetinnz USA" },
-    { id: "4", name: "Sarah Connor", email: "s.connor@gmail.com",        role: "Admin", status: "Inactive", lastActive: "5 days ago",    business: "Digitimmerse" },
-    { id: "5", name: "John Smith",   email: "john.smith@yahoo.com",      role: "User",  status: "Active",   lastActive: "10 mins ago",  business: "eGetinnz PH"  },
-  ]);
+  type User = {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    status: string;
+    lastActive: string;
+    business: string;
+  };
+
+  const [users, setUsers] = useState<User[]>([]);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch('/api/users', { credentials: 'include' });
+      const envelope = await res.json();
+      const data = envelope?.data ?? envelope;
+      
+      const mappedUsers = (data || []).map((u: any) => ({
+        id: u.id,
+        name: u.full_name,
+        email: u.email,
+        role: u.role === "admin" ? "Admin" : "User",
+        status: u.status === "active" ? "Active" : "Inactive",
+        lastActive: new Date(u.updated_at || u.created_at).toLocaleDateString(),
+        business: "eGetinnz PH" // Mocked for UI consistency
+      }));
+      setUsers(mappedUsers);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const businesses = ["eGetinnz PH", "eGetinnz USA", "Fibei Travel", "Digitimmerse"];
 
@@ -71,46 +99,66 @@ export default function ManagementPage() {
   const [editUserDetails, setEditUserDetails] = useState({ id: "", name: "", email: "", role: "" });
 
   // --- HANDLERS ---
-  const handleDeleteUser = (id: string) => {
-    // BACKEND NOTE: Implement DELETE /api/users/:id
-    setUsers(users.filter(user => user.id !== id));
-    setActionMenuAnchor(null); 
+  const handleDeleteUser = async (id: string) => {
+    try {
+      await fetch(`/api/users/${id}`, { method: 'DELETE', credentials: 'include' });
+      fetchUsers();
+      setActionMenuAnchor(null); 
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleDisableUser = (id: string) => {
-    // BACKEND NOTE: Implement PATCH /api/users/:id/disable
-    setUsers(users.map(u => u.id === id ? { ...u, status: u.status === "Active" ? "Inactive" : "Active" } : u));
-    setActionMenuAnchor(null); 
+  const handleDisableUser = async (id: string) => {
+    try {
+      await fetch(`/api/users/${id}/disable`, { method: 'PATCH', credentials: 'include' });
+      fetchUsers();
+      setActionMenuAnchor(null); 
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleAddUser = (e: React.FormEvent) => {
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    // BACKEND NOTE: Implement POST request here to save the new user to the database.
-    const mockNewId = (users.length + 10).toString();
-    const createdUser = {
-      id: mockNewId,
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-      status: "Active",
-      lastActive: "Just now",
-      business: "eGetinnz PH",
-    };
-    setUsers([createdUser, ...users]);
-    setNewUser({ name: "", email: "", password: "", role: "User" });
-    setIsAddModalOpen(false);
+    try {
+      await fetch('/api/users', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: newUser.name,
+          email: newUser.email,
+          password: newUser.password,
+          role: newUser.role.toLowerCase()
+        }),
+        credentials: 'include' 
+      });
+      fetchUsers();
+      setNewUser({ name: "", email: "", password: "", role: "User" });
+      setIsAddModalOpen(false);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleEditDetailsSubmit = (e: React.FormEvent) => {
+  const handleEditDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // BACKEND NOTE: Implement PUT /api/users/:id payload: { name, email, role }
-    setUsers(users.map(u => u.id === editUserDetails.id ? { 
-      ...u, 
-      name: editUserDetails.name, 
-      email: editUserDetails.email, 
-      role: editUserDetails.role 
-    } : u));
-    setIsEditDetailsModalOpen(false);
+    try {
+      await fetch(`/api/users/${editUserDetails.id}`, { 
+        method: 'PUT', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: editUserDetails.name,
+          email: editUserDetails.email,
+          role: editUserDetails.role.toLowerCase()
+        }),
+        credentials: 'include' 
+      });
+      fetchUsers();
+      setIsEditDetailsModalOpen(false);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // BACKEND NOTE: This mock function should be replaced by pulling the actual external platform URL for the user

@@ -7,6 +7,7 @@ const { authenticate, requireAdmin } = require("../../shared/middleware/auth.mid
 router.use(authenticate, requireAdmin);
 
 router.get("/", usersController.listUsers);
+router.get("/:id", usersController.getUserById);
 router.post("/", usersController.createUser);
 router.put("/:id", usersController.updateUser);
 router.patch("/:id/disable", usersController.disableUser);
