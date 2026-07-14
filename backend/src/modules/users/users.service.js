@@ -7,6 +7,12 @@ exports.listUsers = async () => {
   return users;
 };
 
+exports.getUserById = async (id) => {
+  const { user, error } = await usersRepository.findById(id);
+  if (error) throw new Error(error.message);
+  return user;
+};
+
 /**
  * Creates a user. The password is hashed before persisting (the raw password
  * never reaches the DB), and adminId — the authenticated admin from the JWT —
