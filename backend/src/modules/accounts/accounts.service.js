@@ -1,32 +1,57 @@
 const accountsRepository = require("./accounts.repository");
+const socialConnectionsRepository = require("../social-connections/social-connections.repository");
 
-/**
- * Returns all active accounts for the given user.
- */
 exports.listAccounts = async (userId) => {
-  return accountsRepository.findAllByUser(userId);
+  const { accounts, error } = await accountsRepository.findActiveByUser(userId);
+  if (error) throw new Error(error.message);
+  return accounts;
 };
 
 /**
- * Validates the platform code and creates a new account.
+ * Manually creates (mock-connects) an account for the user. Resolves the
+ * platform code to its internal id first; getPlatformId throws for an unknown
+ * code, which the controller surfaces as a 400.
  */
-exports.connectAccount = async (userId, payload) => {
-  const { platformCode, username, display_name, external_id } = payload;
+exports.createAccount = async (
+  userId,
+  { platformCode, externalId, username, displayName },
+) => {
+  const platformId = await socialConnectionsRepository.getPlatformId(platformCode);
 
-  const platform = await accountsRepository.findPlatformByCode(platformCode);
-
-  return accountsRepository.createAccount({
+  const { account, error } = await accountsRepository.insertAccount({
     userId,
-    platformId: platform.id,
-    externalId: external_id,
+    platformId,
+    externalId,
     username,
-    displayName: display_name,
+    displayName,
   });
+  if (error) throw new Error(error.message);
+  return account;
 };
 
 /**
- * Disconnects an account (soft delete).
+ * Updates status / details on an account the user owns. Returns null when no
+ * matching (owned) account exists, which the controller maps to 404.
  */
-exports.disconnectAccount = async (accountId, userId) => {
-  await accountsRepository.deactivateAccount(accountId, userId);
+exports.updateAccount = async (userId, id, fields) => {
+  const { account, error } = await accountsRepository.updateForUser(
+    id,
+    userId,
+    fields,
+  );
+  if (error) throw new Error(error.message);
+  return account;
+};
+
+/**
+ * Soft-disconnects an account (flips is_active to false) without deleting the
+ * row or its OAuth token, so it can be reconnected later. Returns null when no
+ * matching (owned) account exists.
+ */
+exports.disconnectAccount = async (userId, id) => {
+  const { account, error } = await accountsRepository.updateForUser(id, userId, {
+    is_active: false,
+  });
+  if (error) throw new Error(error.message);
+  return account;
 };

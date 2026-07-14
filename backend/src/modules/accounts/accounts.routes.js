@@ -1,20 +1,20 @@
 const express = require("express");
-
+const router = express.Router();
 const accountsController = require("./accounts.controller");
-const { validate } = require("../../shared/middleware/validate.middleware");
 const { authenticate } = require("../../shared/middleware/auth.middleware");
+const { validate } = require("../../shared/middleware/validate.middleware");
 const {
-  connectAccountSchema,
-  accountIdParamSchema,
+  createAccountSchema,
+  updateAccountSchema,
+  accountIdSchema,
 } = require("./accounts.schema");
 
-const router = express.Router();
-
-// All routes require authentication
+/** Every route is scoped to the authenticated user's own connected accounts. */
 router.use(authenticate);
 
 router.get("/", accountsController.listAccounts);
-router.post("/", validate(connectAccountSchema), accountsController.connectAccount);
-router.delete("/:id", validate(accountIdParamSchema), accountsController.disconnectAccount);
+router.post("/", validate(createAccountSchema), accountsController.createAccount);
+router.patch("/:id", validate(updateAccountSchema), accountsController.updateAccount);
+router.delete("/:id", validate(accountIdSchema), accountsController.disconnectAccount);
 
 module.exports = router;
