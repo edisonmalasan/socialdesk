@@ -6,6 +6,7 @@ const supertest = require("supertest");
 require("../../test-utils/env");
 
 const usersRepository = require("./users.repository");
+const mediaService = require("../media/media.service");
 const app = require("../../app");
 
 function tokenFor(role, id = "1") {
@@ -144,6 +145,74 @@ test("DELETE /api/users/:id successfully removes a user", async (t) => {
 test("DELETE /api/users/:id rejects a tampered token", async () => {
   const response = await supertest(app)
     .delete("/api/users/2")
+    .set("Cookie", "auth-token=garbage");
+
+  assert.equal(response.status, 401);
+});
+
+test("POST /api/users/avatar rejects requests with no session", async () => {
+  const response = await supertest(app)
+    .post("/api/users/avatar")
+    .attach("avatar", Buffer.from("fake-image"), "avatar.png");
+
+  assert.equal(response.status, 401);
+});
+
+test("POST /api/users/avatar uploads the caller's avatar and returns the URL", async (t) => {
+  const uploadMock = t.mock.method(mediaService, "uploadToCloudinary", async () => ({
+    secure_url: "https://res.cloudinary.com/demo/user_avatars/7.png",
+  }));
+  t.mock.method(usersRepository, "updateProfileUrl", async (id, profileUrl) => ({
+    user: { id, profile_url: profileUrl },
+    error: null,
+  }));
+
+  const response = await supertest(app)
+    .post("/api/users/avatar")
+    .set("Cookie", `auth-token=${tokenFor("user", "7")}`)
+    .attach("avatar", Buffer.from("fake-image"), "avatar.png");
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(
+    response.body.data.profileUrl,
+    "https://res.cloudinary.com/demo/user_avatars/7.png",
+  );
+  // The deterministic public id keys the upload to the caller's own id.
+  assert.equal(uploadMock.mock.calls[0].arguments[1].public_id, "7");
+});
+
+test("POST /api/users/avatar returns 400 when no file is attached", async () => {
+  const response = await supertest(app)
+    .post("/api/users/avatar")
+    .set("Cookie", `auth-token=${tokenFor("user", "7")}`);
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.success, false);
+});
+
+test("DELETE /api/users/avatar clears the caller's avatar", async (t) => {
+  const destroyMock = t.mock.method(mediaService, "destroyFromCloudinary", async () => ({
+    result: "ok",
+  }));
+  t.mock.method(usersRepository, "updateProfileUrl", async () => ({
+    user: { id: "7", profile_url: null },
+    error: null,
+  }));
+
+  const response = await supertest(app)
+    .delete("/api/users/avatar")
+    .set("Cookie", `auth-token=${tokenFor("user", "7")}`);
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.data.profileUrl, null);
+  assert.equal(destroyMock.mock.calls[0].arguments[0], "user_avatars/7");
+});
+
+test("DELETE /api/users/avatar rejects a tampered token", async () => {
+  const response = await supertest(app)
+    .delete("/api/users/avatar")
     .set("Cookie", "auth-token=garbage");
 
   assert.equal(response.status, 401);
