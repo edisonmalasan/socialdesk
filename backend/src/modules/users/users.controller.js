@@ -88,3 +88,40 @@ exports.deleteUser = async (req, res) => {
     return errorResponse(res, error.message || "Internal server error", 500);
   }
 };
+
+/**
+ * POST /api/users/avatar — self-service. Uploads the authenticated caller's
+ * avatar (multipart field "avatar") and returns the persisted URL. Validation
+ * failures carry a statusCode (400); everything else falls back to 500.
+ */
+exports.uploadAvatar = async (req, res) => {
+  try {
+    const result = await usersService.uploadAvatar(req.user.id, req.file);
+    return successResponse(res, result);
+  } catch (error) {
+    console.error("Failed to upload avatar:", error);
+    return errorResponse(
+      res,
+      error.message || "Failed to upload avatar",
+      error.statusCode || 500,
+    );
+  }
+};
+
+/**
+ * DELETE /api/users/avatar — self-service. Removes the authenticated caller's
+ * avatar from storage and clears it on their profile.
+ */
+exports.deleteAvatar = async (req, res) => {
+  try {
+    const result = await usersService.removeAvatar(req.user.id);
+    return successResponse(res, result);
+  } catch (error) {
+    console.error("Failed to delete avatar:", error);
+    return errorResponse(
+      res,
+      error.message || "Failed to delete avatar",
+      error.statusCode || 500,
+    );
+  }
+};
