@@ -5,6 +5,10 @@ const mediaService = require("../media/media.service");
 const AVATAR_FOLDER = "user_avatars";
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5 MB
 
+// Single source of truth for the avatar size cap: the route enforces it at the
+// multer layer (rejecting while streaming) and the service re-checks it below.
+exports.MAX_AVATAR_BYTES = MAX_AVATAR_BYTES;
+
 /** Cloudinary public id for a user's avatar — deterministic so re-upload
  *  overwrites the old file and delete can target it without a stored id. */
 const avatarPublicId = (userId) => `${AVATAR_FOLDER}/${userId}`;
