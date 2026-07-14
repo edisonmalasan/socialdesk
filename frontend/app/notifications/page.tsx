@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -12,43 +12,47 @@ import {
   BellRing
 } from "lucide-react";
 
-// Define the notification type
+// Define the notification type based on DB schema
 type Notification = {
   id: number;
-  type: "success" | "alert" | "social" | "info";
+  type: string;
   title: string;
   message: string;
-  time: string;
-  date: string;
-  unread: boolean;
+  created_at: string;
+  is_read: boolean;
 };
 
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState("All");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [total, setTotal] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const limit = 20;
 
-  // BACKEND NOTE: Fetch this from GET /api/notifications (implement pagination e.g., ?page=1&limit=20)
-  const [notifications, setNotifications] = useState<Notification[]>([
-    { id: 1, type: "success", title: "Post Published", message: "Your post 'Spring Sale' was published successfully to Facebook and Instagram.", time: "2 mins ago", date: "Today", unread: true },
-    { id: 2, type: "alert", title: "Action Required", message: "Facebook token is expiring in 2 days. Please navigate to Accounts to reconnect.", time: "1 hour ago", date: "Today", unread: true },
-    { id: 3, type: "social", title: "New Comment", message: "Sarah Jane commented on your Instagram post: 'Love this! 😍'", time: "3 hours ago", date: "Today", unread: false },
-    { id: 4, type: "info", title: "Weekly Report Ready", message: "Your analytics report for Feb 11 - Feb 17 is now available for download.", time: "1 day ago", date: "Yesterday", unread: false },
-    { id: 5, type: "social", title: "Post Shared", message: "Your post 'Top 10 Destinations' was shared 45 times on Pinterest.", time: "1 day ago", date: "Yesterday", unread: false },
-    { id: 6, type: "alert", title: "Failed to Publish", message: "Twitter API rate limit exceeded. Scheduled post 'Morning Motivation' failed.", time: "2 days ago", date: "Feb 16, 2026", unread: false },
-    { id: 7, type: "success", title: "Account Connected", message: "TikTok account @eGetinnz successfully linked to SocialDesk.", time: "3 days ago", date: "Feb 15, 2026", unread: false },
-  ]);
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/notifications?type=${activeTab}&page=${page}&limit=${limit}`, { credentials: 'include' });
+      const envelope = await res.json();
+      const data = envelope?.data ?? envelope;
+      setNotifications(data.notifications || []);
+      setTotal(data.total || 0);
+      setUnreadCount(data.unreadCount || 0);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [activeTab, page]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
 
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [menuOpenDir, setMenuOpenDir] = useState<"down" | "up">("down");
 
-  // Derived state
-  const unreadCount = notifications.filter(n => n.unread).length;
-
-  const filteredNotifications = notifications.filter(n => {
-    if (activeTab === "Unread") return n.unread;
-    if (activeTab === "Alerts") return n.type === "alert";
-    if (activeTab === "Social") return n.type === "social";
-    return true; // "All"
-  });
+  // Fetching handles filtering via the API, so we don't filter client-side anymore
+  const filteredNotifications = notifications;
 
   const tabs = ["All", "Unread", "Alerts", "Social"];
 
@@ -63,21 +67,21 @@ export default function NotificationsPage() {
     }
   };
 
-  // BACKEND NOTE: PUT /api/notifications/mark-all-read
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, unread: false })));
+  const markAllAsRead = async () => {
+    await fetch('/api/notifications/mark-all-read', { method: 'PUT', credentials: 'include' });
+    fetchNotifications();
   };
 
-  // BACKEND NOTE: PUT /api/notifications/:id/read
-  const markAsRead = (id: number) => {
-    setNotifications(notifications.map(n => n.id === id ? { ...n, unread: false } : n));
+  const markAsRead = async (id: number) => {
+    await fetch(`/api/notifications/${id}/read`, { method: 'PUT', credentials: 'include' });
     setOpenMenuId(null);
+    fetchNotifications();
   };
 
-  // BACKEND NOTE: DELETE /api/notifications/:id
-  const deleteNotification = (id: number) => {
-    setNotifications(notifications.filter(n => n.id !== id));
+  const deleteNotification = async (id: number) => {
+    await fetch(`/api/notifications/${id}`, { method: 'DELETE', credentials: 'include' });
     setOpenMenuId(null);
+    fetchNotifications();
   };
 
   return (
@@ -109,7 +113,10 @@ export default function NotificationsPage() {
           {tabs.map((tab) => (
             <button 
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab);
+                setPage(1);
+              }}
               className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 flex items-center gap-2 ${
                 activeTab === tab 
                   ? "border-primary text-gray-900" 
@@ -142,12 +149,12 @@ export default function NotificationsPage() {
                 <div 
                   key={notification.id} 
                   className={`p-4 sm:p-6 flex items-start gap-4 transition-colors relative group ${
-                    notification.unread ? 'bg-blue-50/20 hover:bg-blue-50/40' : 'hover:bg-gray-50/80'
+                    !notification.is_read ? 'bg-blue-50/20 hover:bg-blue-50/40' : 'hover:bg-gray-50/80'
                   }`}
                 >
                   {/* Icon */}
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                    notification.unread ? 'bg-white shadow-sm' : 'bg-gray-100'
+                    !notification.is_read ? 'bg-white shadow-sm' : 'bg-gray-100'
                   }`}>
                     {getNotificationIcon(notification.type)}
                   </div>
@@ -155,20 +162,20 @@ export default function NotificationsPage() {
                   {/* Content */}
                   <div className="flex-1 min-w-0 pr-10">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className={`text-base leading-tight ${notification.unread ? 'font-bold text-gray-900' : 'font-semibold text-gray-800'}`}>
+                      <p className={`text-base leading-tight ${!notification.is_read ? 'font-bold text-gray-900' : 'font-semibold text-gray-800'}`}>
                         {notification.title}
                       </p>
-                      {notification.unread && (
+                      {!notification.is_read && (
                         <span className="w-2 h-2 rounded-full bg-primary shrink-0"></span>
                       )}
                     </div>
-                    <p className={`text-sm mb-2 max-w-3xl ${notification.unread ? 'text-gray-700 font-medium' : 'text-gray-500'}`}>
+                    <p className={`text-sm mb-2 max-w-3xl ${!notification.is_read ? 'text-gray-700 font-medium' : 'text-gray-500'}`}>
                       {notification.message}
                     </p>
                     <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
-                      <span>{notification.time}</span>
+                      <span>{new Date(notification.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                       <span>•</span>
-                      <span>{notification.date}</span>
+                      <span>{new Date(notification.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
 
@@ -189,7 +196,7 @@ export default function NotificationsPage() {
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setOpenMenuId(null)}></div>
                         <div className={`absolute right-0 w-40 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden ${menuOpenDir === "up" ? "bottom-full mb-1" : "mt-1"}`}>
-                          {notification.unread && (
+                          {!notification.is_read && (
                             <button 
                               onClick={() => markAsRead(notification.id)}
                               className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -216,11 +223,22 @@ export default function NotificationsPage() {
         {/* Pagination Footer */}
         {filteredNotifications.length > 0 && (
           <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
-            <span>Showing <span className="font-bold text-gray-900">{filteredNotifications.length}</span> results</span>
-            {/* BACKEND NOTE: Hook up actual pagination controls here */}
+            <span>Showing <span className="font-bold text-gray-900">{filteredNotifications.length}</span> of <span className="font-bold text-gray-900">{total}</span> results</span>
             <div className="flex gap-1">
-              <button className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 transition-colors cursor-not-allowed opacity-50" disabled>Previous</button>
-              <button className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 transition-colors">Next</button>
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))} 
+                disabled={page === 1}
+                className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button 
+                onClick={() => setPage(p => p + 1)} 
+                disabled={page * limit >= total}
+                className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
             </div>
           </div>
         )}
