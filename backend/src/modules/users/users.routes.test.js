@@ -191,6 +191,18 @@ test("POST /api/users/avatar returns 400 when no file is attached", async () => 
   assert.equal(response.body.success, false);
 });
 
+test("POST /api/users/avatar rejects a file over the size limit", async () => {
+  const tooBig = Buffer.alloc(6 * 1024 * 1024, 1); // 6 MB > 5 MB cap
+
+  const response = await supertest(app)
+    .post("/api/users/avatar")
+    .set("Cookie", `auth-token=${tokenFor("user", "7")}`)
+    .attach("avatar", tooBig, "big.png");
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.success, false);
+});
+
 test("DELETE /api/users/avatar clears the caller's avatar", async (t) => {
   const destroyMock = t.mock.method(mediaService, "destroyFromCloudinary", async () => ({
     result: "ok",
