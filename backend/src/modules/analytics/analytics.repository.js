@@ -155,3 +155,57 @@ exports.getTopPosts = async ({ userId, from, to, limit }) => {
 
   return data;
 };
+
+/**
+ * Upserts a daily/weekly/monthly account analytics snapshot.
+ */
+exports.upsertAccountSnapshot = async ({ accountId, snapshotDate, periodType, metrics }) => {
+  const { error } = await supabase
+    .from("account_analytics")
+    .upsert({
+      social_account_id: accountId,
+      snapshot_date: snapshotDate,
+      period_type: periodType,
+      followers_count: metrics.followers_count || 0,
+      following_count: metrics.following_count || 0,
+      total_posts: metrics.total_posts || 0,
+      total_likes: metrics.total_likes || 0,
+      total_comments: metrics.total_comments || 0,
+      total_shares: metrics.total_shares || 0,
+      total_views: metrics.total_views || 0,
+      total_reach: metrics.total_reach || 0,
+      impressions: metrics.impressions || 0,
+      engagement_rate: metrics.engagement_rate || 0,
+    }, {
+      onConflict: 'social_account_id, snapshot_date, period_type'
+    });
+
+  if (error) {
+    throw new Error(`Failed to upsert account snapshot: ${error.message}`);
+  }
+};
+
+/**
+ * Upserts engagement summary for a specific post target.
+ */
+exports.upsertPostEngagement = async ({ postTargetId, metrics }) => {
+  const { error } = await supabase
+    .from("post_engagement_summary")
+    .upsert({
+      post_target_id: postTargetId,
+      likes: metrics.likes || 0,
+      comments: metrics.comments || 0,
+      shares: metrics.shares || 0,
+      views: metrics.views || 0,
+      saves: metrics.saves || 0,
+      reach: metrics.reach || 0,
+      engagement_score: metrics.engagement_score || 0,
+      last_updated_at: new Date().toISOString(),
+    }, {
+      onConflict: 'post_target_id'
+    });
+
+  if (error) {
+    throw new Error(`Failed to upsert post engagement: ${error.message}`);
+  }
+};
