@@ -121,3 +121,51 @@ exports.refreshOAuthToken = async (socialAccountId) => {
 
   return updatedToken;
 };
+
+/**
+ * MOCK: Fetches YouTube channel analytics.
+ * In a real scenario, this queries the YouTube Analytics API.
+ */
+exports.getChannelAnalytics = async (channelId, tokens) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        followers_count: Math.floor(Math.random() * 5000) + 500,
+        following_count: 0,
+        total_posts: Math.floor(Math.random() * 100) + 10,
+        total_likes: Math.floor(Math.random() * 20000) + 2000,
+        total_comments: Math.floor(Math.random() * 5000) + 500,
+        total_shares: Math.floor(Math.random() * 2000) + 200,
+        total_views: Math.floor(Math.random() * 500000) + 50000,
+        total_reach: Math.floor(Math.random() * 300000) + 30000,
+        impressions: Math.floor(Math.random() * 1000000) + 100000,
+        engagement_rate: (Math.random() * 8 + 2).toFixed(2),
+      });
+    }, 100);
+  });
+};
+
+/**
+ * MOCK: Fetches YouTube video analytics.
+ */
+exports.getVideoAnalytics = async (videoId, tokens) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const likes = Math.floor(Math.random() * 1000) + 50;
+      const comments = Math.floor(Math.random() * 200) + 10;
+      const shares = Math.floor(Math.random() * 100) + 5;
+      const views = Math.floor(Math.random() * 10000) + 1000;
+      
+      resolve({
+        likes,
+        comments,
+        shares,
+        views,
+        saves: Math.floor(Math.random() * 50),
+        reach: views,
+        engagement_score: likes + comments * 3 + shares * 5,
+      });
+    }, 50);
+  });
+};
+

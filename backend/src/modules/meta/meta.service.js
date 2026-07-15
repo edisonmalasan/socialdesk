@@ -523,3 +523,48 @@ exports.publishInstagramScheduledReel = async ({
       : null,
   };
 };
+
+/**
+ * MOCK: Fetches account analytics from Meta (Facebook/Instagram).
+ * In a real scenario, this would query the Graph API for Insights.
+ */
+exports.getAccountAnalytics = async (externalId, accessToken) => {
+  // Simulate API delay
+  await sleep(100);
+
+  return {
+    followers_count: Math.floor(Math.random() * 10000) + 1000,
+    following_count: Math.floor(Math.random() * 500) + 50,
+    total_posts: Math.floor(Math.random() * 200) + 20,
+    total_likes: Math.floor(Math.random() * 50000) + 5000,
+    total_comments: Math.floor(Math.random() * 10000) + 1000,
+    total_shares: Math.floor(Math.random() * 5000) + 500,
+    total_views: Math.floor(Math.random() * 100000) + 10000,
+    total_reach: Math.floor(Math.random() * 80000) + 8000,
+    impressions: Math.floor(Math.random() * 150000) + 15000,
+    engagement_rate: (Math.random() * 5 + 1).toFixed(2),
+  };
+};
+
+/**
+ * MOCK: Fetches post-level analytics from Meta.
+ */
+exports.getPostAnalytics = async (externalPostId, accessToken) => {
+  await sleep(50);
+
+  const likes = Math.floor(Math.random() * 500) + 10;
+  const comments = Math.floor(Math.random() * 100) + 2;
+  const shares = Math.floor(Math.random() * 50) + 1;
+  const views = Math.floor(Math.random() * 2000) + 100;
+  
+  return {
+    likes,
+    comments,
+    shares,
+    views,
+    saves: Math.floor(Math.random() * 20),
+    reach: views,
+    engagement_score: likes + comments * 2 + shares * 3,
+  };
+};
+
