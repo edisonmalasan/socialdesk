@@ -61,3 +61,19 @@ exports.deleteById = async (id) => {
   const { error } = await supabase.from("users").delete().eq("id", id);
   return { error };
 };
+
+/**
+ * Sets (or clears, when profileUrl is null) the caller's own avatar URL. Scoped
+ * to a single id and returns only id + profile_url; used by the self-service
+ * avatar endpoints, not the admin directory routes.
+ */
+exports.updateProfileUrl = async (id, profileUrl) => {
+  const { data, error } = await supabase
+    .from("users")
+    .update({ profile_url: profileUrl, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select("id, profile_url")
+    .maybeSingle();
+
+  return { user: data, error };
+};
