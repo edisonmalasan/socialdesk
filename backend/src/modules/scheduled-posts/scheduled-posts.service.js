@@ -2,6 +2,7 @@ const scheduledPostsRepository = require("./scheduled-posts.repository");
 const socialConnectionsService = require("../social-connections/social-connections.service");
 const metaService = require("../meta/meta.service");
 const pinterestService = require("../pinterest/pinterest.service");
+const notificationsService = require("../notifications/notifications.service");
 
 const DEFAULT_BATCH_SIZE = 10;
 const TERMINAL_TARGET_STATUSES = [
@@ -185,12 +186,32 @@ const processTarget = async ({ target, markFailedOnError = true }) => {
       platformPostUrl: result.platformPostUrl,
     });
 
+    // Emit publish-success notification (fire-and-forget; errors are swallowed inside)
+    await notificationsService.emitPublishSuccess({
+      userId: post.user_id,
+      postTitle: post.title,
+      platform: connection.platformCode,
+    });
+
     return { published: true };
   } catch (error) {
+    const errorMessage = getProviderErrorMessage(error);
+
     if (markFailedOnError) {
       await scheduledPostsRepository.markTargetFailed({
         postTargetId: target.id,
-        errorMessage: getProviderErrorMessage(error),
+        errorMessage,
+      });
+
+      // Emit publish-failure notification (fire-and-forget; errors are swallowed inside)
+      const connection = await socialConnectionsService
+        .getPublishingConnection(target.social_account_id)
+        .catch(() => null);
+      await notificationsService.emitPublishFailure({
+        userId: post.user_id,
+        postTitle: post.title,
+        platform: connection?.platformCode,
+        reason: errorMessage,
       });
     }
 

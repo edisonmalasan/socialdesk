@@ -1,5 +1,6 @@
 const accountsRepository = require("./accounts.repository");
 const socialConnectionsRepository = require("../social-connections/social-connections.repository");
+const notificationsService = require("../notifications/notifications.service");
 
 exports.listAccounts = async (userId) => {
   const { accounts, error } = await accountsRepository.findActiveByUser(userId);
@@ -26,6 +27,14 @@ exports.createAccount = async (
     displayName,
   });
   if (error) throw new Error(error.message);
+
+  // Emit account-connected notification (fire-and-forget)
+  await notificationsService.emitAccountConnected({
+    userId,
+    platform: platformCode,
+    username: username || displayName,
+  });
+
   return account;
 };
 
@@ -53,5 +62,15 @@ exports.disconnectAccount = async (userId, id) => {
     is_active: false,
   });
   if (error) throw new Error(error.message);
+
+  // Emit account-disconnected notification (fire-and-forget)
+  if (account) {
+    await notificationsService.emitAccountDisconnected({
+      userId,
+      platform: account.platforms?.code || account.platform_code,
+      username: account.username || account.display_name,
+    });
+  }
+
   return account;
 };
