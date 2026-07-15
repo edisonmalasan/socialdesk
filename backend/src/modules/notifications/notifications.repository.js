@@ -1,5 +1,22 @@
 const supabase = require("../../infrastructure/database/supabaseClient");
 
+/**
+ * Inserts a new notification row and returns the created record.
+ */
+exports.create = async ({ userId, type, title, message }) => {
+  const { data, error } = await supabase
+    .from("notifications")
+    .insert({ user_id: userId, type, title, message })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create notification: ${error.message}`);
+  }
+
+  return data;
+};
+
 exports.findAllByUser = async (userId, { type, page = 1, limit = 20 } = {}) => {
   const offset = (page - 1) * limit;
 
