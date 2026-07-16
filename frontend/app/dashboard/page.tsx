@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-import { JSX, useState } from "react";
+import { JSX, useState, useEffect } from "react";
 
 // ── SVG Icons ─────────────────────────────────────────────────────────────────
 const ICONS: Record<string, { bg: string; path: JSX.Element }> = {
@@ -136,68 +136,69 @@ function ChartIcon() {
   );
 }
 
-// ── Data ──────────────────────────────────────────────────────────────────────
-const ACC_PERF = [
-  { name: "eGetinnz PH",  color: "#22c55e", pairs: [{ plt: "Facebook", val: "3.6K", delta: "3.1%", up: false }, { plt: "Instagram", val: "15.6K", delta: "5.2%", up: true  }, { plt: "Pinterest", val: "2.1K", delta: "1.8%", up: true  }] },
-  { name: "eGetinnz USA", color: "#22c55e", pairs: [{ plt: "Facebook", val: "3.6K", delta: "6.1%", up: true  }, { plt: "Pinterest", val: "9K",    delta: "1.2%", up: false }, { plt: "Instagram", val: "4.2K", delta: "2.4%", up: true  }] },
-  { name: "Fibei Travel", color: "#60a5fa", pairs: [{ plt: "Pinterest", val: "1.5K", delta: "2.2%", up: true  }, { plt: "Instagram", val: "876",   delta: "4.7%", up: false }, { plt: "Facebook",  val: "2.3K", delta: "1.1%", up: true  }] },
-  { name: "Digitimmerse", color: "#818cf8", pairs: [{ plt: "X",        val: "999",  delta: "5%",   up: false  }, { plt: "YouTube",   val: "1.1K",  delta: "0.2%", up: true  }, { plt: "Tiktok",    val: "3.4K", delta: "3.9%", up: true  }] },
-];
+// ── Interfaces ────────────────────────────────────────────────────────────────
+export interface Pair {
+  plt: string;
+  val: string;
+  delta: string;
+  up: boolean;
+}
 
-const SCHED_POSTS = [
-  { title: "Enjoy your vacation here!",   account: "eGetinnz PH",  aColor: "#22c55e", date: "Mar 1, 2026 · 10:00AM",  platform: "Facebook"  },
-  { title: "Book your reservation now.",  account: "eGetinnz USA", aColor: "#22c55e", date: "Mar 5, 2026 · 10:00AM",  platform: "Instagram" },
-  { title: "Get your hotel with UI.",     account: "Fibei Travel", aColor: "#60a5fa", date: "Mar 10, 2026 · 10:00AM", platform: "Pinterest" },
-  { title: "Enjoy your summer vacation!", account: "Digitimmerse", aColor: "#818cf8", date: "Apr 1, 2026 · 10:00AM",  platform: "YouTube"   },
-];
+export interface AccountPerformance {
+  name: string;
+  color: string;
+  pairs: Pair[];
+}
 
-const CONNECTED = [
-  { platform: "Facebook",  name: "Facebook",  handle: "Egetinnz Page"  },
-  { platform: "Instagram", name: "Instagram", handle: "@egetinnz_usa"  },
-  { platform: "YouTube",   name: "YouTube",   handle: "@egetinnz"      },
-  { platform: "Tiktok",    name: "Tiktok",    handle: "Fibei Travel"   },
-  { platform: "Pinterest", name: "Pinterest", handle: "@Digitimmerse"  },
-  { platform: "X",         name: "X",         handle: "@fibei_travel"  },
-];
+export interface ScheduledPost {
+  title: string;
+  account: string;
+  aColor: string;
+  date: string;
+  platform: string;
+}
 
-const SUMMARY_PAGES = [
-  { name: "Egetinnz PH",   plt: "Facebook",  engagement: "500", third: "10,000", thirdLabel: "Reach",  posts: "120", avgLikes: "42", engRate: 5  },
-  { name: "@Digitimmerse", plt: "Tiktok",    engagement: "500", third: "10,000", thirdLabel: "Views",  posts: "120", avgLikes: "38", engRate: 4  },
-];
+export interface ConnectedAccount {
+  platform: string;
+  name: string;
+  handle: string;
+}
 
-const ALL_SUMMARY_PAGES = [
-  { name: "Egetinnz PH",   plt: "Facebook",  engagement: "500", third: "10,000", thirdLabel: "Reach",  posts: "120", avgLikes: "42", engRate: 5  },
-  { name: "Egetinnz USA",  plt: "Instagram", engagement: "320", third: "8,500",  thirdLabel: "Reach",  posts: "98",  avgLikes: "35", engRate: 3  },
-  { name: "Fibei Travel",  plt: "Pinterest", engagement: "410", third: "12,400", thirdLabel: "Reach",  posts: "75",  avgLikes: "28", engRate: 6  },
-  { name: "@Digitimmerse", plt: "Tiktok",    engagement: "500", third: "10,000", thirdLabel: "Views",  posts: "120", avgLikes: "38", engRate: 4  },
-  { name: "@egetinnz",     plt: "YouTube",   engagement: "290", third: "6,200",  thirdLabel: "Views",  posts: "44",  avgLikes: "55", engRate: 7  },
-  { name: "@fibei_travel", plt: "X",         engagement: "180", third: "3,800",  thirdLabel: "Reach",  posts: "60",  avgLikes: "22", engRate: 2  },
-];
+export interface SummaryPage {
+  name: string;
+  plt: string;
+  engagement: string;
+  third: string;
+  thirdLabel: string;
+  posts: string;
+  avgLikes: string;
+  engRate: number;
+}
 
-// ── Modal data ────────────────────────────────────────────────────────────────
-const FOLLOWERS_DATA = [
-  { plt: "Facebook", val: "1,654" }, { plt: "Instagram", val: "2,014" },
-  { plt: "Tiktok",   val: "1,478" }, { plt: "YouTube",   val: "895"   },
-  { plt: "Pinterest",val: "1,000" }, { plt: "X",         val: "811"   },
-];
-const POSTED_DATA = [
-  { plt: "Facebook", val: 24 }, { plt: "Instagram", val: 10 },
-  { plt: "Tiktok",   val: 19 }, { plt: "YouTube",   val: 26 },
-  { plt: "Pinterest",val: 24 }, { plt: "X",         val: 17 },
-];
-const SCHEDULED_MODAL = [
-  { title: "Enjoy your vacation here!",      date: "Mar 1, 2026 - 10:00 AM",  plt: "Facebook"  },
-  { title: "Book your reservation with us!", date: "Mar 5, 2026 - 12:00 PM",  plt: "Instagram" },
-  { title: "Get your hotel with IU!",        date: "Mar 10, 2026 - 11:00 AM", plt: "Instagram" },
-  { title: "Enjoy your summer vacation!",    date: "Apr 20, 2026 - 09:00 PM", plt: "Pinterest" },
-];
-const ENGAGEMENT_DATA = [
-  { plt: "Facebook",  post: "Come and book with us!",        likes: 120, comments: 30, shares: 15, total: 165 },
-  { plt: "Instagram", post: "Book your hotel here with us",  likes: 120, comments: 30, shares: 15, total: 165 },
-  { plt: "Pinterest", post: "Get a chance to travel here",   likes: 120, comments: 30, shares: 15, total: 165 },
-  { plt: "YouTube",   post: "Summer season is here!",        likes: 120, comments: 30, shares: 15, total: 165 },
-  { plt: "Tiktok",    post: "Relax and vacation is here!",   likes: 120, comments: 30, shares: 15, total: 165 },
-];
+export interface EngagementData {
+  plt: string;
+  post: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  total: number;
+}
+
+export interface DashboardData {
+  kpis: {
+    total_followers: string;
+    total_posts: string;
+    total_scheduled: number;
+    total_engagement: string;
+    followers_data: { plt: string; val: string }[];
+    posted_data: { plt: string; val: number }[];
+  };
+  account_performance: AccountPerformance[];
+  scheduled_posts: ScheduledPost[];
+  connected_accounts: ConnectedAccount[];
+  summary_pages: SummaryPage[];
+  engagement_data: EngagementData[];
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function CloseBtn({ onClick }: { onClick: () => void }) {
@@ -231,16 +232,51 @@ function SmBtn({ children, onClick }: { children: React.ReactNode; onClick?: () 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Home() {
   const [modal, setModal] = useState<"followers"|"posted"|"scheduled"|"engagement"|null>(null);
-  const [accModal, setAccModal] = useState<typeof ACC_PERF[0] | null>(null);
-  const [summaryModal, setSummaryModal] = useState<typeof SUMMARY_PAGES[0] | null>(null);
+  const [accModal, setAccModal] = useState<AccountPerformance | null>(null);
+  const [summaryModal, setSummaryModal] = useState<SummaryPage | null>(null);
   const [viewAllSummary, setViewAllSummary] = useState(false);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/dashboard/overview")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load dashboard overview");
+        return res.json();
+      })
+      .then((json) => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
 
   const handleViewSchedule = () => {
     setModal(null);
     router.push("/schedule?highlight=scheduled-posts");
   };
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", fontFamily: "inherit" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ border: "4px solid #f3f3f3", borderTop: "4px solid #1e3a5f", borderRadius: "50%", width: 40, height: 40, animation: "spin 1s linear infinite", margin: "0 auto 12px" }} />
+          <p style={{ color: "#64748b", fontSize: 15, fontWeight: 500 }}>Loading Dashboard...</p>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ fontFamily: "'DM Sans','Inter',sans-serif", color: "#1a202c", fontSize: 15 }}>
@@ -254,7 +290,7 @@ export default function Home() {
               <h2 style={{ color: "#1e3a5f", fontSize: 24, fontWeight: 700, margin: "0 0 6px" }}>Total Followers</h2>
               <p style={{ color: "#64748b", fontSize: 13, margin: "0 0 18px" }}>Overview for <strong style={{ color: "#1a202c" }}>Egetinnz</strong> total followers performance.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {FOLLOWERS_DATA.map(r => (
+                {(data?.kpis?.followers_data || []).map(r => (
                   <div key={r.plt} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc", borderRadius: 10, padding: "10px 14px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Icon name={r.plt} size={28} /><span style={{ color: "#1a202c", fontWeight: 500, fontSize: 15 }}>{r.plt}</span></div>
                     <span style={{ color: "#1a202c", fontWeight: 700, fontSize: 19 }}>{r.val}</span>
@@ -262,7 +298,7 @@ export default function Home() {
                 ))}
               </div>
               <div style={{ borderTop: "1px solid #e2e8f0", margin: "16px 0 14px", paddingTop: 12, textAlign: "center" }}>
-                <span style={{ color: "#1a202c", fontWeight: 700, fontSize: 16 }}>Total: 7,852 Followers</span>
+                <span style={{ color: "#1a202c", fontWeight: 700, fontSize: 16 }}>Total: {data?.kpis?.total_followers || "0"} Followers</span>
               </div>
               <div style={{ textAlign: "center" }}><CloseBtn onClick={() => setModal(null)} /></div>
             </div>
@@ -278,7 +314,7 @@ export default function Home() {
             <div style={{ padding: "22px 26px 24px" }}>
               <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 20px", color: "#1e3a5f" }}>Total Posted Content</h2>
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-                {POSTED_DATA.map(r => (
+                {(data?.kpis?.posted_data || []).map(r => (
                   <div key={r.plt} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}><Icon name={r.plt} size={30} /><span style={{ fontSize: 16, fontWeight: 500 }}>{r.plt}</span></div>
                     <span style={{ fontSize: 26, fontWeight: 700 }}>{r.val}</span>
@@ -286,7 +322,7 @@ export default function Home() {
                 ))}
               </div>
               <div style={{ borderTop: "1px solid #e8edf3", margin: "18px 0 14px" }} />
-              <p style={{ fontSize: 17, fontWeight: 700, color: "#2563eb", margin: "0 0 16px", textAlign: "center" }}>Total: 120 Posts</p>
+              <p style={{ fontSize: 17, fontWeight: 700, color: "#2563eb", margin: "0 0 16px", textAlign: "center" }}>Total: {data?.kpis?.total_posts || "0"} Posts</p>
               <div style={{ textAlign: "center" }}><CloseBtn onClick={() => setModal(null)} /></div>
             </div>
           </div>
@@ -311,12 +347,12 @@ export default function Home() {
                   <tr><td colSpan={5} style={{ padding: "8px 0" }} /></tr>
                 </thead>
                 <tbody>
-                  {SCHEDULED_MODAL.map((p, i) => (
+                  {(data?.scheduled_posts || []).map((p, i) => (
                     <tr key={i} style={{ background: "#f8fafc", borderBottom: "4px solid #fff" }}>
                       <td style={{ padding: "14px 16px", fontSize: 15 }}>{p.title}</td>
                       <td style={{ padding: "14px 16px", fontSize: 13, color: "#64748b", whiteSpace: "nowrap" }}>{p.date}</td>
                       <td style={{ padding: "12px 14px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon name={p.plt} size={22} /><span style={{ fontSize: 13 }}>{p.plt}</span></div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon name={p.platform} size={22} /><span style={{ fontSize: 13 }}>{p.platform}</span></div>
                       </td>
                       <td style={{ padding: "12px 14px" }}><span style={{ color: "#16a34a", fontWeight: 600, fontSize: 14 }}>Scheduled</span></td>
                       <td style={{ padding: "12px 14px" }}>
@@ -360,7 +396,7 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ENGAGEMENT_DATA.map((r, i) => (
+                    {(data?.engagement_data || []).map((r, i) => (
                       <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#fafbfc", borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: "13px 14px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -407,7 +443,7 @@ export default function Home() {
                 </div>
               </div>
               <div style={{ borderTop: "1px solid #dde3ec", margin: "22px 0 16px", paddingTop: 16, textAlign: "center" }}>
-                <p style={{ fontSize: 16, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>Total: 8 Scheduled Posts</p>
+                <p style={{ fontSize: 16, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>Total Engagement: {data?.kpis?.total_engagement || "0"}</p>
               </div>
               <div style={{ textAlign: "center" }}><CloseBtn onClick={() => setModal(null)} /></div>
             </div>
@@ -493,7 +529,7 @@ export default function Home() {
                       </tr>
                     </thead>
                     <tbody>
-                      {ALL_SUMMARY_PAGES.map((pg, i) => (
+                      {(data?.summary_pages || []).map((pg, i) => (
                         <tr key={pg.name} style={{ background: i % 2 === 0 ? "#fff" : "#fafbfc", borderBottom: "1px solid #f1f5f9" }}>
                           {/* Page name */}
                           <td style={{ padding: "13px 14px" }}>
@@ -551,7 +587,7 @@ export default function Home() {
 
               {/* Footer */}
               <div style={{ borderTop: "1px solid #e8edf3", margin: "20px 0 16px", paddingTop: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 13, color: "#64748b" }}>Showing <strong style={{ color: "#1a202c" }}>{ALL_SUMMARY_PAGES.length}</strong> pages total</span>
+                <span style={{ fontSize: 13, color: "#64748b" }}>Showing <strong style={{ color: "#1a202c" }}>{(data?.summary_pages || []).length}</strong> pages total</span>
                 <CloseBtn onClick={() => setViewAllSummary(false)} />
               </div>
             </div>
@@ -639,7 +675,6 @@ export default function Home() {
           </div>
         </Overlay>
       )}
-
       {/* ── Page content ── */}
       <div className="dash-content">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
@@ -656,10 +691,10 @@ export default function Home() {
               <p style={{ fontSize: 15, fontWeight: 700, margin: "0 0 4px" }}>Overall Performance <span style={{ fontWeight: 400 }}>(All Accounts)</span></p>
               <p style={{ fontSize: 13, color: "#94a3b8", margin: "0 0 18px" }}>Combined analytics for Egetinnz PH, Egetinnz USA, Fibei Travel, and Digitimmerse.</p>
               <div className="dash-stat-cards">
-                <StatCard title="Total Followers"         value="41,335" sub="As of February 11, 2026" icon={<FollowerIcon />} onClick={() => setModal("followers")} />
-                <StatCard title="Total Posted Content"    value="674"    sub="Published Post"          icon={<CheckIcon />}   onClick={() => setModal("posted")} />
-                <StatCard title="Total Scheduled Content" value="35"     sub="Scheduled Post"          icon={<CalendarIcon />} onClick={() => setModal("scheduled")} />
-                <StatCard title="Total Engagement"        value="10,084" sub="Interactions"            icon={<ChartIcon />}   onClick={() => setModal("engagement")} />
+                <StatCard title="Total Followers"         value={data?.kpis?.total_followers || "0"} sub="As of today" icon={<FollowerIcon />} onClick={() => setModal("followers")} />
+                <StatCard title="Total Posted Content"    value={data?.kpis?.total_posts || "0"}    sub="Published Post"          icon={<CheckIcon />}   onClick={() => setModal("posted")} />
+                <StatCard title="Total Scheduled Content" value={(data?.kpis?.total_scheduled || 0).toString()}     sub="Scheduled Post"          icon={<CalendarIcon />} onClick={() => setModal("scheduled")} />
+                <StatCard title="Total Engagement"        value={data?.kpis?.total_engagement || "0"} sub="Interactions"            icon={<ChartIcon />}   onClick={() => setModal("engagement")} />
               </div>
             </div>
 
@@ -667,7 +702,7 @@ export default function Home() {
             <div>
               <p style={{ fontSize: 15, fontWeight: 700, margin: "0 0 14px" }}>Account Performance</p>
               <div className="dash-acc-cards">
-                {ACC_PERF.map(a => <AccCard key={a.name} acc={a} onViewMore={() => setAccModal(a)} />)}
+                {(data?.account_performance || []).map(a => <AccCard key={a.name} acc={a} onViewMore={() => setAccModal(a)} />)}
               </div>
             </div>
 
@@ -685,7 +720,7 @@ export default function Home() {
                   <tr><td colSpan={5} style={{ padding: "6px 0", background: "#fff" }} /></tr>
                 </thead>
                 <tbody>
-                  {SCHED_POSTS.map((p, i) => <SchedRow key={i} post={p} />)}
+                  {(data?.scheduled_posts || []).slice(0, 4).map((p, i) => <SchedRow key={i} post={p} />)}
                 </tbody>
               </table>
               </div>
@@ -699,7 +734,7 @@ export default function Home() {
             <div style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", border: "1px solid #e8edf3" }}>
               <p style={{ fontSize: 15, fontWeight: 700, margin: "0 0 14px" }}>Connected Accounts</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {CONNECTED.map(a => <ConnRow key={a.handle} acc={a} />)}
+                {(data?.connected_accounts || []).map(a => <ConnRow key={a.handle} acc={a} />)}
               </div>
             </div>
 
@@ -709,11 +744,11 @@ export default function Home() {
                 <p style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Summary per Pages</p>
                 <SmBtn onClick={() => setViewAllSummary(true)}>View All</SmBtn>
               </div>
-              {SUMMARY_PAGES.map((pg, i) => (
+              {(data?.summary_pages || []).slice(0, 2).map((pg, i) => (
                 <SummaryCard
                   key={pg.name}
                   page={pg}
-                  divider={i < SUMMARY_PAGES.length - 1}
+                  divider={i < Math.min((data?.summary_pages || []).length, 2) - 1}
                   onDetails={() => setSummaryModal(pg)}
                 />
               ))}
@@ -750,7 +785,7 @@ function StatCard({ title, value, sub, icon, onClick }: { title: string; value: 
 }
 
 // ── Account Performance Card ──────────────────────────────────────────────────
-function AccCard({ acc, onViewMore }: { acc: typeof ACC_PERF[0]; onViewMore: () => void }) {
+function AccCard({ acc, onViewMore }: { acc: AccountPerformance; onViewMore: () => void }) {
   const [h, setH] = useState(false);
   return (
     <div onClick={onViewMore} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{
@@ -793,7 +828,7 @@ function AccCard({ acc, onViewMore }: { acc: typeof ACC_PERF[0]; onViewMore: () 
 }
 
 // ── Scheduled Post Row ────────────────────────────────────────────────────────
-function SchedRow({ post }: { post: typeof SCHED_POSTS[0] }) {
+function SchedRow({ post }: { post: ScheduledPost }) {
   const [h, setH] = useState(false);
   return (
     <tr onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
@@ -820,7 +855,7 @@ function SchedRow({ post }: { post: typeof SCHED_POSTS[0] }) {
 const TD: React.CSSProperties = { padding: "14px 16px", fontSize: 14, borderBottom: "6px solid #fff" };
 
 // ── Connected Account Row ─────────────────────────────────────────────────────
-function ConnRow({ acc }: { acc: typeof CONNECTED[0] }) {
+function ConnRow({ acc }: { acc: ConnectedAccount }) {
   const [h, setH] = useState(false);
   return (
     <div onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{
@@ -844,7 +879,7 @@ function ConnRow({ acc }: { acc: typeof CONNECTED[0] }) {
 }
 
 // ── Summary Page Card ─────────────────────────────────────────────────────────
-function SummaryCard({ page, divider, onDetails }: { page: typeof SUMMARY_PAGES[0]; divider: boolean; onDetails: () => void }) {
+function SummaryCard({ page, divider, onDetails }: { page: SummaryPage; divider: boolean; onDetails: () => void }) {
   const [h, setH] = useState(false);
   return (
     <div style={{ paddingBottom: divider ? 14 : 0, marginBottom: divider ? 14 : 0, borderBottom: divider ? "1px solid #f1f5f9" : "none" }}>
