@@ -7,6 +7,8 @@ const {
   analyticsSummaryQuerySchema,
   analyticsPostsQuerySchema,
   analyticsTopPostsQuerySchema,
+  analyticsBestTimeQuerySchema,
+  analyticsExportQuerySchema,
 } = require("./analytics.schema");
 
 const router = express.Router();
@@ -17,5 +19,7 @@ router.use(authenticate);
 router.get("/summary", validate(analyticsSummaryQuerySchema), analyticsController.getSummary);
 router.get("/posts", validate(analyticsPostsQuerySchema), analyticsController.getPosts);
 router.get("/top-posts", validate(analyticsTopPostsQuerySchema), analyticsController.getTopPosts);
+router.get("/best-time", validate(analyticsBestTimeQuerySchema), analyticsController.getBestTime);
+router.get("/export", validate(analyticsExportQuerySchema), analyticsController.exportAnalytics);
 
 module.exports = router;
