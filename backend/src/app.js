@@ -13,6 +13,7 @@ const accountAdminRoutes = require("./modules/account-admin/account-admin.routes
 const saasAnalyticsRoutes = require("./modules/saas-analytics/saas-analytics.routes");
 const settingsRoutes = require("./modules/settings/settings.routes");
 const notificationsRoutes = require("./modules/notifications/notifications.routes");
+const dashboardRoutes = require("./modules/dashboard/dashboard.routes");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
@@ -46,5 +47,6 @@ app.use("/api/platform-health", platformHealthRoutes);
 app.use("/api/account-admin", accountAdminRoutes);
 app.use("/api/saas-analytics", saasAnalyticsRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 module.exports = app;
