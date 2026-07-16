@@ -2,55 +2,81 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { 
-  Search, 
-  Plus, 
-  MoreVertical, 
-  UserCircle2, 
-  Filter, 
-  Users, 
-  UserCheck, 
-  UserMinus, 
+import {
+  Search,
+  Plus,
+  MoreVertical,
+  UserCircle2,
+  Filter,
+  Users,
+  UserCheck,
+  UserMinus,
   ShieldCheck,
   X,
   Pencil,
   Ban,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  Check,
+  AlertTriangle,
+  Loader2
 } from "lucide-react";
 
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  lastActive: string;
+  business: string;
+};
+
+// Pull a human-readable message out of either backend envelope shape:
+//   success/error envelope → { error, details }, raw auth failure → { error }
+const errorFromEnvelope = (env: any, fallback: string): string =>
+  env?.error || env?.details || fallback;
+
+
 export default function ManagementPage() {
-  
-  type User = {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    status: string;
-    lastActive: string;
-    business: string;
-  };
 
   const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const fetchUsers = async () => {
+    setIsLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch('/api/users', { credentials: 'include' });
       const envelope = await res.json();
+      if (!res.ok) {
+        setLoadError(errorFromEnvelope(envelope, "Failed to load users."));
+        setUsers([]);
+        return;
+      }
       const data = envelope?.data ?? envelope;
-      
-      const mappedUsers = (data || []).map((u: any) => ({
+      const mappedUsers: User[] = (Array.isArray(data) ? data : []).map((u: any) => ({
         id: u.id,
         name: u.full_name,
         email: u.email,
         role: u.role === "admin" ? "Admin" : "User",
         status: u.status === "active" ? "Active" : "Inactive",
         lastActive: new Date(u.updated_at || u.created_at).toLocaleDateString(),
-        business: "eGetinnz PH" // Mocked for UI consistency
+        business: "eGetinnz PH", // Mocked for UI consistency — no backend support yet (see getPlatformUrl)
       }));
       setUsers(mappedUsers);
     } catch (err) {
-      console.error(err);
+      setLoadError("Something went wrong. Please try again.");
+      setUsers([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -98,32 +124,55 @@ export default function ManagementPage() {
   const [isEditDetailsModalOpen, setIsEditDetailsModalOpen] = useState(false);
   const [editUserDetails, setEditUserDetails] = useState({ id: "", name: "", email: "", role: "" });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // --- HANDLERS ---
   const handleDeleteUser = async (id: string) => {
+    setIsDeleting(true);
     try {
-      await fetch(`/api/users/${id}`, { method: 'DELETE', credentials: 'include' });
-      fetchUsers();
-      setActionMenuAnchor(null); 
+      const res = await fetch(`/api/users/${id}`, { method: 'DELETE', credentials: 'include' });
+      if (!res.ok) {
+        // DELETE returns 204 (no body) on success; only failures carry a JSON envelope.
+        const envelope = await res.json().catch(() => null);
+        showToast(errorFromEnvelope(envelope, "Failed to remove user."), "error");
+        return;
+      }
+      showToast("User removed", "success");
+      setDeleteTarget(null);
+      await fetchUsers();
     } catch (err) {
-      console.error(err);
+      showToast("Something went wrong. Please try again.", "error");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleDisableUser = async (id: string) => {
+    const target = users.find(u => u.id === id);
+    const wasActive = target?.status === "Active";
+    setActionMenuAnchor(null);
     try {
-      await fetch(`/api/users/${id}/disable`, { method: 'PATCH', credentials: 'include' });
-      fetchUsers();
-      setActionMenuAnchor(null); 
+      const res = await fetch(`/api/users/${id}/disable`, { method: 'PATCH', credentials: 'include' });
+      if (!res.ok) {
+        const envelope = await res.json().catch(() => null);
+        showToast(errorFromEnvelope(envelope, "Failed to update user."), "error");
+        return;
+      }
+      showToast(wasActive ? "User disabled" : "User enabled", "success");
+      await fetchUsers();
     } catch (err) {
-      console.error(err);
+      showToast("Something went wrong. Please try again.", "error");
     }
   };
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
-      await fetch('/api/users', { 
-        method: 'POST', 
+      const res = await fetch('/api/users', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           full_name: newUser.name,
@@ -131,35 +180,53 @@ export default function ManagementPage() {
           password: newUser.password,
           role: newUser.role.toLowerCase()
         }),
-        credentials: 'include' 
+        credentials: 'include'
       });
-      fetchUsers();
+      const envelope = await res.json().catch(() => null);
+      if (!res.ok) {
+        showToast(errorFromEnvelope(envelope, "Failed to create user."), "error");
+        return;
+      }
+      showToast("User created", "success");
       setNewUser({ name: "", email: "", password: "", role: "User" });
       setIsAddModalOpen(false);
+      await fetchUsers();
     } catch (err) {
-      console.error(err);
+      showToast("Something went wrong. Please try again.", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleEditDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
-      await fetch(`/api/users/${editUserDetails.id}`, { 
-        method: 'PUT', 
+      const res = await fetch(`/api/users/${editUserDetails.id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           full_name: editUserDetails.name,
           email: editUserDetails.email,
           role: editUserDetails.role.toLowerCase()
         }),
-        credentials: 'include' 
+        credentials: 'include'
       });
-      fetchUsers();
+      const envelope = await res.json().catch(() => null);
+      if (!res.ok) {
+        showToast(errorFromEnvelope(envelope, "Failed to save changes."), "error");
+        return;
+      }
+      showToast("Changes saved", "success");
       setIsEditDetailsModalOpen(false);
+      await fetchUsers();
     } catch (err) {
-      console.error(err);
+      showToast("Something went wrong. Please try again.", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
 
   // BACKEND NOTE: This mock function should be replaced by pulling the actual external platform URL for the user
   const getPlatformUrl = (businessName: string) => {
@@ -191,7 +258,15 @@ export default function ManagementPage() {
 
   return (
     <div className="flex flex-col gap-6 overflow-x-hidden pb-10">
-      
+
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-100 flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl text-white text-sm font-semibold ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
+          {toast.type === "success" ? <Check size={16} /> : <AlertTriangle size={16} />}
+          {toast.msg}
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">User Management</h1>
@@ -328,7 +403,40 @@ export default function ManagementPage() {
         </div>
 
         <div className="flex flex-col">
-          {filteredUsers.map((user) => (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-gray-500">
+              <Loader2 size={28} className="animate-spin text-primary" />
+              <p className="text-sm font-medium">Loading users…</p>
+            </div>
+          ) : loadError ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center px-4">
+              <AlertTriangle size={28} className="text-red-500" />
+              <p className="text-sm font-medium text-gray-700">{loadError}</p>
+              <button
+                onClick={() => fetchUsers()}
+                className="px-4 py-2 text-sm font-bold bg-primary text-white rounded-lg hover:bg-blue-900 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center px-4">
+              <Users size={28} className="text-gray-300" />
+              {users.length === 0 ? (
+                <p className="text-sm font-medium text-gray-500">No users yet. Add one to get started.</p>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-gray-500">No users match your filters.</p>
+                  <button
+                    onClick={() => { setSearchQuery(""); setRoleFilter("All"); setStatusFilter("All"); setBusinessFilter("All"); }}
+                    className="text-xs text-primary font-bold hover:underline"
+                  >
+                    Clear filters
+                  </button>
+                </>
+              )}
+            </div>
+          ) : filteredUsers.map((user) => (
             <div key={user.id} className="grid grid-cols-1 md:grid-cols-[3fr_1.5fr_1.5fr_2fr_2fr_1fr] gap-3 md:gap-4 p-4 md:px-6 md:py-4 items-center border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors group">
               <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0 text-white">
@@ -408,7 +516,10 @@ export default function ManagementPage() {
               </div>
               <div className="flex items-center justify-end gap-3 mt-4">
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 text-sm font-bold bg-primary text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm">Create User</button>
+                <button type="submit" disabled={isSubmitting} className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-primary text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                  {isSubmitting && <Loader2 size={15} className="animate-spin" />}
+                  {isSubmitting ? "Creating…" : "Create User"}
+                </button>
               </div>
             </form>
           </div>
@@ -442,9 +553,46 @@ export default function ManagementPage() {
               </div>
               <div className="flex items-center justify-end gap-3 mt-4">
                 <button type="button" onClick={() => setIsEditDetailsModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 text-sm font-bold bg-primary text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm">Save Changes</button>
+                <button type="submit" disabled={isSubmitting} className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-primary text-white hover:bg-blue-900 rounded-lg transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                  {isSubmitting && <Loader2 size={15} className="animate-spin" />}
+                  {isSubmitting ? "Saving…" : "Save Changes"}
+                </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3. DELETE CONFIRMATION MODAL */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !isDeleting && setDeleteTarget(null)}></div>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm relative z-10 overflow-hidden">
+            <div className="p-6 flex flex-col gap-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                  <Trash2 size={18} className="text-red-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Remove user?</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    This will permanently remove <span className="font-semibold text-gray-700">{deleteTarget.name}</span>. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-3 mt-2">
+                <button type="button" onClick={() => setDeleteTarget(null)} disabled={isDeleting} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-60">Cancel</button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteUser(deleteTarget.id)}
+                  disabled={isDeleting}
+                  className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isDeleting && <Loader2 size={15} className="animate-spin" />}
+                  {isDeleting ? "Removing…" : "Remove User"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -495,7 +643,10 @@ export default function ManagementPage() {
                   </button>
                   <div className="border-t border-gray-100" />
                   <button
-                    onClick={() => handleDeleteUser(u.id)}
+                    onClick={() => {
+                      setDeleteTarget({ id: u.id, name: u.name });
+                      setActionMenuAnchor(null);
+                    }}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
                   >
                     <Trash2 size={15} className="text-red-500" /> Remove User
