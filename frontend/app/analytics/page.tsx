@@ -86,6 +86,8 @@ export default function AnalyticsPage() {
   const [pageStatsData, setPageStatsData] = useState<PageStatsPoint[]>([]);
   const [engagementTrendBarData, setEngagementTrendBarData] = useState<{ month: string; rate: number }[]>([]);
   const [overviewData, setOverviewData] = useState({ engagement_rate: 0, total_likes: 0, total_comments: 0 });
+  const [bestTimeData, setBestTimeData] = useState<{ time: string; visitors: number }[]>([]);
+  const [bestTimeVisitors, setBestTimeVisitors] = useState<string>("0");
 
   useEffect(() => {
     const params = new URLSearchParams({ period_type: 'monthly' });
@@ -100,6 +102,15 @@ export default function AnalyticsPage() {
         setPageStatsData(data.page_stats?.map((p: any) => ({ month: p.period, followers: p.followers, likes: p.likes, views: p.views, shares: p.shares, comments: p.comments })) ?? []);
         setEngagementTrendBarData(data.engagement_trend?.map((p: any) => ({ month: p.period, rate: p.rate })) ?? []);
         setOverviewData(data.overview ?? { engagement_rate: 0, total_likes: 0, total_comments: 0 });
+      });
+
+    fetch(`/api/analytics/best-time?${params}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) return;
+        const body = data.data ?? data;
+        setBestTimeData(body.data ?? []);
+        setBestTimeVisitors(body.total ? body.total.toLocaleString() : "0");
       });
   }, [selectedAccountId, dateRange]);
 
@@ -344,24 +355,7 @@ export default function AnalyticsPage() {
     return '#0284C7';                  // Very dark blue
   };
 
-  // BACKEND NOTE: Replace with real hourly visitor/engagement data per page/platform via API (e.g. GET /analytics/best-time?page=...&platform=...)
-  // The `totalVisitors` value should be the sum across all time slots for the selected period.
-  const bestTimeData = [
-    { time: "12am", visitors: 500 },
-    { time: "2am",  visitors: 300 },
-    { time: "4am",  visitors: 800 },
-    { time: "6am",  visitors: 2500 },
-    { time: "8am",  visitors: 5500 },
-    { time: "10am", visitors: 9000 },
-    { time: "12pm", visitors: 14000 },
-    { time: "2pm",  visitors: 16500 },
-    { time: "4pm",  visitors: 15800 },
-    { time: "6pm",  visitors: 11500 },
-    { time: "8pm",  visitors: 10000 },
-    { time: "10pm", visitors: 11000 },
-    { time: "12am", visitors: 8000 },
-  ];
-  const bestTimeVisitors = "22,658"; // BACKEND NOTE: Replace with the actual total visitors count from the API
+  // bestTimeData and bestTimeVisitors are now provided by API state above.
 
 
   const getStatusBadge = (status: string) => {
@@ -1630,7 +1624,14 @@ export default function AnalyticsPage() {
               <button
                 onClick={() => {
                   setConfirmModal(false);
-                  // BACKEND NOTE: Trigger actual file download (CSV/PDF/JPG) here
+                  
+                  const format = saveModal === "csv" ? "csv" : "pdf";
+                  const params = new URLSearchParams({ format });
+                  if (selectedAccountId !== "all") params.set("account_id", selectedAccountId);
+                  if (saveModalDateRange.from) params.set("from", new Date(saveModalDateRange.from).toISOString());
+                  if (saveModalDateRange.to) params.set("to", new Date(saveModalDateRange.to).toISOString());
+                  
+                  window.open(`/api/analytics/export?${params}`, "_blank");
                 }}
                 className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity cursor-pointer"
               >

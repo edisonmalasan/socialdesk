@@ -27,3 +27,21 @@ exports.analyticsTopPostsQuerySchema = z.object({
     limit: z.string().optional(), // limit comes in as a string in query params
   }),
 });
+
+exports.analyticsBestTimeQuerySchema = z.object({
+  query: z.object({
+    account_id: z.string().uuid("Invalid account id format").optional(),
+    platform: z.string().optional(),
+    from: z.string().datetime({ offset: true }).optional(),
+    to: z.string().datetime({ offset: true }).optional(),
+  }),
+});
+
+exports.analyticsExportQuerySchema = z.object({
+  query: z.object({
+    account_id: z.string().uuid("Invalid account id format").optional(),
+    from: z.string().datetime({ offset: true }).optional(),
+    to: z.string().datetime({ offset: true }).optional(),
+    format: z.enum(["csv", "pdf"]),
+  }),
+});

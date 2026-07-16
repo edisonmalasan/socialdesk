@@ -30,3 +30,24 @@ exports.getTopPosts = async (req, res) => {
     return errorResponse(res, error.message || "Failed to fetch top posts", 500);
   }
 };
+
+exports.getBestTime = async (req, res) => {
+  try {
+    const result = await analyticsService.getBestTime(req.user.id, req.query);
+    return successResponse(res, result);
+  } catch (error) {
+    console.error("getBestTime error:", error);
+    return errorResponse(res, error.message || "Failed to fetch best time analytics", 500);
+  }
+};
+
+exports.exportAnalytics = async (req, res) => {
+  try {
+    await analyticsService.exportAnalytics(req.user.id, req.query, res);
+  } catch (error) {
+    console.error("exportAnalytics error:", error);
+    if (!res.headersSent) {
+      return errorResponse(res, error.message || "Failed to export analytics", 500);
+    }
+  }
+};
