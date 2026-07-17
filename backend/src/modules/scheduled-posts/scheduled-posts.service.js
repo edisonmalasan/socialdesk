@@ -2,6 +2,7 @@ const scheduledPostsRepository = require("./scheduled-posts.repository");
 const socialConnectionsService = require("../social-connections/social-connections.service");
 const metaService = require("../meta/meta.service");
 const pinterestService = require("../pinterest/pinterest.service");
+const youtubeService = require("../youtube/youtube.service");
 const notificationsService = require("../notifications/notifications.service");
 
 const DEFAULT_BATCH_SIZE = 10;
@@ -97,6 +98,26 @@ const publishPinterestTarget = async ({ post, connection }) => {
   });
 };
 
+const publishYouTubeTarget = async ({ post, connection }) => {
+  const videoUrl = getFirstMediaUrl(post);
+
+  if (!videoUrl) {
+    throw new Error("YouTube scheduled posts require a video URL");
+  }
+
+  const metadata = post.metadata?.youtube || {};
+
+  return youtubeService.publishScheduledVideo({
+    socialAccountId: connection.socialAccountId,
+    videoUrl,
+    title: post.title || "Untitled Video",
+    description: post.body_text,
+    tags: metadata.tags || [],
+    privacyStatus: metadata.privacy_status || "public",
+    mimeType: metadata.mime_type || "video/mp4",
+  });
+};
+
 const publishTarget = async ({ post, connection }) => {
   switch (connection.platformCode) {
     case "facebook":
@@ -105,6 +126,8 @@ const publishTarget = async ({ post, connection }) => {
       return publishInstagramTarget({ post, connection });
     case "pinterest":
       return publishPinterestTarget({ post, connection });
+    case "youtube":
+      return publishYouTubeTarget({ post, connection });
     default:
       throw new Error(`Unsupported scheduled post platform: ${connection.platformCode}`);
   }
@@ -312,4 +335,5 @@ exports._private = {
   getPostTargetJobId,
   getScheduleDelay,
   publishTarget,
+  publishYouTubeTarget,
 };
