@@ -133,6 +133,50 @@ const publishTarget = async ({ post, connection }) => {
   }
 };
 
+const refreshConnectionTokenIfNeeded = async (connection, post) => {
+  if (!connection.expiresAt) return connection;
+
+  const expiresAt = new Date(connection.expiresAt).getTime();
+  // Check if expiring within 10 minutes from now or already expired
+  const isExpiring = Date.now() >= expiresAt - 10 * 60 * 1000;
+
+  if (!isExpiring) return connection;
+
+  try {
+    let updatedToken;
+    switch (connection.platformCode) {
+      case "facebook":
+      case "instagram":
+        updatedToken = await metaService.refreshOAuthToken(connection.socialAccountId);
+        break;
+      case "youtube":
+        updatedToken = await youtubeService.refreshOAuthToken(connection.socialAccountId);
+        break;
+      default:
+        // Other platforms (e.g., Pinterest) might not support auto-refresh, just return
+        return connection;
+    }
+
+    if (updatedToken) {
+      // Update the connection object dynamically before publishing
+      connection.accessToken = updatedToken.access_token || updatedToken.accessToken;
+      connection.refreshToken = updatedToken.refresh_token || updatedToken.refreshToken || connection.refreshToken;
+      connection.expiresAt = updatedToken.expires_at || updatedToken.expiresAt;
+    }
+
+    return connection;
+  } catch (error) {
+    // Notify user of the failure and abort publish
+    await notificationsService.emitPublishFailure({
+      userId: post.user_id,
+      postTitle: post.title,
+      platform: connection.platformCode,
+      reason: `Failed to refresh OAuth token: ${error.message}`,
+    });
+    throw new Error(`Token refresh failed: ${error.message}`);
+  }
+};
+
 const getPostTargetJobId = (target) => {
   return `scheduled-post-target:${target.id}`;
 };
@@ -197,9 +241,12 @@ const processTarget = async ({ target, markFailedOnError = true }) => {
   }
 
   try {
-    const connection = await socialConnectionsService.getPublishingConnection(
+    let connection = await socialConnectionsService.getPublishingConnection(
       target.social_account_id,
     );
+
+    // Ensure the token is valid before publishing
+    connection = await refreshConnectionTokenIfNeeded(connection, post);
 
     const result = await publishTarget({ post, target, connection });
 
