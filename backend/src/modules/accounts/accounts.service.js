@@ -1,6 +1,7 @@
 const accountsRepository = require("./accounts.repository");
 const socialConnectionsRepository = require("../social-connections/social-connections.repository");
 const notificationsService = require("../notifications/notifications.service");
+const scheduledPostsQueue = require("../scheduled-posts/scheduled-posts.queue");
 
 exports.listAccounts = async (userId) => {
   const { accounts, error } = await accountsRepository.findActiveByUser(userId);
@@ -62,6 +63,14 @@ exports.disconnectAccount = async (userId, id) => {
     is_active: false,
   });
   if (error) throw new Error(error.message);
+
+  // Clean up pending scheduled jobs for this account so they don't fail later
+  try {
+    await scheduledPostsQueue.cancelPostTargetsByAccountId({ accountId: id });
+  } catch (cleanupError) {
+    console.error("Failed to cleanup scheduled posts for disconnected account:", cleanupError);
+    // Non-blocking: we still disconnected the account successfully
+  }
 
   // Emit account-disconnected notification (fire-and-forget)
   if (account) {
