@@ -242,6 +242,13 @@ exports.cancelPostTargets = async ({ postId }) => {
   });
 };
 
+exports.cancelPostTargetsByAccountId = async ({ accountId }) => {
+  return scheduledPostsService.cancelPostTargetsByAccountId({
+    publishingQueue: getPublishingQueue(),
+    accountId,
+  });
+};
+
 exports.stop = async () => {
   await Promise.all([
     schedulerWorker?.close(),

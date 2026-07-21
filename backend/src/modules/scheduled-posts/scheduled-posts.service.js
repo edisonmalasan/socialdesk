@@ -339,6 +339,19 @@ exports.cancelPostTargets = async ({ publishingQueue, postId }) => {
   let cancelled = 0;
 
   for (const target of targets) {
+    await scheduledPostsRepository.markTargetCancelled({ postTargetId: target.id });
+    cancelled += await publishingQueue.remove(getPostTargetJobId(target));
+  }
+
+  return { cancelled };
+};
+
+exports.cancelPostTargetsByAccountId = async ({ publishingQueue, accountId }) => {
+  const targets = await scheduledPostsRepository.getPendingTargetsByAccountId({ accountId });
+  let cancelled = 0;
+
+  for (const target of targets) {
+    await scheduledPostsRepository.markTargetCancelled({ postTargetId: target.id });
     cancelled += await publishingQueue.remove(getPostTargetJobId(target));
   }
 

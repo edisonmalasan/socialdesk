@@ -5,6 +5,7 @@ const TARGET_STATUS = {
   PUBLISHING: "publishing",
   PUBLISHED: "published",
   FAILED: "failed",
+  CANCELLED: "cancelled",
 };
 
 /**
@@ -126,6 +127,44 @@ exports.getPendingTargetsByPostId = async ({ postId }) => {
   }
 
   return data || [];
+};
+
+/**
+ * Retrieves pending targets for a specific social account.
+ */
+exports.getPendingTargetsByAccountId = async ({ accountId }) => {
+  const { data, error } = await supabase
+    .from("post_targets")
+    .select("id, post_id, status")
+    .eq("social_account_id", accountId)
+    .eq("status", TARGET_STATUS.PENDING);
+
+  if (error) {
+    throw new Error(`Failed to load pending targets for account ${accountId}: ${error.message}`);
+  }
+
+  return data || [];
+};
+
+/**
+ * Marks a specific target as cancelled.
+ */
+exports.markTargetCancelled = async ({ postTargetId }) => {
+  const { data, error } = await supabase
+    .from("post_targets")
+    .update({
+      status: TARGET_STATUS.CANCELLED,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", postTargetId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to cancel target ${postTargetId}: ${error.message}`);
+  }
+
+  return data;
 };
 
 /**
