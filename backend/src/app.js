@@ -14,6 +14,7 @@ const saasAnalyticsRoutes = require("./modules/saas-analytics/saas-analytics.rou
 const settingsRoutes = require("./modules/settings/settings.routes");
 const notificationsRoutes = require("./modules/notifications/notifications.routes");
 const dashboardRoutes = require("./modules/dashboard/dashboard.routes");
+const socialConnectionsRoutes = require("./modules/social-connections/social-connections.routes");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
@@ -48,5 +49,6 @@ app.use("/api/account-admin", accountAdminRoutes);
 app.use("/api/saas-analytics", saasAnalyticsRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/social-connections", socialConnectionsRoutes);
 
 module.exports = app;
