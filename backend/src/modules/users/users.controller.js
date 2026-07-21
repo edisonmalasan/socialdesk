@@ -89,6 +89,55 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
+exports.getCurrentUser = async (req, res) => {
+  try {
+
+    const user =
+      await usersService.getCurrentUser(req.user.id);
+
+    return successResponse(res, user);
+
+  } catch (error) {
+
+    return errorResponse(
+      res,
+      error.message,
+      500
+    );
+
+  }
+};
+
+exports.updateCurrentUser = async (req, res) => {
+
+  const {
+    full_name,
+    currentPassword,
+  } = req.body;
+
+  try {
+
+    const user =
+      await usersService.updateCurrentUser(
+        req.user.id,
+        full_name,
+        currentPassword,
+      );
+
+    return successResponse(res, user);
+
+  } catch (error) {
+
+    return errorResponse(
+      res,
+      error.message,
+      500
+    );
+
+  }
+
+};
+
 /**
  * POST /api/users/avatar — self-service. Uploads the authenticated caller's
  * avatar (multipart field "avatar") and returns the persisted URL. Validation
@@ -124,4 +173,35 @@ exports.deleteAvatar = async (req, res) => {
       error.statusCode || 500,
     );
   }
+};
+
+exports.changePassword = async (req, res) => {
+
+  const {
+    currentPassword,
+    newPassword,
+  } = req.body;
+
+  try {
+
+    await usersService.changePassword(
+      req.user.id,
+      currentPassword,
+      newPassword,
+    );
+
+    return successResponse(res, {
+      message: "Password updated successfully",
+    });
+
+  } catch (error) {
+
+    return errorResponse(
+      res,
+      error.message,
+      500
+    );
+
+  }
+
 };

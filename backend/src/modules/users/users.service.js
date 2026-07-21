@@ -53,6 +53,47 @@ exports.createUser = async ({ email, password, full_name, role }, adminId) => {
   return user;
 };
 
+exports.getCurrentUser = async (userId) => {
+  const { user, error } = await usersRepository.findCurrentUser(userId);
+
+  if (error) throw new Error(error.message);
+
+  return user;
+};
+
+exports.updateCurrentUser = async (
+  userId,
+  full_name,
+  currentPassword,
+) => {
+
+  const { user, error } =
+    await usersRepository.findByIdWithPassword(userId);
+
+  if (error) throw new Error(error.message);
+
+  const valid = await bcrypt.compare(
+    currentPassword,
+    user.password_hash
+  );
+
+  if (!valid) {
+    throw new Error("Current password is incorrect");
+  }
+
+  const result =
+    await usersRepository.updateCurrentUser(
+      userId,
+      full_name
+    );
+
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
+
+  return result.user;
+};
+
 exports.updateUser = async (id, { email, full_name, role }) => {
   const { user, error } = await usersRepository.updateById(id, { email, full_name, role });
   if (error) throw new Error(error.message);
@@ -121,4 +162,38 @@ exports.removeAvatar = async (userId) => {
   if (error) throw new Error(error.message);
 
   return { profileUrl: null };
+};
+
+exports.changePassword = async (
+  userId,
+  currentPassword,
+  newPassword,
+) => {
+
+  const { user, error } =
+    await usersRepository.findByIdWithPassword(userId);
+
+  if (error) throw new Error(error.message);
+
+  const valid = await bcrypt.compare(
+    currentPassword,
+    user.password_hash
+  );
+
+  if (!valid) {
+    throw new Error("Current password is incorrect");
+  }
+
+  const password_hash =
+    await bcrypt.hash(newPassword, 10);
+
+  const result =
+    await usersRepository.updatePassword(
+      userId,
+      password_hash
+    );
+
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
 };

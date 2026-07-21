@@ -25,6 +25,52 @@ exports.findById = async (id) => {
   return { user: data, error };
 };
 
+exports.findByIdWithPassword = async (id) => {
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, email, full_name, profile_url, password_hash")
+    .eq("id", id)
+    .maybeSingle();
+
+  return { user: data, error };
+};
+
+exports.findCurrentUser = async (id) => {
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, email, full_name, profile_url")
+    .eq("id", id)
+    .maybeSingle();
+
+  return { user: data, error };
+};
+
+exports.updateCurrentUser = async (id, full_name) => {
+  const { data, error } = await supabase
+    .from("users")
+    .update({
+      full_name,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("id, email, full_name, profile_url")
+    .maybeSingle();
+
+  return { user: data, error };
+};
+
+exports.updatePassword = async (id, password_hash) => {
+  const { error } = await supabase
+    .from("users")
+    .update({
+      password_hash,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  return { error };
+};
+
 exports.create = async ({ email, password_hash, full_name, role, created_by }) => {
   const { data, error } = await supabase
     .from("users")
