@@ -55,7 +55,7 @@ const getConnection = () => {
 };
 
 const createSchedulerQueue = () => {
-  return new Queue(`${getQueueName()}:scheduler`, {
+  return new Queue(`${getQueueName()}-scheduler`, {
     connection: getConnection(),
     defaultJobOptions: {
       attempts: 1,
