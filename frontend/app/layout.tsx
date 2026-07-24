@@ -16,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} flex bg-background text-gray-900`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} flex bg-background text-gray-900`} suppressHydrationWarning>
         {/* Pass children to the wrapper so it controls the layout */}
         <LayoutWrapper>
           {children}

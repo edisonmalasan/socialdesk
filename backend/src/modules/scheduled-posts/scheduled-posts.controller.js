@@ -1,4 +1,5 @@
 const scheduledPostsQueue = require("./scheduled-posts.queue");
+const { successResponse, errorResponse } = require("../../shared/utils/response.util");
 
 exports.schedulePostJobs = async (req, res) => {
   try {
@@ -6,10 +7,10 @@ exports.schedulePostJobs = async (req, res) => {
       postId: req.params.postId,
     });
 
-    res.json(result);
+    return successResponse(res, result);
   } catch (error) {
     console.error("Failed to schedule post jobs:", error.message || error);
-    res.status(500).json({ error: error.message || "Failed to schedule post jobs" });
+    return errorResponse(res, error.message || "Failed to schedule post jobs", 500);
   }
 };
 
@@ -19,9 +20,9 @@ exports.cancelPostJobs = async (req, res) => {
       postId: req.params.postId,
     });
 
-    res.json(result);
+    return successResponse(res, result);
   } catch (error) {
     console.error("Failed to cancel post jobs:", error.message || error);
-    res.status(500).json({ error: error.message || "Failed to cancel post jobs" });
+    return errorResponse(res, error.message || "Failed to cancel post jobs", 500);
   }
 };

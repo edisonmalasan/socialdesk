@@ -17,6 +17,22 @@ exports.getPlatformId = async (platformCode) => {
 };
 
 /**
+ * Retrieves all available platforms.
+ */
+exports.getAllPlatforms = async () => {
+  const { data, error } = await supabase
+    .from("platforms")
+    .select("id, code, name")
+    .order("name", { ascending: true });
+    
+  if (error) {
+    throw new Error(`Failed to fetch platforms: ${error.message}`);
+  }
+  
+  return data;
+};
+
+/**
  * Upserts a social account (inserts if new, updates if exists based on platform_id & external_id).
  */
 exports.upsertSocialAccount = async ({
@@ -46,6 +62,8 @@ exports.upsertSocialAccount = async ({
     profile_url: profileUrl,
     avatar_url: avatarUrl,
     metadata,
+    // Reconnecting via OAuth reactivates a previously soft-disconnected account.
+    is_active: true,
     last_synced_at: new Date().toISOString(),
   };
 
@@ -143,6 +161,43 @@ exports.getSocialAccountWithToken = async (socialAccountId) => {
   if (error || !data) {
     throw new Error(`Social account not found: ${socialAccountId}`);
   }
+  return data;
+};
+
+/**
+ * Retrieves all social accounts (active and disconnected) for a specific user,
+ * including their platform details and oauth tokens.
+ */
+exports.getAccountsWithTokensByUser = async (userId) => {
+  const { data, error } = await supabase
+    .from("social_accounts")
+    .select(`
+      id,
+      external_id,
+      username,
+      display_name,
+      profile_url,
+      avatar_url,
+      is_active,
+      connected_at,
+      platforms (
+        id,
+        code,
+        name
+      ),
+      oauth_tokens (
+        access_token,
+        refresh_token,
+        expires_at
+      )
+    `)
+    .eq("user_id", userId)
+    .order("connected_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to fetch user accounts: ${error.message}`);
+  }
+
   return data;
 };
 

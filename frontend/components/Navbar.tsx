@@ -37,15 +37,34 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   // Determine if search bar should be shown
   const showSearchBar = pathname === '/posts' || pathname.startsWith('/posts/');
 
-  // BACKEND NOTE: Fetch notifications via GET /api/notifications. 
-  // Consider using WebSockets or Server-Sent Events (SSE) for real-time updates.
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: "success", title: "Post Published", message: "Your post 'Spring Sale' was published successfully.", time: "2m ago", unread: true },
-    { id: 2, type: "alert", title: "Action Required", message: "Facebook token is expiring in 2 days. Please reconnect.", time: "1h ago", unread: true },
-    { id: 3, type: "social", title: "New Comment", message: "Sarah Jane commented on your Instagram post.", time: "3h ago", unread: false },
-  ]);
+  // Define Notification Type
+  type Notification = {
+    id: number;
+    type: string;
+    title: string;
+    message: string;
+    created_at: string;
+    is_read: boolean;
+  };
 
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('/api/notifications?limit=5', { credentials: 'include' });
+      const envelope = await res.json();
+      const data = envelope?.data ?? envelope;
+      setNotifications(data.notifications || []);
+      setUnreadCount(data.unreadCount || 0);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -89,9 +108,13 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     router.push("/login");
   };
 
-  // BACKEND NOTE: Implement PUT request to /api/notifications/mark-read to update status in DB
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, unread: false })));
+  const markAllAsRead = async () => {
+    try {
+      await fetch('/api/notifications/mark-all-read', { method: 'PUT', credentials: 'include' });
+      fetchNotifications();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   // Helper for notification icons
@@ -272,19 +295,25 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`px-4 py-3 flex gap-3 hover:bg-gray-50 transition-colors cursor-pointer ${notification.unread ? 'bg-blue-50/30' : ''}`}
+                      className={`px-4 py-3 flex gap-3 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.is_read ? 'bg-blue-50/30' : ''}`}
+                      onClick={async () => {
+                        if (!notification.is_read) {
+                          await fetch(`/api/notifications/${notification.id}/read`, { method: 'PUT', credentials: 'include' });
+                          fetchNotifications();
+                        }
+                      }}
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${notification.unread ? 'bg-white shadow-sm' : 'bg-gray-100'}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${!notification.is_read ? 'bg-white shadow-sm' : 'bg-gray-100'}`}>
                         {getNotificationIcon(notification.type)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm leading-tight mb-0.5 ${notification.unread ? 'font-bold text-gray-900' : 'font-medium text-gray-800'}`}>
+                        <p className={`text-sm leading-tight mb-0.5 ${!notification.is_read ? 'font-bold text-gray-900' : 'font-medium text-gray-800'}`}>
                           {notification.title}
                         </p>
                         <p className="text-xs text-gray-500 truncate">{notification.message}</p>
-                        <p className="text-[10px] text-gray-400 mt-1">{notification.time}</p>
+                        <p className="text-[10px] text-gray-400 mt-1">{new Date(notification.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                       </div>
-                      {notification.unread && (
+                      {!notification.is_read && (
                         <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0"></div>
                       )}
                     </div>

@@ -63,67 +63,37 @@ export default function AccountsPage() {
   const [connectedAccounts, setConnectedAccounts] = useState<Connected[]>([]);
 
   useEffect(() => {
-    fetch('/api/accounts')
+    fetch('/api/accounts', { credentials: 'include' })
       .then(res => res.json())
-      .then(data => setConnectedAccounts(data.map(transformAccount)));
+      .then(envelope => {
+        const list = envelope?.data ?? envelope;
+        setConnectedAccounts((Array.isArray(list) ? list : []).map(transformAccount));
+      });
   }, []);
 
-  const [connectPlatformId, setConnectPlatformId] = useState<string | null>(null); // null | "selector" | platformId
-  const [connectEmail, setConnectEmail] = useState("");
+  const [connectPlatformId, setConnectPlatformId] = useState<string | null>(null); // null | "selector"
   const [disconnectId, setDisconnectId] = useState<string | null>(null);
   const [confirmChecked, setConfirmChecked] = useState(false);
 
   const findPlatform = (id: string | undefined) => platforms.find((p) => p.id === id);
 
   const openAddSelector = () => setConnectPlatformId("selector");
-  const openPlatformLogin = (platformId: string) => {
-    setConnectEmail("");
-    setConnectPlatformId(platformId);
-  };
 
-  const handleConnectSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!connectPlatformId || connectPlatformId === "selector") return;
-
-    const platformId = connectPlatformId;
-    const username = connectEmail ? `@${connectEmail.split("@")[0]}` : `@${platformId}_user_${Math.floor(Math.random() * 1000)}`;
-
-    const res = await fetch('/api/accounts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        platformCode: platformId,
-        username,
-        display_name: username,
-        external_id: `mock_${platformId}_${Date.now()}`,
-      }),
-    });
-
-    if (res.ok) {
-      const newAccount = await res.json();
-      setConnectedAccounts((prev) => [transformAccount(newAccount), ...prev]);
+  const initiateOAuth = (platformId: string) => {
+    if (platformId === "facebook" || platformId === "instagram") {
+      window.location.href = "/api/auth/facebook/redirect";
+    } else if (platformId === "pinterest") {
+      window.location.href = "/api/auth/pinterest/oauth";
+    } else if (platformId === "youtube") {
+      const userId = Cookies.get("user-id");
+      if (userId) {
+        window.location.href = `/api/auth/youtube/oauth?userId=${userId}`;
+      } else {
+        alert("User ID missing. Please log in again.");
+      }
+    } else {
+      alert(`${findPlatform(platformId)?.name} connection is coming soon!`);
     }
-    setConnectPlatformId(null);
-    setConnectEmail("");
-  };
-
-  const quickConnect = async (platformId: string) => {
-    const res = await fetch('/api/accounts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        platformCode: platformId,
-        username: `@${platformId}_official`,
-        display_name: `${platformId} Official`,
-        external_id: `mock_${platformId}_${Date.now()}`,
-      }),
-    });
-
-    if (res.ok) {
-      const newAccount = await res.json();
-      setConnectedAccounts((prev) => [transformAccount(newAccount), ...prev]);
-    }
-    setConnectPlatformId(null);
   };
 
   const openDisconnectModal = (connId: string) => {
@@ -133,10 +103,9 @@ export default function AccountsPage() {
 
   const handleConfirmDisconnect = async () => {
     if (!disconnectId || !confirmChecked) return;
-    const res = await fetch('/api/accounts', {
+    const res = await fetch(`/api/accounts/${disconnectId}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: disconnectId }),
+      credentials: 'include'
     });
     if (res.ok) setConnectedAccounts((prev) => prev.filter((c) => c.id !== disconnectId));
     setDisconnectId(null);
@@ -145,7 +114,6 @@ export default function AccountsPage() {
 
   const closeAllModals = () => {
     setConnectPlatformId(null);
-    setConnectEmail("");
     setDisconnectId(null);
     setConfirmChecked(false);
   };
@@ -246,7 +214,7 @@ export default function AccountsPage() {
 
                   <div className="mt-auto pt-4 flex w-full justify-center">
                     <button
-                      onClick={() => quickConnect(p.id)}
+                      onClick={() => initiateOAuth(p.id)}
                       className="inline-flex w-full items-center justify-center rounded-lg bg-white border border-gray-200 px-4 py-2.5 text-sm font-bold text-gray-700 whitespace-nowrap hover:bg-[#274C77] hover:text-white hover:border-[#274C77] transition-all shadow-sm"
                     >
                       Connect
@@ -259,57 +227,6 @@ export default function AccountsPage() {
         </div>
       )}
 
-      {/* Platform login modal */}
-      {connectPlatformId && connectPlatformId !== "selector" && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl max-h-[90dvh] overflow-y-auto sm:p-8">
-            <div className="mb-6 flex items-start gap-4">
-              <div className={`rounded-xl p-3 ${findPlatform(connectPlatformId)?.color}`}>{findPlatform(connectPlatformId)?.icon}</div>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-xl font-bold text-gray-900">Connect {findPlatform(connectPlatformId)?.name}</h3>
-                <p className="mt-1 text-xs font-medium text-gray-500 leading-relaxed">Log in to authorize access and begin tracking your analytics.</p>
-              </div>
-              <button onClick={closeAllModals} className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors" aria-label="Close">
-                <X size={18} />
-              </button>
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleConnectSubmit();
-              }}
-              className="space-y-4"
-            >
-              <div>
-                <label className="mb-1.5 block text-xs font-bold text-gray-700 uppercase tracking-wider">Email Address</label>
-                <input
-                  required
-                  value={connectEmail}
-                  onChange={(e) => setConnectEmail(e.target.value)}
-                  type="email"
-                  placeholder="name@example.com"
-                  className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-[#274C77]/20 transition-all shadow-sm"
-                />
-              </div>
-
-              <div className="pt-2 flex flex-col gap-3">
-                <button type="submit" className="w-full rounded-lg bg-[#274C77] py-3 text-sm font-bold text-white shadow-sm hover:bg-[#1a385b] transition-colors">
-                  Log In &amp; Authorize
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => quickConnect(connectPlatformId)}
-                  className="w-full rounded-lg border border-gray-200 bg-white py-3 text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
-                >
-                  Quick Connect (Mock OAuth)
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Disconnect modal */}
       {disconnectId && (

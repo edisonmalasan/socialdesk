@@ -255,3 +255,49 @@ exports.publishScheduledPin = async ({
     platformPostUrl: res.data.link || res.data.url || null,
   };
 };
+
+/**
+ * MOCK: Fetches Pinterest account analytics.
+ */
+exports.getAccountAnalytics = async (accessToken) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        followers_count: Math.floor(Math.random() * 20000) + 1000,
+        following_count: Math.floor(Math.random() * 500) + 10,
+        total_posts: Math.floor(Math.random() * 500) + 50,
+        total_likes: Math.floor(Math.random() * 50000) + 5000, // Pinterest calls them saves/pins, mapped to likes for simplicity
+        total_comments: Math.floor(Math.random() * 1000) + 100,
+        total_shares: Math.floor(Math.random() * 10000) + 1000,
+        total_views: Math.floor(Math.random() * 200000) + 20000,
+        total_reach: Math.floor(Math.random() * 150000) + 15000,
+        impressions: Math.floor(Math.random() * 500000) + 50000,
+        engagement_rate: (Math.random() * 5 + 1).toFixed(2),
+      });
+    }, 100);
+  });
+};
+
+/**
+ * MOCK: Fetches Pinterest Pin analytics.
+ */
+exports.getPinAnalytics = async (pinId, accessToken) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const saves = Math.floor(Math.random() * 200) + 10;
+      const comments = Math.floor(Math.random() * 20) + 1;
+      const views = Math.floor(Math.random() * 5000) + 500;
+      
+      resolve({
+        likes: saves,
+        comments,
+        shares: Math.floor(Math.random() * 50),
+        views,
+        saves,
+        reach: views,
+        engagement_score: saves * 3 + comments * 2,
+      });
+    }, 50);
+  });
+};
+

@@ -94,7 +94,7 @@ const getWorkerConcurrency = () => {
 };
 
 const createSchedulerQueue = () => {
-  return new Queue(`${getQueueName()}:scheduler`, {
+  return new Queue(`${getQueueName()}-scheduler`, {
     connection: getConnection(),
     defaultJobOptions: {
       attempts: 1,
@@ -105,7 +105,7 @@ const createSchedulerQueue = () => {
 };
 
 const createPublishingQueue = () => {
-  return new Queue(`${getQueueName()}:publisher`, {
+  return new Queue(`${getQueueName()}-publisher`, {
     connection: getConnection(),
     defaultJobOptions: {
       attempts: getPublishAttempts(),
@@ -239,6 +239,13 @@ exports.cancelPostTargets = async ({ postId }) => {
   return scheduledPostsService.cancelPostTargets({
     publishingQueue: getPublishingQueue(),
     postId,
+  });
+};
+
+exports.cancelPostTargetsByAccountId = async ({ accountId }) => {
+  return scheduledPostsService.cancelPostTargetsByAccountId({
+    publishingQueue: getPublishingQueue(),
+    accountId,
   });
 };
 

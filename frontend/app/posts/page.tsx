@@ -31,7 +31,6 @@ import {
   Filter,
   ChevronDown,
   Youtube,
-  Linkedin,
   Search,
   CalendarRange
 } from "lucide-react";
@@ -96,10 +95,11 @@ export default function PostsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/posts')
+    fetch('/api/posts', { credentials: 'include' })
       .then(res => res.json())
-      .then(data => {
-        setPosts(data.map(transformPost));
+      .then(envelope => {
+        const list = envelope?.data ?? envelope;
+        setPosts((Array.isArray(list) ? list : []).map(transformPost));
         setLoading(false);
       })
       .catch(() => {
@@ -133,7 +133,7 @@ export default function PostsPage() {
 
   const deletePost = async (id: string) => {
     if (confirm("Are you sure you want to delete this post?")) {
-      const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/posts/${id}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) setPosts(posts.filter(post => post.id !== id));
     }
     setOpenDropdownId(null);
@@ -846,6 +846,7 @@ export default function PostsPage() {
             await fetch(`/api/posts/${updatedPost.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
               body: JSON.stringify(payload),
             });
             setPosts(posts.map(p => p.id === updatedPost.id ? updatedPost : p));
@@ -1119,7 +1120,6 @@ function PlatformIcon({ platform }: { platform: string }) {
     case 'tiktok': return <Video size={14} className="text-black" />;
     case 'x': return <XIcon className="w-3.5 h-3.5" />;
     case 'youtube': return <Youtube size={14} className="text-red-600" />;
-    case 'linkedin': return <Linkedin size={14} className="text-blue-700" />;
     default: return <Video size={14} />;
   }
 }

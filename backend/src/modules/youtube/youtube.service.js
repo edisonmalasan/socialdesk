@@ -1,5 +1,8 @@
 const { google } = require("googleapis");
 const { Readable } = require("stream");
+const https = require("https");
+const http = require("http");
+const { URL } = require("url");
 const dbService = require("../social-connections/social-connections.service");
 
 const getOAuth2Client = () =>
@@ -121,3 +124,178 @@ exports.refreshOAuthToken = async (socialAccountId) => {
 
   return updatedToken;
 };
+
+/**
+ * Returns an OAuth2 client with a fresh access token for a social account.
+ * Automatically refreshes the token if it has expired or is close to expiry.
+ */
+exports.getAuthorizedClient = async (socialAccountId) => {
+  const account = await dbService.getSocialAccountWithToken(socialAccountId);
+  const oauthToken = Array.isArray(account.oauth_tokens)
+    ? account.oauth_tokens[0]
+    : account.oauth_tokens;
+
+  if (!oauthToken?.refresh_token) {
+    throw new Error(`No refresh token found for social account ${socialAccountId}`);
+  }
+
+  const oauth2Client = getOAuth2Client();
+
+  // Check if access token is still valid (at least 5 minutes remaining).
+  const expiresAt = oauthToken.expires_at ? new Date(oauthToken.expires_at).getTime() : 0;
+  const isExpired = Date.now() >= expiresAt - 5 * 60 * 1000;
+
+  if (isExpired || !oauthToken.access_token) {
+    // Refresh via google-auth-library and persist the new token.
+    oauth2Client.setCredentials({ refresh_token: oauthToken.refresh_token });
+    const { credentials } = await oauth2Client.refreshAccessToken();
+
+    await dbService.upsertOAuthToken({
+      socialAccountId,
+      accessToken: credentials.access_token,
+      refreshToken: credentials.refresh_token || oauthToken.refresh_token,
+      tokenType: credentials.token_type || "Bearer",
+      expiresAt: credentials.expiry_date
+        ? new Date(credentials.expiry_date).toISOString()
+        : null,
+      scope: credentials.scope,
+    });
+
+    oauth2Client.setCredentials(credentials);
+  } else {
+    oauth2Client.setCredentials({
+      access_token: oauthToken.access_token,
+      refresh_token: oauthToken.refresh_token,
+    });
+  }
+
+  return oauth2Client;
+};
+
+/**
+ * Fetches a readable stream from an HTTP/HTTPS URL.
+ * Used for streaming a video file to the YouTube upload API.
+ */
+const fetchVideoStream = (videoUrl) =>
+  new Promise((resolve, reject) => {
+    const parsedUrl = new URL(videoUrl);
+    const transport = parsedUrl.protocol === "https:" ? https : http;
+
+    transport
+      .get(videoUrl, (response) => {
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          // Follow one level of redirect
+          return fetchVideoStream(response.headers.location).then(resolve).catch(reject);
+        }
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          return reject(new Error(`Failed to fetch video (HTTP ${response.statusCode}): ${videoUrl}`));
+        }
+        resolve(response);
+      })
+      .on("error", reject);
+  });
+
+/**
+ * Publishes a scheduled video to YouTube by streaming it directly from a URL.
+ * Used by the scheduled-posts worker.
+ *
+ * @param {object} opts
+ * @param {string} opts.socialAccountId  - Social account UUID (used to load/refresh OAuth token)
+ * @param {string} opts.videoUrl         - Publicly accessible video URL (e.g., Cloudinary)
+ * @param {string} opts.title            - YouTube video title
+ * @param {string} [opts.description]    - Video description
+ * @param {string[]} [opts.tags]         - Array of tag strings
+ * @param {string} [opts.privacyStatus]  - 'public' | 'private' | 'unlisted' (default: 'public')
+ * @param {string} [opts.mimeType]       - Video MIME type (default: 'video/mp4')
+ */
+exports.publishScheduledVideo = async ({
+  socialAccountId,
+  videoUrl,
+  title,
+  description,
+  tags,
+  privacyStatus,
+  mimeType,
+}) => {
+  if (!videoUrl) {
+    throw new Error("YouTube scheduled posts require a video URL");
+  }
+
+  const oauth2Client = await exports.getAuthorizedClient(socialAccountId);
+  const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+
+  const videoStream = await fetchVideoStream(videoUrl);
+
+  const res = await youtube.videos.insert({
+    part: ["snippet", "status"],
+    requestBody: {
+      snippet: {
+        title,
+        description: description || "",
+        tags: tags || [],
+        categoryId: "22", // People & Blogs – safe generic default
+      },
+      status: {
+        privacyStatus: privacyStatus || "public",
+      },
+    },
+    media: {
+      mimeType: mimeType || "video/mp4",
+      body: videoStream,
+    },
+  });
+
+  const videoId = res.data.id;
+  return {
+    externalPostId: videoId,
+    platformPostUrl: videoId ? `https://www.youtube.com/watch?v=${videoId}` : null,
+  };
+};
+
+/**
+ * MOCK: Fetches YouTube channel analytics.
+ * In a real scenario, this queries the YouTube Analytics API.
+ */
+exports.getChannelAnalytics = async (channelId, tokens) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        followers_count: Math.floor(Math.random() * 5000) + 500,
+        following_count: 0,
+        total_posts: Math.floor(Math.random() * 100) + 10,
+        total_likes: Math.floor(Math.random() * 20000) + 2000,
+        total_comments: Math.floor(Math.random() * 5000) + 500,
+        total_shares: Math.floor(Math.random() * 2000) + 200,
+        total_views: Math.floor(Math.random() * 500000) + 50000,
+        total_reach: Math.floor(Math.random() * 300000) + 30000,
+        impressions: Math.floor(Math.random() * 1000000) + 100000,
+        engagement_rate: (Math.random() * 8 + 2).toFixed(2),
+      });
+    }, 100);
+  });
+};
+
+/**
+ * MOCK: Fetches YouTube video analytics.
+ */
+exports.getVideoAnalytics = async (videoId, tokens) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const likes = Math.floor(Math.random() * 1000) + 50;
+      const comments = Math.floor(Math.random() * 200) + 10;
+      const shares = Math.floor(Math.random() * 100) + 5;
+      const views = Math.floor(Math.random() * 10000) + 1000;
+      
+      resolve({
+        likes,
+        comments,
+        shares,
+        views,
+        saves: Math.floor(Math.random() * 50),
+        reach: views,
+        engagement_score: likes + comments * 3 + shares * 5,
+      });
+    }, 50);
+  });
+};
+

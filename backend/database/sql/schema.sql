@@ -188,6 +188,20 @@ CREATE TRIGGER oauth_tokens_updated_at
     BEFORE UPDATE ON oauth_tokens
     FOR EACH ROW EXECUTE PROCEDURE update_updated_at();
 
+-- User-level app preferences shown in Settings.
+CREATE TABLE user_settings (
+    user_id                       UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    notification_post_success     BOOLEAN NOT NULL DEFAULT true,
+    notification_post_failure     BOOLEAN NOT NULL DEFAULT true,
+    notification_weekly_report    BOOLEAN NOT NULL DEFAULT false,
+    created_at                    TIMESTAMPTZ DEFAULT NOW(),
+    updated_at                    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TRIGGER user_settings_updated_at
+    BEFORE UPDATE ON user_settings
+    FOR EACH ROW EXECUTE PROCEDURE update_updated_at();
+
 -- SEED DATA
 
 INSERT INTO platforms (code, name) VALUES
@@ -195,7 +209,6 @@ INSERT INTO platforms (code, name) VALUES
     ('tiktok',    'TikTok'),
     ('instagram', 'Instagram'),
     ('x',         'X (Twitter)'),
-    ('linkedin',  'LinkedIn'),
     ('youtube',   'YouTube'),
     ('pinterest', 'Pinterest');
 
@@ -207,3 +220,16 @@ INSERT INTO content_types (code, name) VALUES
     ('carousel',  'Carousel'),
     ('image',     'Image');
 
+-- NOTIFICATIONS
+CREATE TABLE notifications (
+    id              SERIAL PRIMARY KEY,
+    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type            VARCHAR(20) NOT NULL DEFAULT 'info', -- 'success', 'alert', 'social', 'info'
+    title           VARCHAR(255) NOT NULL,
+    message         TEXT NOT NULL,
+    is_read         BOOLEAN DEFAULT false,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_is_read ON notifications(is_read);

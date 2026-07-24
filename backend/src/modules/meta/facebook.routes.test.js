@@ -15,7 +15,7 @@ test("GET /api/auth/facebook/redirect requires a userId", async () => {
   const response = await supertest(app).get("/api/auth/facebook/redirect");
 
   assert.equal(response.status, 400);
-  assert.deepEqual(response.body, { error: "Missing userId" });
+  assert.deepEqual(response.body, { success: false, error: "Missing userId" });
 });
 
 test("GET /api/auth/facebook/redirect redirects to the Facebook OAuth screen", async () => {
@@ -30,7 +30,9 @@ test("POST /api/auth/facebook/post rejects a request missing required fields", a
   const response = await supertest(app).post("/api/auth/facebook/post").send({});
 
   assert.equal(response.status, 400);
-  assert.deepEqual(response.body, { success: false, message: "Missing parameters" });
+  assert.equal(response.body.success, false);
+  assert.equal(response.body.error, "Validation Error");
+  assert.ok(response.body.details); // Zod details
 });
 
 test("POST /api/auth/facebook/post creates a page post on success", async (t) => {
@@ -59,13 +61,15 @@ test("POST /api/auth/facebook/post returns 500 when the service call fails", asy
 
   assert.equal(response.status, 500);
   assert.equal(response.body.error, "graph api unreachable");
+  assert.equal(response.body.success, false);
 });
 
 test("POST /api/auth/facebook/refresh requires a socialAccountId", async () => {
   const response = await supertest(app).post("/api/auth/facebook/refresh").send({});
 
   assert.equal(response.status, 400);
-  assert.deepEqual(response.body, { error: "socialAccountId is required" });
+  assert.equal(response.body.success, false);
+  assert.equal(response.body.error, "Validation Error");
 });
 
 test("POST /api/auth/facebook/refresh refreshes the token on success", async (t) => {
@@ -78,8 +82,10 @@ test("POST /api/auth/facebook/refresh refreshes the token on success", async (t)
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, {
     success: true,
-    message: "Token refreshed successfully",
-    token: { access_token: "new-token" },
+    data: {
+      message: "Token refreshed successfully",
+      token: { access_token: "new-token" },
+    },
   });
 });
 

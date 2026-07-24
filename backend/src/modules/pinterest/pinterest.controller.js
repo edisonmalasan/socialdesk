@@ -1,5 +1,6 @@
 const pinterestService = require("./pinterest.service");
 const dbService = require("../social-connections/social-connections.service");
+const { successResponse, errorResponse } = require("../../shared/utils/response.util");
 
 /**
  * Redirects the user to Pinterest OAuth login page
@@ -9,7 +10,7 @@ exports.redirectToPinterest = (req, res) => {
   const { userId } = req.query;
 
   if (!userId) {
-    return res.status(400).json({ error: "userId is required" });
+    return errorResponse(res, "userId is required", 400);
   }
 
   // Generate Pinterest OAuth authorization URL
@@ -34,14 +35,10 @@ exports.handlePinterestCallback = async (req, res) => {
 
     // Validate authorization code and userId
     if (!code) {
-      return res.status(400).json({
-        error: "Authorization code missing",
-      });
+      return errorResponse(res, "Authorization code missing", 400);
     }
     if (!userId) {
-      return res.status(400).json({
-        error: "userId (state) missing",
-      });
+      return errorResponse(res, "userId (state) missing", 400);
     }
 
     // Exchange code for Pinterest access token
@@ -79,16 +76,13 @@ exports.handlePinterestCallback = async (req, res) => {
     });
 
     // Return successful OAuth response
-    res.json({
-      success: true,
+    return successResponse(res, {
       message: "Pinterest account linked successfully",
       account,
     });
   } catch (err) {
     // Handle OAuth/token exchange errors
-    res.status(500).json({
-      error: err.response?.data || err.message,
-    });
+    return errorResponse(res, err.response?.data || err.message, 500);
   }
 };
 
@@ -109,9 +103,7 @@ exports.createPinterestBoard = async (req, res) => {
 
     // Validate required fields
     if (!accessToken || !name) {
-      return res.status(400).json({
-        error: "accessToken and name are required",
-      });
+      return errorResponse(res, "accessToken and name are required", 400);
     }
 
     // Create Pinterest board
@@ -122,15 +114,10 @@ exports.createPinterestBoard = async (req, res) => {
     });
 
     // Return successful response
-    res.json({
-      success: true,
-      board,
-    });
+    return successResponse(res, { board });
   } catch (err) {
     // Handle board creation errors
-    res.status(500).json({
-      error: err.response?.data || err.message,
-    });
+    return errorResponse(res, err.response?.data || err.message, 500);
   }
 };
 
@@ -151,10 +138,9 @@ exports.createPin = async (req, res) => {
     const { accessToken, boardId, title, description, link } = req.body || {};
 
     // Validate required fields
+    // (Handled partially by schema, but kept here for fallback since board route isn't strictly validated yet)
     if (!accessToken || !boardId) {
-      return res.status(400).json({
-        error: "accessToken and boardId are required",
-      });
+      return errorResponse(res, "accessToken and boardId are required", 400);
     }
 
     // Create Pinterest pin
@@ -168,14 +154,9 @@ exports.createPin = async (req, res) => {
     });
 
     // Return successful response
-    res.json({
-      success: true,
-      ...result,
-    });
+    return successResponse(res, result);
   } catch (err) {
     // Handle pin creation errors
-    res.status(500).json({
-      error: err.response?.data || err.message,
-    });
+    return errorResponse(res, err.response?.data || err.message, 500);
   }
 };

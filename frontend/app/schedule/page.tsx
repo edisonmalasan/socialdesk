@@ -524,10 +524,11 @@ export default function SchedulePage() {
   }, [searchParams]);
 
   useEffect(() => {
-    fetch('/api/posts')
+    fetch('/api/posts', { credentials: 'include' })
       .then(res => res.json())
-      .then(data => {
-        const schedulable = (data as any[]).filter(p => p.status === 'scheduled' || p.status === 'draft');
+      .then(envelope => {
+        const list = envelope?.data ?? envelope;
+        const schedulable = (Array.isArray(list) ? list : []).filter((p: any) => p.status === 'scheduled' || p.status === 'draft');
         setPosts(schedulable.map(transformToScheduledPost));
       });
   }, []);
@@ -701,10 +702,12 @@ export default function SchedulePage() {
                       const res = await fetch('/api/posts', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
                         body: JSON.stringify({ title: getTitle() || 'Untitled', body_text: caption, status: 'draft' }),
                       });
                       if (res.ok) {
-                        const newPost = await res.json();
+                        const envelope = await res.json();
+                        const newPost = envelope?.data ?? envelope;
                         setPosts(prev => [transformToScheduledPost(newPost), ...prev]);
                         clearAll(); showToast("Saved as draft.");
                       } else { showToast("Failed to save draft.", "error"); }
@@ -719,6 +722,7 @@ export default function SchedulePage() {
                         const res = await fetch('/api/posts', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
+                          credentials: 'include',
                           body: JSON.stringify({ title: getTitle() || 'Untitled', body_text: caption, status: 'published' }),
                         });
                         if (res.ok) { clearAll(); showToast("Post published! 🚀"); }
@@ -907,10 +911,12 @@ export default function SchedulePage() {
             const res = await fetch('/api/posts', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
               body: JSON.stringify({ title, body_text: caption, status: 'scheduled', scheduled_at }),
             });
             if (res.ok) {
-              const newPost = await res.json();
+              const envelope = await res.json();
+              const newPost = envelope?.data ?? envelope;
               setPosts(prev => [transformToScheduledPost(newPost), ...prev]);
               setCaption(''); setImagePreview(null); showToast("Post scheduled! 🎉");
             } else { showToast("Failed to schedule post.", "error"); }
@@ -923,6 +929,7 @@ export default function SchedulePage() {
             const res = await fetch(`/api/posts/${updated.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
               body: JSON.stringify({ title: updated.title }),
             });
             if (res.ok) { setPosts(prev => prev.map(p => p.id === updated.id ? updated : p)); showToast("Post updated!"); }
@@ -933,7 +940,7 @@ export default function SchedulePage() {
       {deletePost && (
         <DeleteModal onClose={() => setDeletePost(null)}
           onConfirm={async () => {
-            const res = await fetch(`/api/posts/${deletePost.id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/posts/${deletePost.id}`, { method: 'DELETE', credentials: 'include' });
             if (res.ok) { setPosts(prev => prev.filter(p => p.id !== deletePost.id)); showToast("Post deleted."); }
             else { showToast("Failed to delete post.", "error"); }
             setDeletePost(null);
