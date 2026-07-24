@@ -84,7 +84,7 @@ Shared backend conventions now visible in code:
 | High | Scheduled-post operations | Finish queue health/admin inspection, failed-job views, retry controls, and production Redis runbook. |
 | High | OAuth callback consistency | Normalize Meta/Pinterest/YouTube/TikTok callback behavior and frontend redirect handling. |
 | High | Token refresh orchestration | Ensure every publish and analytics sync can refresh or fail gracefully before provider calls. |
-| High | Provider capability gating | Stop showing unavailable actions as usable. TikTok, X, LinkedIn, and unsupported formats should be disabled or marked unavailable until backend support exists. |
+| High | Provider capability gating | Stop showing unavailable actions as usable. TikTok, X, and unsupported formats should be disabled or marked unavailable until backend support exists. |
 | High | Provider app review/compliance | Prepare required privacy policy, terms, data deletion, OAuth scopes, and app-review notes for Meta, Pinterest, Google/YouTube, and TikTok. |
 | High | End-to-end smoke testing | Test login, connect account, create post, schedule post, publish job, notification, analytics refresh, export, admin management, and settings from the UI. |
 | Medium | Media module routes | Add generic media upload/delete routes for composer assets, thumbnails, and reusable media. |
@@ -93,7 +93,6 @@ Shared backend conventions now visible in code:
 | Medium | API docs | Document every backend route, auth requirement, request body, response shape, and error envelope. |
 | Medium | Local setup docs | Add a complete setup guide for Supabase, Redis, Cloudinary, OAuth apps, and queue toggles. |
 | Low | X/Twitter decision | Confirm paid API access and scope before implementing the module. |
-| Low | LinkedIn decision | Decide whether LinkedIn belongs in MVP before adding OAuth/publishing work. |
 
 ## Environment Variables Guide
 
@@ -222,7 +221,7 @@ Before calling the system production-ready:
 4. Connect and publish through each supported provider using real app credentials.
 5. Replace mock provider analytics adapters with real API calls.
 6. Implement TikTok or hide/disable TikTok UI actions until supported.
-7. Decide X/Twitter and LinkedIn MVP status and hide/disable unsupported actions.
+7. Decide X/Twitter MVP status and hide/disable unsupported actions.
 8. Confirm OAuth app review/scopes/privacy/data deletion requirements for each provider.
 9. Add queue/admin observability for failed scheduled posts and analytics ingestion.
 10. Run backend tests, frontend tests, and manual end-to-end smoke tests.

@@ -31,7 +31,6 @@ import {
   Filter,
   ChevronDown,
   Youtube,
-  Linkedin,
   Search,
   CalendarRange
 } from "lucide-react";
@@ -1121,7 +1120,6 @@ function PlatformIcon({ platform }: { platform: string }) {
     case 'tiktok': return <Video size={14} className="text-black" />;
     case 'x': return <XIcon className="w-3.5 h-3.5" />;
     case 'youtube': return <Youtube size={14} className="text-red-600" />;
-    case 'linkedin': return <Linkedin size={14} className="text-blue-700" />;
     default: return <Video size={14} />;
   }
 }

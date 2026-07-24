@@ -209,7 +209,6 @@ INSERT INTO platforms (code, name) VALUES
     ('tiktok',    'TikTok'),
     ('instagram', 'Instagram'),
     ('x',         'X (Twitter)'),
-    ('linkedin',  'LinkedIn'),
     ('youtube',   'YouTube'),
     ('pinterest', 'Pinterest');
 
